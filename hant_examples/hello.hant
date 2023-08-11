@@ -1,0 +1,4 @@
+var x1 = 114514
+print x1
+var str = "hello world"
+print str

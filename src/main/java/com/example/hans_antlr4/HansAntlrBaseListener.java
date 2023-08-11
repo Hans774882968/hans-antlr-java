@@ -34,6 +34,9 @@ public class HansAntlrBaseListener implements HansAntlrListener {
 	public void exitVariable(HansAntlrParser.VariableContext ctx) {
 		final TerminalNode varName = ctx.ID();
 		final ValueContext varValue = ctx.value();
+		if (varValue == null) {
+			return;
+		}
 		final int varType = varValue.getStart().getType();
 		final int varIndex = variables.size();
 		final String varTextValue = varValue.getText();
@@ -49,6 +52,9 @@ public class HansAntlrBaseListener implements HansAntlrListener {
 	@Override
 	public void exitPrint(HansAntlrParser.PrintContext ctx) {
 		final TerminalNode varName = ctx.ID();
+		if (varName == null) {
+			return;
+		}
 		if (!variables.containsKey(varName.getText())) {
 			log.error("ERROR: You are trying to print var '{}' which has not been declared!", varName.getText());
 			return;

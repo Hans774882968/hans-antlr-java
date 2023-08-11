@@ -139,6 +139,78 @@ public class HelloAntlr4Test {
 
 TODO: 这样改造后就不能通过上一节的命令行来获取gui输出了。
 
+## 用 antlr4 实现词法分析 & 语法分析
+
+入口：`src\main\java\com\example\hans_antlr4\App.java`。
+
+为了接受文件输入，我们需要改下入口：
+
+```java
+@Slf4j
+public class App {
+    private static ARGUMENT_ERRORS getArgumentValidationError(String[] args) {
+        if (args.length != 1) {
+            return ARGUMENT_ERRORS.NO_FILE;
+        }
+        String filePath = args[0];
+        if (!filePath.endsWith(".hant")) {
+            return ARGUMENT_ERRORS.BAD_FILE_EXTENSION;
+        }
+        return ARGUMENT_ERRORS.NONE;
+    }
+
+    public static void parse(String fileAbsolutePath) throws IOException {
+        // 省略，和上一节一样
+    }
+
+    public static void main(String[] args) {
+        ARGUMENT_ERRORS argumentError = getArgumentValidationError(args);
+        if (argumentError != ARGUMENT_ERRORS.NONE) {
+            log.error(argumentError.getMessage());
+            return;
+        }
+        File hantFile = new File(args[0]);
+        String fileAbsolutePath = hantFile.getAbsolutePath();
+        log.info("trying to parse hant file \"{}\" ...", fileAbsolutePath);
+        try {
+            parse(fileAbsolutePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+    }
+}
+```
+
+为了打包出一个“自带干粮”的jar，我们需要使用`maven-assembly-plugin`。`pom.xml`新增：
+
+```xml
+<plugins>
+    <plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <configuration>
+        <descriptorRefs>
+        <descriptorRef>jar-with-dependencies</descriptorRef>
+        </descriptorRefs>
+        <archive>
+        <manifest>
+            <mainClass>com.example.hans_antlr4.App</mainClass>
+        </manifest>
+        </archive>
+    </configuration>
+    <executions>
+        <execution>
+        <id>make-assembly</id>
+        <phase>package</phase>
+        <goals>
+            <goal>single</goal>
+        </goals>
+        </execution>
+    </executions>
+    </plugin>
+</plugins>
+```
+
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html
