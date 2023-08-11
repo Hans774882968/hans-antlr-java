@@ -21,12 +21,7 @@ WS : [ \t\r\n]+ -> skip ;    // 跳过空格、制表符、回车符和换行符
 注意，文件名必须大写，因为我们接下来要生成`.java`的lexer和parser。为了方便，编写一个叫`antlr.ps1`的power shell脚本：
 
 ```ps1
-param(
-    [Parameter()]
-    [string]$p1
-)
-
-java -cp C:\java_project\softs\antlr-4.13.0-complete.jar org.antlr.v4.Tool $p1
+java -cp C:\java_project\softs\antlr-4.13.0-complete.jar org.antlr.v4.Tool $args
 ```
 
 再把`C:\java_project\softs`加入环境变量，就能执行命令来生成`.java`的lexer和parser文件了。
@@ -40,12 +35,7 @@ antlr src\main\java\com\example\antlr4_hello\Hello.g
 现在开始准备编译由antlr4生成的Java代码。准备一个ps1脚本`antlr-compile.ps1`：
 
 ```ps1
-param(
-    [Parameter()]
-    [string]$p1
-)
-
-javac -cp C:\java_project\softs\antlr-4.13.0-complete.jar $p1
+javac -cp C:\java_project\softs\antlr-4.13.0-complete.jar $args
 ```
 
 于是可以使用编译命令：
@@ -83,9 +73,29 @@ java -cp "C:\java_project\softs\antlr-4.13.0-complete.jar;C:\java_project\hans_a
 
 ![1-antlr_hello_world.jpg](./README_assets/1-antlr_hello_world.jpg)
 
+## VSCode antlr 插件如何关闭自动生成`.antlr`文件夹的功能
+
+antlr插件在点击`.g`文件后会自动生成lexer和parser，并生成`.antlr`文件夹。如何关闭这个功能？只需要设置：
+
+```json
+"antlr4.generation": {
+    "mode": "none"
+}
+```
+
 ## antlr4 hello world：编程式
 
-`pom.xml`添加本地依赖：
+`pom.xml`添加依赖：
+
+```xml
+<dependency>
+    <groupId>org.antlr</groupId>
+    <artifactId>antlr4</artifactId>
+    <version>4.13.0</version>
+</dependency>
+```
+
+也可以添加本地依赖：
 
 ```xml
 <dependency>

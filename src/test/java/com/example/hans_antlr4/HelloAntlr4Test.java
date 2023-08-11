@@ -11,7 +11,7 @@ import com.example.antlr4_hello.HelloParser;
 
 public class HelloAntlr4Test {
     @Test
-    public void shouldAnswerWithTrue() {
+    public void hello_antlr4_test() {
         HelloLexer lexer = new HelloLexer(CharStreams.fromString("hello world acmer"));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HelloParser parser = new HelloParser(tokens);
