@@ -2,89 +2,95 @@
 
 package com.example.hans_antlr4;
 
+import java.util.HashMap;
+import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-/**
- * This class provides an empty implementation of {@link HansAntlrListener},
- * which can be extended to create a listener which only needs to handle a subset
- * of the available methods.
- */
+import com.example.hans_antlr4.HansAntlrParser.ValueContext;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @SuppressWarnings("CheckReturnValue")
 public class HansAntlrBaseListener implements HansAntlrListener {
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterVariable(HansAntlrParser.VariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitVariable(HansAntlrParser.VariableContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterPrint(HansAntlrParser.PrintContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitPrint(HansAntlrParser.PrintContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterValue(HansAntlrParser.ValueContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitValue(HansAntlrParser.ValueContext ctx) { }
+	Map<String, Variable> variables = new HashMap<>();
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterEveryRule(ParserRuleContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitEveryRule(ParserRuleContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void visitTerminal(TerminalNode node) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void visitErrorNode(ErrorNode node) { }
+	@Override
+	public void enterCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) {
+	}
+
+	@Override
+	public void exitCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) {
+	}
+
+	@Override
+	public void enterVariable(HansAntlrParser.VariableContext ctx) {
+	}
+
+	@Override
+	public void exitVariable(HansAntlrParser.VariableContext ctx) {
+		final TerminalNode varName = ctx.ID();
+		final ValueContext varValue = ctx.value();
+		final int varType = varValue.getStart().getType();
+		final int varIndex = variables.size();
+		final String varTextValue = varValue.getText();
+		final Variable variable = new Variable(varIndex, varType, varName.getText(), varTextValue);
+		variables.put(varName.getText(), variable);
+		logVariableDeclarationStatementFound(varName, variable);
+	}
+
+	@Override
+	public void enterPrint(HansAntlrParser.PrintContext ctx) {
+	}
+
+	@Override
+	public void exitPrint(HansAntlrParser.PrintContext ctx) {
+		final TerminalNode varName = ctx.ID();
+		if (!variables.containsKey(varName.getText())) {
+			log.error("ERROR: You are trying to print var '{}' which has not been declared!", varName.getText());
+			return;
+		}
+		final Variable variable = variables.get(varName.getText());
+		logPrintStatementFound(varName, variable);
+	}
+
+	private void logVariableDeclarationStatementFound(TerminalNode varName, Variable variable) {
+		final int line = varName.getSymbol().getLine();
+		log.info("OK: Define variable '{}' with type '{}' and value '{}' at line {}",
+				variable.getName(), variable.getVarType(), variable.getVarTextValue(), line);
+	}
+
+	private void logPrintStatementFound(TerminalNode varName, Variable variable) {
+		final int line = varName.getSymbol().getLine();
+		final String format = "OK: You instructed to print variable '{}' which has type '{}' value of '{}' at line {}";
+		log.info(format, variable.getVarIndex(), variable.getVarType(), variable.getVarTextValue(), line);
+	}
+
+	@Override
+	public void enterValue(HansAntlrParser.ValueContext ctx) {
+	}
+
+	@Override
+	public void exitValue(HansAntlrParser.ValueContext ctx) {
+	}
+
+	// 下面4个方法是每个 .g 文件都会生成的，其他方法则是为 CFG 的每个非终结符生成的
+	@Override
+	public void enterEveryRule(ParserRuleContext ctx) {
+	}
+
+	@Override
+	public void exitEveryRule(ParserRuleContext ctx) {
+	}
+
+	@Override
+	public void visitTerminal(TerminalNode node) {
+	}
+
+	@Override
+	public void visitErrorNode(ErrorNode node) {
+	}
 }

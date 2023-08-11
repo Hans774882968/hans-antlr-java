@@ -15,6 +15,12 @@ public class HansAntlr4Test {
                 "print str"));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);
+
+        HansAntlrBaseListener listener = new HansAntlrBaseListener();
+        parser.addParseListener(listener);
+        HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
+        parser.addErrorListener(errorListener);
+
         ParseTree tree = parser.compilationUnit();
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);

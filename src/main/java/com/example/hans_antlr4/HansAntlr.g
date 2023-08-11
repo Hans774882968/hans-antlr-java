@@ -15,7 +15,7 @@ value:
 	op = NUMBER
 	| op = STRING; // must be NUMBER or STRING value (defined below)
 
-//TOKENS
+// TOKENS
 VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
 PRINT: 'print';
 EQUALS: '='; // must be '='
