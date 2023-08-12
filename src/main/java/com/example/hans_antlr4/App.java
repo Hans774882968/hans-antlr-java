@@ -20,11 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class App {
+    private static boolean runMode = false;
+
     private static ARGUMENT_ERRORS getArgumentValidationError(String[] args) {
-        if (args.length != 1) {
+        if ((runMode && args.length != 2) || (!runMode && args.length != 1)) {
             return ARGUMENT_ERRORS.NO_FILE;
         }
-        String filePath = args[0];
+        String filePath = runMode ? args[1] : args[0];
         if (!filePath.endsWith(".hant")) {
             return ARGUMENT_ERRORS.BAD_FILE_EXTENSION;
         }
@@ -55,14 +57,20 @@ public class App {
         os.close();
     }
 
+    private static void runClass(byte[] byteCode) {
+        CodeRunner.run(byteCode);
+    }
+
     public static void main(String[] args) {
+        runMode = args[0].equals("run");
         ARGUMENT_ERRORS argumentError = getArgumentValidationError(args);
         if (argumentError != ARGUMENT_ERRORS.NONE) {
             log.error(argumentError.getMessage());
             return;
         }
 
-        File hantFile = new File(args[0]);
+        String inputFilePath = runMode ? args[1] : args[0];
+        File hantFile = new File(inputFilePath);
         String fileName = hantFile.getName();
         String fileAbsolutePath = hantFile.getAbsolutePath();
         log.info("trying to parse hant file \"{}\" ...", fileAbsolutePath);
@@ -77,7 +85,11 @@ public class App {
         final byte[] byteCode = new BytecodeGenerator().generateBytecode(
                 instructionsQueue, StringUtils.remove(fileName, ".hant"));
         try {
-            saveBytecodeToClassFile(fileAbsolutePath, byteCode);
+            if (runMode) {
+                runClass(byteCode);
+            } else {
+                saveBytecodeToClassFile(fileAbsolutePath, byteCode);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

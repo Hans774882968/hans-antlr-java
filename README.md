@@ -6,14 +6,16 @@
 
 TODO
 
-近几天我看到一个项目叫[Creating JVM language](https://juejin.cn/post/6844903671679942663)，目标是开发一门编译到JVM字节码的语言。在此我打算跟着这个项目做一遍，学习：
+近几天我看到一个项目叫[Creating JVM language](https://juejin.cn/post/6844903671679942663)，目标是开发一门编译到JVM字节码的语言。在此我打算跟着这个项目做一遍，以学习：
 
 1. antlr4的使用
-2. `ASM`的使用
+2. `ASM`的使用和JVM字节码指令
 
-这门语言叫做`hant`。
+这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
-## antlr4 hello world
+**作者：[hans774882968](https://blog.csdn.net/hans774882968)以及[hans774882968](https://juejin.cn/user/1464964842528888)以及[hans774882968](https://www.52pojie.cn/home.php?mod=space&uid=1906177)**
+
+## antlr4 hello world（可以跳过）
 
 创建文件`src\main\java\com\example\antlr4_hello\Hello.g`：
 
@@ -654,16 +656,16 @@ var x1 = 114514
 print x1
 var str = "hello world"
 print str
-var str2 = "hw\n"
+var str2 = "hello\n支持输出中文~"
 print str2
 ```
 
-运行代码后，即可看到在同一文件夹下生成了`hello.class`。我们可以使用 JDK 自带的`javap`工具来验证生成的字节码的正确性。`javap -v C:\java_project\hans-antlr-java\hant_examples\hello.class`
+运行代码后，即可看到在同一文件夹下生成了`hello.class`。我们可以使用 JDK 自带的`javap`工具来验证生成的字节码的正确性。`javap -v C:\java_project\hans-antlr-java\hant_examples\hello.class`输出：
 
 ```
 Classfile /C:/java_project/hans-antlr-java/hant_examples/hello.class
-  Last modified 2023年8月12日; size 333 bytes
-  SHA-256 checksum 0b46d5143eb67307240ed9ec8ddf543ccc639c334b3d393350fa7589e40177ff
+  Last modified 2023年8月13日; size 355 bytes
+  SHA-256 checksum bae32267cc9d8cd4cd8072df85c2afc3e5f440df014b84446290f58057d40d7d
 public class hello
   minor version: 0
   major version: 52
@@ -695,8 +697,8 @@ Constant pool:
   #21 = Utf8               (Ljava/lang/String;)V
   #22 = NameAndType        #15:#21        // println:(Ljava/lang/String;)V
   #23 = Methodref          #14.#22        // java/io/PrintStream.println:(Ljava/lang/String;)V
-  #24 = Utf8               \"hw\\n\"
-  #25 = String             #24            // \"hw\\n\"
+  #24 = Utf8               \"hello\\n支持输出中文~\"
+  #25 = String             #24            // \"hello\\n支持输出中文~\"
   #26 = Utf8               Code
 {
   public static void main(java.lang.String[]);
@@ -714,7 +716,7 @@ Constant pool:
         14: getstatic     #12                 // Field java/lang/System.out:Ljava/io/PrintStream;
         17: aload_1
         18: invokevirtual #23                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-        21: ldc           #25                 // String \"hw\\n\"
+        21: ldc           #25                 // String \"hello\\n支持输出中文~\"
         23: astore_2
         24: getstatic     #12                 // Field java/lang/System.out:Ljava/io/PrintStream;
         27: aload_2
@@ -723,7 +725,7 @@ Constant pool:
 }
 ```
 
-运行
+运行class文件的命令：
 
 ```ps1
 java -cp C:\java_project\hans-antlr-java\hant_examples hello
@@ -736,7 +738,86 @@ java hello
 ```
 -16558
 "hello world"
-"hw\n"
+"hello\n支持输出中文~"
+```
+
+## Part3：4-在命令行直接运行`.hant`代码
+
+在上一节我们已经得到了类的`byte[]`，因此可以直接使用`ClassLoader`加载并运行这个类。首先，我们修改入口，同时支持`java -jar xx.jar hello.hant`和`java -jar xx.jar run hello.hant`：
+
+```java
+@Slf4j
+public class App {
+    private static boolean runMode = false;
+
+    private static ARGUMENT_ERRORS getArgumentValidationError(String[] args) {
+        if ((runMode && args.length != 2) || (!runMode && args.length != 1)) {
+            return ARGUMENT_ERRORS.NO_FILE;
+        }
+        String filePath = runMode ? args[1] : args[0];
+        if (!filePath.endsWith(".hant")) {
+            return ARGUMENT_ERRORS.BAD_FILE_EXTENSION;
+        }
+        return ARGUMENT_ERRORS.NONE;
+    }
+
+    private static void runClass(byte[] byteCode) {
+        CodeRunner.run(byteCode);
+    }
+
+    public static void main(String[] args) {
+        runMode = args[0].equals("run");
+        ARGUMENT_ERRORS argumentError = getArgumentValidationError(args);
+        if (argumentError != ARGUMENT_ERRORS.NONE) {
+            log.error(argumentError.getMessage());
+            return;
+        }
+
+        String inputFilePath = runMode ? args[1] : args[0];
+        File hantFile = new File(inputFilePath);
+        // 省略无关代码
+        try {
+            if (runMode) {
+                runClass(byteCode);
+            } else {
+                saveBytecodeToClassFile(fileAbsolutePath, byteCode);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+TODO: 这部分代码开始乱了，要整理下~
+
+新增的`src\main\java\com\example\hans_antlr4\CodeRunner.java`从`byte[]`加载类并调用其`main`函数：
+
+```java
+package com.example.hans_antlr4;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
+class MyClassLoader extends ClassLoader {
+    public Class<?> myDefineClass(byte[] arg1, int arg2, int arg3) {
+        return super.defineClass(null, arg1, arg2, arg3);
+    }
+}
+
+public class CodeRunner {
+    public static void run(byte[] byteCode) {
+        MyClassLoader cl = new MyClassLoader();
+        Class<?> cls = cl.myDefineClass(byteCode, 0, byteCode.length);
+        try {
+            Method mainMethod = cls.getDeclaredMethod("main", String[].class);
+            mainMethod.invoke(null, (Object) new String[] {});
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+                | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+}
 ```
 
 ## 参考资料
