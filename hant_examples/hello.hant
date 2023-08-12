@@ -2,3 +2,5 @@ var x1 = 114514
 print x1
 var str = "hello world"
 print str
+var str2 = "hello\n支持输出中文~"
+print str2

@@ -38,6 +38,7 @@ build/
 ### generated files ###
 bin/
 gen/
+hant_examples/*.class
 
 ### MAC ###
 .DS_Store

@@ -20,6 +20,6 @@ VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
 PRINT: 'print';
 EQUALS: '='; // must be '='
 NUMBER: [0-9]+; // must consist only of digits
-STRING: '"' .* '"'; // must be anything in qutoes
+STRING: '"' .*? '"'; // must be anything in qutoes
 ID: [a-zA-Z0-9]+; // must be any alphanumeric value
 WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces

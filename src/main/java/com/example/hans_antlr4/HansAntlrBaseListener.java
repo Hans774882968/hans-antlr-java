@@ -2,21 +2,31 @@
 
 package com.example.hans_antlr4;
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.example.hans_antlr4.HansAntlrParser.ValueContext;
+import com.example.hans_antlr4.bytecode_gen.instructions.Instruction;
+import com.example.hans_antlr4.bytecode_gen.instructions.PrintVariable;
+import com.example.hans_antlr4.bytecode_gen.instructions.VariableDeclaration;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @SuppressWarnings("CheckReturnValue")
 public class HansAntlrBaseListener implements HansAntlrListener {
-	Map<String, Variable> variables = new HashMap<>();
+	private Map<String, Variable> variables = new HashMap<>();
+	private Queue<Instruction> instructionsQueue = new ArrayDeque<>();
+
+	public Queue<Instruction> getInstructionsQueue() {
+		return instructionsQueue;
+	}
 
 	@Override
 	public void enterCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) {
@@ -42,6 +52,7 @@ public class HansAntlrBaseListener implements HansAntlrListener {
 		final String varTextValue = varValue.getText();
 		final Variable variable = new Variable(varIndex, varType, varName.getText(), varTextValue);
 		variables.put(varName.getText(), variable);
+		instructionsQueue.add(new VariableDeclaration(variable));
 		logVariableDeclarationStatementFound(varName, variable);
 	}
 
@@ -60,6 +71,7 @@ public class HansAntlrBaseListener implements HansAntlrListener {
 			return;
 		}
 		final Variable variable = variables.get(varName.getText());
+		instructionsQueue.add(new PrintVariable(variable));
 		logPrintStatementFound(varName, variable);
 	}
 
