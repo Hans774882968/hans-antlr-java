@@ -14,6 +14,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.example.hans_antlr4.bytecode_gen.BytecodeGenerator;
 import com.example.hans_antlr4.bytecode_gen.instructions.Instruction;
+import com.example.hans_antlr4.parsing.HansAntlrBaseListener;
+import com.example.hans_antlr4.parsing.HansAntlrErrorListener;
+import com.example.hans_antlr4.parsing.HansAntlrLexer;
+import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.validation.ARGUMENT_ERRORS;
 
 import lombok.extern.slf4j.Slf4j;

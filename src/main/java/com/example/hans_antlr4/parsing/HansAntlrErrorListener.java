@@ -1,4 +1,4 @@
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;

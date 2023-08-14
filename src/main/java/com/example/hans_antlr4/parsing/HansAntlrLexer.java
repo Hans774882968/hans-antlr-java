@@ -1,6 +1,6 @@
 // Generated from src\main\java\com\example\hans_antlr4\HansAntlr.g by ANTLR 4.13.0
 
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;

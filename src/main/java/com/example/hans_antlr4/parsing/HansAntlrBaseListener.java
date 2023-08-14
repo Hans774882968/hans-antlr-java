@@ -1,6 +1,6 @@
 // Generated from src\main\java\com\example\hans_antlr4\HansAntlr.g by ANTLR 4.13.0
 
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -11,10 +11,10 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.example.hans_antlr4.HansAntlrParser.ValueContext;
 import com.example.hans_antlr4.bytecode_gen.instructions.Instruction;
 import com.example.hans_antlr4.bytecode_gen.instructions.PrintVariable;
 import com.example.hans_antlr4.bytecode_gen.instructions.VariableDeclaration;
+import com.example.hans_antlr4.parsing.HansAntlrParser.ValueContext;
 
 import lombok.extern.slf4j.Slf4j;
 

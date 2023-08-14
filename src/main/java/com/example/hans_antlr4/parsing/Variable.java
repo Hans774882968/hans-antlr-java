@@ -1,4 +1,4 @@
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

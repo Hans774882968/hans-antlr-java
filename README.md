@@ -13,18 +13,26 @@ TODO
 
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
+环境：
+- Windows10
+- VSCode快速创建的Maven项目
+
 **作者：[hans774882968](https://blog.csdn.net/hans774882968)以及[hans774882968](https://juejin.cn/user/1464964842528888)以及[hans774882968](https://www.52pojie.cn/home.php?mod=space&uid=1906177)**
 
 ## antlr4 hello world（可以跳过）
 
-创建文件`src\main\java\com\example\antlr4_hello\Hello.g`：
+> ANTLR（ANother Tool for Language Recognition）是用 Java 语言编写的功能强大的语法分析器自动生成工具，由旧金山大学的 Terence Parr 博士等人于 1989 年推出第一代，迭代到现在是第四代，因此一般称之为`antlr4`。该工具本身是 Java 语言的工具，但产出的语法分析器可以是包括 js 和 ts 语言在内的主流编程语言，因此基本上可以认为`antlr4`是当前使用最广泛的一款语法分析器自动生成工具。
+
+> `antlr4`接收 g4 文法作为输入，输出为符合该文法约束的对应目标语言的解析器源代码。更准确地讲，是输出解析器的框架代码，该框架代码在运行时可以自动解析输入文本并生成我们在上一讲提到的AST，但业务项目仍然需要在该框架代码上补充完善业务需求的逻辑。
+
+首先在[antlr官网](https://www.antlr.org/download/antlr-4.13.0-complete.jar)下载jar，并把jar所在路径加入环境变量Path。然后创建文件`src\main\java\com\example\antlr4_hello\Hello.g`：
 
 ```
-grammar Hello;               // 定义文法的名字
+grammar Hello; // 定义文法的名字
 
-s  : 'hello' ID ;            // 匹配关键字hello和标志符
-ID : [a-z]+ ;                // 标志符由小写字母组成
-WS : [ \t\r\n]+ -> skip ;    // 跳过空格、制表符、回车符和换行符
+s: 'hello' ID; // 匹配关键字hello和标志符
+ID: [a-z]+; // 标志符由小写字母组成
+WS: [ \t\r\n]+ -> skip; // 跳过空格、制表符、回车符和换行符
 ```
 
 注意，文件名必须大写，因为我们接下来要生成`.java`的lexer和parser。为了方便，编写一个叫`antlr.ps1`的power shell脚本：
@@ -132,7 +140,7 @@ import com.example.antlr4_hello.HelloParser;
 
 public class HelloAntlr4Test {
     @Test
-    public void shouldAnswerWithTrue() {
+    public void hello_antlr4_test() {
         HelloLexer lexer = new HelloLexer(CharStreams.fromString("hello world acmer"));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HelloParser parser = new HelloParser(tokens);
@@ -150,13 +158,20 @@ TODO: 这样改造后就不能通过上一节的命令行来获取gui输出了�
 
 ## Part3：1-用 Listener 实现遍历 AST 过程中的自定义操作
 
-这一节的语法规则文件为`src\main\java\com\example\hans_antlr4\HansAntlr.g`。
+这一节正式开始实现`hant`语言。这一节我们需要添加的特性：
+
+- 声明`int`或者`string`类型的变量：`var str = "str"`
+- 打印变量：`print str`
+- 简单的类型推断
+- 支持`java -jar xx.jar hello.hant`编译`hello.hant`，以及`java -jar xx.jar run hello.hant`直接运行`hello.hant`生成的字节码。
+
+这一节的语法规则文件为`src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g`。
 
 ```g
 grammar HansAntlr;
 
 @header {
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 }
 
 // RULES
@@ -175,12 +190,13 @@ VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
 PRINT: 'print';
 EQUALS: '='; // must be '='
 NUMBER: [0-9]+; // must consist only of digits
-STRING: '"' .*? '"'; // must be anything in qutoes
+// must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式
+STRING: '"' .*? '"';
 ID: [a-zA-Z0-9]+; // must be any alphanumeric value
 WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces
 ```
 
-使用上一节编写的`antlr.ps1`来生成lexer、parser和listener：`antlr src\main\java\com\example\hans_antlr4\HansAntlr.g`。
+使用上一节编写的`antlr.ps1`来生成lexer、parser和listener：`antlr src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g`。
 
 上一节提到，antlr4为我们生成了4个Java文件：
 
@@ -191,9 +207,9 @@ WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces
 
 其中：
 1. Lexer和Parser都不需要改动。
-2. `HelloBaseListener`继承了`HelloListener`，它提供了一些函数，其中名字形如`enterXyz`，`exitXyz`分别表示进入和离开名为`Xyz`的非终结符时的操作。因此我们只需要在`HelloBaseListener`的`exitXyz`编写自己的逻辑。
+2. `HelloBaseListener`继承了`HelloListener`，它提供了一些函数，其中形如`enterXyz`，`exitXyz`的函数分别表示进入和离开名为`Xyz`的非终结符时的操作。因此我们只需要在`HelloBaseListener`的`exitXyz`编写自己的逻辑。
 
-`src\main\java\com\example\hans_antlr4\HansAntlrBaseListener.java`：
+`src\main\java\com\example\hans_antlr4\parsing\HansAntlrBaseListener.java`：
 
 ```java
 @Slf4j
@@ -244,10 +260,10 @@ public class HansAntlrBaseListener implements HansAntlrListener {
 }
 ```
 
-为了方便后续的字节码生成流程，我们抽象出`Variable`表示变量信息。`src\main\java\com\example\hans_antlr4\Variable.java`：
+为了方便后续的字节码生成流程，我们抽象出`Variable`表示变量信息。`src\main\java\com\example\hans_antlr4\parsing\Variable.java`：
 
 ```java
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -262,10 +278,10 @@ public class Variable {
 }
 ```
 
-除了BaseListener，我们还需要提供一个ErrorListener。`src\main\java\com\example\hans_antlr4\HansAntlrErrorListener.java`：
+除了BaseListener，我们还需要提供一个ErrorListener。`src\main\java\com\example\hans_antlr4\parsing\HansAntlrErrorListener.java`：
 
 ```java
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
@@ -485,7 +501,7 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4\BYTECODE_GEN
 
 其中`interface Instruction`表示我们希望生成一条语句的字节码，`PrintVariable`和`VariableDeclaration`表示我们希望生成一条变量定义语句或print语句的字节码，所以后者都要`implements`前者。
 
-遍历AST后，我们就能从 Listener 中拿到`Queue<Instruction> instructionsQueue`。`src\main\java\com\example\hans_antlr4\HansAntlrBaseListener.java`
+遍历AST后，我们就能从 Listener 中拿到`Queue<Instruction> instructionsQueue`。`src\main\java\com\example\hans_antlr4\parsing\HansAntlrBaseListener.java`：
 
 ```java
 @Slf4j
@@ -541,9 +557,9 @@ public interface Instruction {
 }
 ```
 
-这里选用`ASM`来操作 Java 字节码。这样就不用关心非常底层的十六进制数字，你只需要知道指令的名字，`ASM`会自动帮你处理剩下的事情。
+这里选用`ASM`来操作 Java 字节码。这样我们就不用关心非常底层的十六进制数字了。我们只需要知道指令的名字，`ASM`会自动帮我们处理剩下的事情。
 
-`BytecodeGenerator.generateBytecode()`会依次遍历`instructionsQueue`里的`Instruction`，调用`apply`方法来生成字节码，输出`byte[]`。`apply`方法会调用`methodVisitor`的若干visit方法以实现输出字节码的副作用。`src\main\java\com\example\hans_antlr4\bytecode_gen\BytecodeGenerator.java`：
+`BytecodeGenerator.generateBytecode()`会依次遍历`instructionsQueue`里的`Instruction`，调用`apply`方法来生成字节码，输出`byte[]`。`apply`方法会调用`methodVisitor`的若干visit方法以实现输出字节码的“副作用”。`src\main\java\com\example\hans_antlr4\bytecode_gen\BytecodeGenerator.java`：
 
 ```java
 package com.example.hans_antlr4.bytecode_gen;

@@ -1,7 +1,7 @@
 grammar HansAntlr;
 
 @header {
-package com.example.hans_antlr4;
+package com.example.hans_antlr4.parsing;
 }
 
 // RULES
@@ -20,6 +20,7 @@ VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
 PRINT: 'print';
 EQUALS: '='; // must be '='
 NUMBER: [0-9]+; // must consist only of digits
-STRING: '"' .*? '"'; // must be anything in qutoes
+// must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式
+STRING: '"' .*? '"';
 ID: [a-zA-Z0-9]+; // must be any alphanumeric value
 WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces
