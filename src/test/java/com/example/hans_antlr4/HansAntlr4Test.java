@@ -33,7 +33,7 @@ public class HansAntlr4Test {
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);
         Assert.assertEquals(
-                "(compilationUnit (statements (variable var x = (value 5)) (print print x) (variable var str = (value \"hello world\")) (print print str) (variable var str2 = (value \"支持输入中文\")) (print print str2)) <EOF>)",
+                "(compilationUnit (statements (variable var x = (expression (value 5))) (print print (expression (variableReference x))) (variable var str = (expression (value \"hello world\"))) (print print (expression (variableReference str))) (variable var str2 = (expression (value \"支持输入中文\"))) (print print (expression (variableReference str2)))) <EOF>)",
                 treeString);
 
         Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());

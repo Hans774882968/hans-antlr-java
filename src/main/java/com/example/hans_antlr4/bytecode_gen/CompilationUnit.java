@@ -6,8 +6,8 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import com.example.hans_antlr4.bytecode_gen.instructions.Instruction;
-import com.example.hans_antlr4.bytecode_gen.instructions.VariableDeclaration;
+import com.example.hans_antlr4.domain.scope.Scope;
+import com.example.hans_antlr4.domain.statement.Statement;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +15,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class CompilationUnit implements Opcodes {
-    private Queue<Instruction> instructionsQueue;
+    private Scope scope;
+    private Queue<Statement> instructionsQueue;
 
     public byte[] generateBytecode(String name) {
         ClassWriter cw = new ClassWriter(0);
@@ -25,18 +26,16 @@ public class CompilationUnit implements Opcodes {
         {
             // declare static void main
             mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
-            final long localVariablesCount = instructionsQueue.stream()
-                    .filter(instruction -> instruction instanceof VariableDeclaration)
-                    .count();
-            final int maxStack = 100; // TODO: do that properly
 
+            StatementGenerator statementGenerator = new StatementGenerator(mv);
             // apply instructions generated from traversing parse tree!
-            for (Instruction instruction : instructionsQueue) {
-                instruction.apply(mv);
+            for (Statement instruction : instructionsQueue) {
+                statementGenerator.generate(instruction, scope);
             }
             mv.visitInsn(RETURN); // add return instruction
 
-            mv.visitMaxs(maxStack, (int) localVariablesCount); // set max stack and max local variables
+            final int maxStack = 100; // TODO: do that properly
+            mv.visitMaxs(maxStack, -1); // set max stack and max local variables
             mv.visitEnd();
         }
         cw.visitEnd();

@@ -18,6 +18,7 @@ import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
 import com.example.hans_antlr4.validation.ARGUMENT_ERRORS;
 
+import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -54,9 +55,9 @@ public class App {
 
     private static void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
         final String classFile = StringUtils.replace(fileAbsolutePath, ".hant", ".class");
+        @Cleanup
         OutputStream os = new FileOutputStream(classFile);
         os.write(byteCode);
-        os.close();
     }
 
     private static void runClass(byte[] byteCode) {

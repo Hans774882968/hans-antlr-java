@@ -41,6 +41,75 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitVariable(HansAntlrParser.VariableContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code ValueExpr}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitValueExpr(HansAntlrParser.ValueExprContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code ADD}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitADD(HansAntlrParser.ADDContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code VarReference}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitVarReference(HansAntlrParser.VarReferenceContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code SUBSTRACT}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitSUBSTRACT(HansAntlrParser.SUBSTRACTContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code MULTIPLY}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitMULTIPLY(HansAntlrParser.MULTIPLYContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code DIVIDE}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitDIVIDE(HansAntlrParser.DIVIDEContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#variableReference}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#print}.
 	 * 
 	 * @param ctx

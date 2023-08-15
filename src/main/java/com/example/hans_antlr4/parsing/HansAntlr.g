@@ -8,10 +8,24 @@ package com.example.hans_antlr4.parsing;
 compilationUnit: statements EOF;
 // root rule - our code consist consist only of variables and prints (see definition below)
 statements: (variable | print)*;
-variable: VARIABLE ID EQUALS value;
+variable: VARIABLE ID EQUALS expression;
 // requires VAR token followed by ID token followed by EQUALS TOKEN ...
+
+expression:
+	variableReference					# VarReference
+	| value								# ValueExpr
+	| '(' expression '*' expression ')'	# MULTIPLY
+	| expression '*' expression			# MULTIPLY
+	| '(' expression '/' expression ')'	# DIVIDE
+	| expression '/' expression			# DIVIDE
+	| '(' expression '+' expression ')'	# ADD
+	| expression '+' expression			# ADD
+	| '(' expression '-' expression ')'	# SUBSTRACT
+	| expression '-' expression			# SUBSTRACT;
+variableReference: ID;
+
 print:
-	PRINT ID; // print statement must consist of 'print' keyword and ID
+	PRINT expression; // print statement must consist of 'print' keyword and ID
 value:
 	op = NUMBER
 	| op = STRING; // must be NUMBER or STRING value (defined below)
