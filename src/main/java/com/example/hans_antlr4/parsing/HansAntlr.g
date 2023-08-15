@@ -5,8 +5,9 @@ package com.example.hans_antlr4.parsing;
 }
 
 // RULES
-compilationUnit: (variable | print)* EOF;
+compilationUnit: statements EOF;
 // root rule - our code consist consist only of variables and prints (see definition below)
+statements: (variable | print)*;
 variable: VARIABLE ID EQUALS value;
 // requires VAR token followed by ID token followed by EQUALS TOKEN ...
 print:

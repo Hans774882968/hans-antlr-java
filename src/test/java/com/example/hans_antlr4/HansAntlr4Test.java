@@ -6,10 +6,11 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.example.hans_antlr4.parsing.HansAntlrBaseListener;
+import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.parsing.HansAntlrErrorListener;
 import com.example.hans_antlr4.parsing.HansAntlrLexer;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
+import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
 
 public class HansAntlr4Test {
     @Test
@@ -23,16 +24,18 @@ public class HansAntlr4Test {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);
 
-        HansAntlrBaseListener listener = new HansAntlrBaseListener();
-        parser.addParseListener(listener);
+        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
         HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
         parser.addErrorListener(errorListener);
 
         ParseTree tree = parser.compilationUnit();
+        CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);
         Assert.assertEquals(
-                "(compilationUnit (variable var x = (value 5)) (print print x) (variable var str = (value \"hello world\")) (print print str) (variable var str2 = (value \"\u652F\u6301\u8F93\u5165\u4E2D\u6587\")) (print print str2) <EOF>)",
+                "(compilationUnit (statements (variable var x = (value 5)) (print print x) (variable var str = (value \"hello world\")) (print print str) (variable var str2 = (value \"支持输入中文\")) (print print str2)) <EOF>)",
                 treeString);
+
+        Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());
     }
 }

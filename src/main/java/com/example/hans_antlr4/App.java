@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Queue;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -12,12 +11,11 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringUtils;
 
-import com.example.hans_antlr4.bytecode_gen.BytecodeGenerator;
-import com.example.hans_antlr4.bytecode_gen.instructions.Instruction;
-import com.example.hans_antlr4.parsing.HansAntlrBaseListener;
+import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.parsing.HansAntlrErrorListener;
 import com.example.hans_antlr4.parsing.HansAntlrLexer;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
+import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
 import com.example.hans_antlr4.validation.ARGUMENT_ERRORS;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,21 +35,21 @@ public class App {
         return ARGUMENT_ERRORS.NONE;
     }
 
-    private static Queue<Instruction> parse(String fileAbsolutePath) throws IOException {
+    private static CompilationUnit parse(String fileAbsolutePath) throws IOException {
         CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
         HansAntlrLexer lexer = new HansAntlrLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);
 
-        HansAntlrBaseListener listener = new HansAntlrBaseListener();
-        parser.addParseListener(listener);
+        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
         HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
         parser.addErrorListener(errorListener);
 
         ParseTree tree = parser.compilationUnit();
+        CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);
-        return listener.getInstructionsQueue();
+        return compilationUnit;
     }
 
     private static void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
@@ -78,16 +76,15 @@ public class App {
         String fileName = hantFile.getName();
         String fileAbsolutePath = hantFile.getAbsolutePath();
         log.info("trying to parse hant file \"{}\" ...", fileAbsolutePath);
-        Queue<Instruction> instructionsQueue = null;
+        CompilationUnit compilationUnit = null;
         try {
-            instructionsQueue = parse(fileAbsolutePath);
+            compilationUnit = parse(fileAbsolutePath);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
-        final byte[] byteCode = new BytecodeGenerator().generateBytecode(
-                instructionsQueue, StringUtils.remove(fileName, ".hant"));
+        final byte[] byteCode = compilationUnit.generateBytecode(StringUtils.remove(fileName, ".hant"));
         try {
             if (runMode) {
                 runClass(byteCode);

@@ -167,7 +167,7 @@ TODO: 这样改造后就不能通过上一节的命令行来获取gui输出了�
 
 这一节的语法规则文件为`src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g`。
 
-```g
+```g4
 grammar HansAntlr;
 
 @header {
@@ -832,6 +832,194 @@ public class CodeRunner {
                 | InvocationTargetException e) {
             e.printStackTrace();
         }
+    }
+}
+```
+
+## Part4~6：改用 Visitor 模式
+
+antlr提供了Listener和Visitor两种模式使得我们能方便地遍历AST，以提取代码文本中的信息。为什么这里我们需要把代码改造成Visitor模式呢？
+
+- 更少的代码。
+- 更少的BUG。无需把解析的结果保存到变量里。
+
+原作者给出的对比代码：
+
+```java
+// Listener
+class ClassListener extends EnkelBaseListener<ClassDeclaration> {
+
+    private Class parsedClass;
+
+    @Override
+    public void enterClassDeclaration(@NotNull EnkelParser.ClassDeclarationContext ctx) {
+        String className = ctx.className().getText();
+        // do some other stuff
+        parsedClass = new Class(className, methods);
+    }
+
+    public Class getParsedClass() {
+        return parsedClass;
+    }
+}
+
+// Visitor
+public class ClassVisitor extends EnkelBaseVisitor<ClassDeclaration> {
+
+    @Override
+    public ClassDeclaration visitClassDeclaration(@NotNull EnkelParser.ClassDeclarationContext ctx) {
+        String name = ctx.className().getText();
+        // do some other stuff
+        return new ClassDeclaration(name, methods);
+    }
+}
+```
+
+listener和visitor都支持拆分，只不过我目前的实现规模较小，没有进行拆分。但listener只支持副作用，而visitor允许调用者直接拿到返回值，所以Visitor模式可以稍微少写点代码。
+
+给`antlr.jar`显式传入`-visitor`即可获取`BaseVisitor.java`：
+
+```ps1
+antlr src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g -visitor -no-listener
+```
+
+为了方便visitor的实现，需要改下文法：
+
+```g4
+compilationUnit: statements EOF;
+statements: (variable | print)*;
+```
+
+我们自己的Visitor直接import刚刚生成的`src\main\java\com\example\hans_antlr4\parsing\HansAntlrBaseVisitor.java`即可。新增visitor：
+
+```
+biz_visitor
+    CompilationUnitVisitor.java
+    StatementVisitor.java
+```
+
+`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\CompilationUnitVisitor.java`：
+
+```java
+@EqualsAndHashCode(callSuper = false)
+@Data
+public class CompilationUnitVisitor extends HansAntlrBaseVisitor<CompilationUnit> {
+    @Override
+    public CompilationUnit visitCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) {
+        StatementVisitor statementVisitor = new StatementVisitor();
+        ctx.statements().accept(statementVisitor);
+        return new CompilationUnit(statementVisitor.getInstructionsQueue());
+    }
+}
+```
+
+`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\StatementVisitor.java`：
+
+```java
+@EqualsAndHashCode(callSuper = false)
+@Data
+@Slf4j
+public class StatementVisitor extends HansAntlrBaseVisitor<Instruction> {
+    private Map<String, Variable> variables = new HashMap<>();
+    private Queue<Instruction> instructionsQueue = new ArrayDeque<>();
+
+    @Override
+    public VariableDeclaration visitVariable(HansAntlrParser.VariableContext ctx) {
+        final TerminalNode varName = ctx.ID();
+        final ValueContext varValue = ctx.value();
+        if (varValue == null) {
+            return null;
+        }
+        final int varType = varValue.getStart().getType();
+        final int varIndex = variables.size();
+        final String varTextValue = varValue.getText();
+        final Variable variable = new Variable(varIndex, varType, varName.getText(), varTextValue);
+        variables.put(varName.getText(), variable);
+        VariableDeclaration variableDeclaration = new VariableDeclaration(variable);
+        instructionsQueue.add(variableDeclaration);
+        logVariableDeclarationStatementFound(varName, variable);
+        return variableDeclaration;
+    }
+
+    @Override
+    public PrintVariable visitPrint(HansAntlrParser.PrintContext ctx) {
+        final TerminalNode varName = ctx.ID();
+        if (varName == null) {
+            return null;
+        }
+        if (!variables.containsKey(varName.getText())) {
+            log.error("ERROR: You are trying to print var '{}' which has not been declared!", varName.getText());
+            return null;
+        }
+        final Variable variable = variables.get(varName.getText());
+        PrintVariable printVariable = new PrintVariable(variable);
+        instructionsQueue.add(printVariable);
+        logPrintStatementFound(varName, variable);
+        return printVariable;
+    }
+
+    // logVariableDeclarationStatementFound 、 logPrintStatementFound 没有变化，省略了
+}
+```
+
+这里用到了本次新增的`src\main\java\com\example\hans_antlr4\bytecode_gen\CompilationUnit.java`，它是由`com.example.hans_antlr4.bytecode_gen.BytecodeGenerator`稍作修改而来。
+
+```java
+@Data
+@AllArgsConstructor
+public class CompilationUnit implements Opcodes {
+    private Queue<Instruction> instructionsQueue;
+
+    public byte[] generateBytecode(String name) {
+        ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
+        // version, access, name, signature, base class, interfaces
+        cw.visit(52, ACC_PUBLIC + ACC_SUPER, name, null, "java/lang/Object", null);
+        {
+            // declare static void main
+            mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
+            final long localVariablesCount = instructionsQueue.stream()
+                    .filter(instruction -> instruction instanceof VariableDeclaration)
+                    .count();
+            final int maxStack = 100; // TODO: do that properly
+
+            // apply instructions generated from traversing parse tree!
+            for (Instruction instruction : instructionsQueue) {
+                instruction.apply(mv);
+            }
+            mv.visitInsn(RETURN); // add return instruction
+
+            mv.visitMaxs(maxStack, (int) localVariablesCount); // set max stack and max local variables
+            mv.visitEnd();
+        }
+        cw.visitEnd();
+
+        return cw.toByteArray();
+    }
+}
+```
+
+最后稍微改下入口调用`Parser`的代码，把`parser.addParseListener(listener);`改为`tree.accept(compilationUnitVisitor)`即可：
+
+```java
+@Slf4j
+public class App {
+    // 其他函数省略
+    private static CompilationUnit parse(String fileAbsolutePath) throws IOException {
+        CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
+        HansAntlrLexer lexer = new HansAntlrLexer(charStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        HansAntlrParser parser = new HansAntlrParser(tokens);
+
+        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
+        HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
+        parser.addErrorListener(errorListener);
+
+        ParseTree tree = parser.compilationUnit();
+        CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
+        String treeString = tree.toStringTree(parser);
+        System.out.println(treeString);
+        return compilationUnit;
     }
 }
 ```
