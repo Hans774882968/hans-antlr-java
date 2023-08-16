@@ -9,12 +9,17 @@ import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class PrintStatementGenerator implements Opcodes {
-    public void generate(MethodVisitor mv, PrintStatement printStatement, Scope scope) {
-        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv);
+    private Scope scope;
+
+    public void generate(MethodVisitor mv, PrintStatement printStatement) {
+        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, scope);
         Expression expression = printStatement.getExpression();
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
-        expressionGenerator.generate(expression, scope);
+        expression.accept(expressionGenerator);
         Type type = expression.getType();
         String descriptor = "(" + type.getDescriptor() + ")V"; // such as "(Ljava/lang/String;)V"
         ClassType owner = new ClassType("java.io.PrintStream");

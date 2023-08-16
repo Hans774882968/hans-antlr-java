@@ -11,6 +11,8 @@ TODO
 1. antlr4的使用
 2. `ASM`的使用和JVM字节码指令
 
+为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。
+
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
 环境：
@@ -836,7 +838,7 @@ public class CodeRunner {
 }
 ```
 
-## Part4~6：改用 Visitor 模式
+## Part4~6：1-改用 Visitor 模式
 
 antlr提供了Listener和Visitor两种模式使得我们能方便地遍历AST，以提取代码文本中的信息。为什么这里我们需要把代码改造成Visitor模式呢？
 
@@ -1023,6 +1025,205 @@ public class App {
     }
 }
 ```
+
+## Part4~7：2-语法规则新增`expression`，为实现表达式功能做准备
+
+TODO
+
+语法规则新增`expression`，为实现表达式功能做准备；新增作用域管理类`Scope`。本节需要引入大量的类，主要集中在`domain`文件夹。我们先看下文件夹的结构：
+
+```
+SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
+│  App.java：项目入口
+│  CodeRunner.java：负责直接在内存运行刚刚生成的类
+│
+├─bytecode_gen
+│      CompilationUnit.java：字节码生成的入口文件
+│      ExpressionGenerator.java：含若干 generate(Expression expression) 方法，负责生成表达式的字节码
+│      PrintStatementGenerator.java：负责生成 print 语句的字节码
+│      StatementGenerator.java：分发到具体的语句类型，如 PrintStatementGenerator
+│      VariableDeclarationStatementGenerator.java：负责生成变量定义语句的字节码
+│
+├─domain：domain文件夹下的类，主要是用于沟通 visitors 和 bytecodeGenerators
+│  ├─expression
+│  │      Addition.java：记录加法信息用于表达式生成。下一小节才会用到。
+│  │      ArithmeticExpression.java：Addition等具体算数运算类的基类。下一小节才会用到。
+│  │      Division.java：记录除法信息用于表达式生成。下一小节才会用到。
+│  │      Expression.java：所有表达式类，如 Value 、VarReference 、 ArithmeticExpression 的基类。
+│  │      Multiplication.java：记录乘法信息用于表达式生成。下一小节才会用到。
+│  │      Pow.java：记录乘方信息用于表达式生成。下一小节才会用到。
+│  │      Subtraction.java：记录减法信息用于表达式生成。下一小节才会用到。
+│  │      Value.java：记录常量信息。
+│  │      VarReference.java：记录变量引用信息。
+│  │
+│  ├─global
+│  │      MetaData.java：目前仅用于作用域类 Scope 的初始化。
+│  │
+│  ├─scope
+│  │      LocalVariable.java：记录局部变量信息。
+│  │      Scope.java：记录作用域信息。可以理解为之前的 Queue<Instruction> instructionsQueue 的封装。数据结构变更为 List<LocalVariable> localVariables 。
+│  │
+│  ├─statement
+│  │      PrintStatement.java：记录 print 语句的信息。目前只记录了待 print 的 expression 。
+│  │      Statement.java：用于记录语句信息。是其他语句类的基类。
+│  │      VariableDeclaration.java：记录变量定义语句的信息。目前只记录了变量名和变量初始值的表达式。
+│  │
+│  └─type
+│          BuiltInType.java
+│          ClassType.java
+│          Type.java：用于记录类型信息。是其他类型类的基类。
+│
+├─exception：自定义异常类
+│      LocalVariableNotFoundException.java
+│      UnsupportedArithmeticOperationException.java
+│
+├─parsing
+│  │  HansAntlr.g：语法规则。下面其他的文件都是由 antlr.jar 工具生成，不需要改动。主要逻辑都在 biz_visitor 文件夹下。
+│  │  HansAntlr.interp
+│  │  HansAntlr.tokens
+│  │  HansAntlrBaseVisitor.java
+│  │  HansAntlrErrorListener.java
+│  │  HansAntlrLexer.interp
+│  │  HansAntlrLexer.java
+│  │  HansAntlrLexer.tokens
+│  │  HansAntlrParser.java
+│  │  HansAntlrVisitor.java
+│  │
+│  └─biz_visitor
+│          CompilationUnitVisitor.java：visitor的入口。
+│          ExpressionVisitor.java：遍历至表达式子树时记录信息。
+│          StatementVisitor.java：遍历至语句子树时记录信息。如变量定义语句、 print 语句。
+│
+├─utils
+│      TypeResolver.java：目前只有一个方法 public static Type TypeResolver.getFromValue(String value) ，仅在 ExpressionVisitor.visitValue 用到，用于提取常量的类型信息。
+│
+└─validation
+        ARGUMENT_ERRORS.java：用于入口，解析命令行参数。
+```
+
+## Part8：1-支持算数运算
+
+1. 给`Expression`添加`accept`抽象方法来调用`ExpressionGenerator`下的某个`generate`方法，于是`public void generate(Expression expression, Scope scope)`可以删除。
+2. `ExpressionGenerator`、`PrintStatementGenerator`、`StatementGenerator`、`VariableDeclarationStatementGenerator`添加成员`private Scope scope;`，在调用构造函数时就获得`scope`，这样它们各个方法就不需要额外传入`scope`了。
+
+### 支持乘方`**`运算
+
+语法规则修改：
+
+```g4
+expression:
+	variableReference						# VarReference
+	| value									# ValueExpr
+	| '(' expression '**' expression ')'	# POW
+	| expression '**' expression			# POW
+	| '(' expression '*' expression ')'		# MULTIPLY
+	| expression '*' expression				# MULTIPLY
+	| '(' expression '/' expression ')'		# DIVIDE
+	| expression '/' expression				# DIVIDE
+	| '(' expression '+' expression ')'		# ADD
+	| expression '+' expression				# ADD
+	| '(' expression '-' expression ')'		# SUBTRACT
+	| expression '-' expression				# SUBTRACT;
+variableReference: ID;
+```
+
+对`ExpressionVisitor`的改动和加减乘除一样：
+
+```java
+    @Override
+    public Pow visitPOW(HansAntlrParser.POWContext ctx) {
+        ExpressionContext leftExpressionContext = ctx.expression(0);
+        ExpressionContext rightExpressionContext = ctx.expression(1);
+        Expression leftExpression = leftExpressionContext.accept(this);
+        Expression rightExpression = rightExpressionContext.accept(this);
+        return new Pow(leftExpression, rightExpression);
+    }
+```
+
+新增的`Pow`类也和加减乘除的一样：
+
+```java
+public class Pow extends ArithmeticExpression {
+    public Pow(Expression leftExpression, Expression rightExpression) {
+        super(leftExpression.getType(), leftExpression, rightExpression);
+    }
+
+    @Override
+    public void accept(ExpressionGenerator generator) {
+        generator.generate(this);
+    }
+}
+```
+
+字节码生成是支持乘方运算符的难点，我们打算先研究字节码再。我们写一段Java代码：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        int x = 114514;
+        int v = (int) Math.pow(x - 114514 + 1 * 2, x - 114514 + 1 * 3) + (x - 114512);
+        System.out.println(v);
+    }
+}
+```
+
+并执行`javap -v xx.class`查看相关的字节码：
+
+```
+20: iload_1
+21: ldc           #16                 // int 114514
+23: isub
+24: iconst_2
+25: iadd
+// 生成好 expression 的字节码后，需要生成 i2d 语句强转为 double
+26: i2d
+27: iload_1
+28: ldc           #16                 // int 114514
+30: isub
+31: iconst_3
+32: iadd
+33: i2d
+// 两个参数都准备好后即可生成 Math.pow 的调用语句
+34: invokestatic  #34                 // Method java/lang/Math.pow:(DD)D       
+// 因为目前 hant 语言只支持整型，所以需要强转回 int
+37: d2i
+38: iload_1
+39: ldc           #40                 // int 114512
+41: isub
+42: iadd
+43: istore_3
+44: getstatic     #17                 // Field java/lang/System.out:Ljava/io/PrintStream;
+47: iload_3
+48: invokevirtual #23                 // Method java/io/PrintStream.println:(I)V
+51: return
+```
+
+要点：
+1. 生成好`expression`的字节码后，需要生成`i2d`语句强转为`double`
+2. 两个参数都准备好后即可生成`Math.pow`的调用语句`invokestatic`
+3. 因为目前 hant 语言只支持整型，所以需要生成`d2i`语句强转回`int`
+
+于是可以写出其`generate(Pow expression)`方法：
+
+```java
+    public void generate(Pow expression) {
+        Expression leftExpression = expression.getLeftExpression();
+        Expression rightExpression = expression.getRightExpression();
+        leftExpression.accept(this);
+        mv.visitInsn(I2D);
+        rightExpression.accept(this);
+        mv.visitInsn(I2D);
+        ClassType owner = new ClassType("java.lang.Math");
+        String fieldDescriptor = owner.getInternalName(); // "java/lang/Math"
+        String descriptor = "(DD)D";
+        mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
+        mv.visitInsn(D2I);
+    }
+```
+
+## Part8：2-如何编写`bytecode_gen`下代码的单测
+
+`Mockito`。
 
 ## 参考资料
 

@@ -11,21 +11,26 @@ import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 public class StatementGenerator {
     private MethodVisitor mv;
     private ExpressionGenerator expressionGenerator;
+    private Scope scope;
 
-    public StatementGenerator(MethodVisitor mv) {
+    public StatementGenerator(MethodVisitor mv, Scope scope) {
         this.mv = mv;
-        expressionGenerator = new ExpressionGenerator(mv);
+        expressionGenerator = new ExpressionGenerator(mv, scope);
+        this.scope = scope;
     }
 
-    public void generate(Statement expression, Scope scope) {
+    // TODO: 改成不同签名的方法
+    public void generate(Statement expression) {
         if (expression instanceof PrintStatement) {
             PrintStatement printStatement = (PrintStatement) expression;
-            new PrintStatementGenerator().generate(mv, printStatement, scope);
-        } else if (expression instanceof VariableDeclaration) {
+            new PrintStatementGenerator(scope).generate(mv, printStatement);
+        }
+        if (expression instanceof VariableDeclaration) {
             VariableDeclaration variableDeclaration = (VariableDeclaration) expression;
-            new VariableDeclarationStatementGenerator().generate(mv, variableDeclaration, scope);
-        } else if (expression instanceof Expression) {
-            expressionGenerator.generate((Expression) expression, scope);
+            new VariableDeclarationStatementGenerator(mv, scope).generate(variableDeclaration);
+        }
+        if (expression instanceof Expression) {
+            ((Expression) expression).accept(expressionGenerator);
         }
     }
 }

@@ -27,10 +27,10 @@ public class CompilationUnit implements Opcodes {
             // declare static void main
             mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
 
-            StatementGenerator statementGenerator = new StatementGenerator(mv);
+            StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
             // apply instructions generated from traversing parse tree!
             for (Statement instruction : instructionsQueue) {
-                statementGenerator.generate(instruction, scope);
+                statementGenerator.generate(instruction);
             }
             mv.visitInsn(RETURN); // add return instruction
 

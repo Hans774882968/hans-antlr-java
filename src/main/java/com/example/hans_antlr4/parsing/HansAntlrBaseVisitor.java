@@ -102,7 +102,7 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
-	public T visitSUBSTRACT(HansAntlrParser.SUBSTRACTContext ctx) {
+	public T visitPOW(HansAntlrParser.POWContext ctx) {
 		return visitChildren(ctx);
 	}
 
@@ -116,6 +116,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitMULTIPLY(HansAntlrParser.MULTIPLYContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitSUBTRACT(HansAntlrParser.SUBTRACTContext ctx) {
 		return visitChildren(ctx);
 	}
 

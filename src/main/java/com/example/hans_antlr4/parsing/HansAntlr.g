@@ -12,16 +12,18 @@ variable: VARIABLE ID EQUALS expression;
 // requires VAR token followed by ID token followed by EQUALS TOKEN ...
 
 expression:
-	variableReference					# VarReference
-	| value								# ValueExpr
-	| '(' expression '*' expression ')'	# MULTIPLY
-	| expression '*' expression			# MULTIPLY
-	| '(' expression '/' expression ')'	# DIVIDE
-	| expression '/' expression			# DIVIDE
-	| '(' expression '+' expression ')'	# ADD
-	| expression '+' expression			# ADD
-	| '(' expression '-' expression ')'	# SUBSTRACT
-	| expression '-' expression			# SUBSTRACT;
+	variableReference						# VarReference
+	| value									# ValueExpr
+	| '(' expression '**' expression ')'	# POW
+	| expression '**' expression			# POW
+	| '(' expression '*' expression ')'		# MULTIPLY
+	| expression '*' expression				# MULTIPLY
+	| '(' expression '/' expression ')'		# DIVIDE
+	| expression '/' expression				# DIVIDE
+	| '(' expression '+' expression ')'		# ADD
+	| expression '+' expression				# ADD
+	| '(' expression '-' expression ')'		# SUBTRACT
+	| expression '-' expression				# SUBTRACT;
 variableReference: ID;
 
 print:

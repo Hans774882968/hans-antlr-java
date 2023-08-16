@@ -3,6 +3,8 @@ package com.example.hans_antlr4.parsing.biz_visitor;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
@@ -15,11 +17,11 @@ import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-// import lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode(callSuper = false)
 @Data
-// @Slf4j
+@Slf4j
 public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
     private Scope scope;
     private Queue<Statement> instructionsQueue = new ArrayDeque<>();
@@ -31,7 +33,8 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
     @Override
     public VariableDeclaration visitVariable(HansAntlrParser.VariableContext ctx) {
-        final String varName = ctx.ID().getText();
+        final TerminalNode varTerminalNode = ctx.ID();
+        final String varName = varTerminalNode.getText();
         final ExpressionContext expressionContext = ctx.expression();
         final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
         Expression expression = expressionContext.accept(expressionVisitor);
@@ -39,6 +42,8 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         scope.addLocalVariable(new LocalVariable(varName, expression.getType()));
         VariableDeclaration variableDeclaration = new VariableDeclaration(varName, expression);
         instructionsQueue.add(variableDeclaration);
+
+        logVariableDeclarationStatementFound(varTerminalNode, expression);
 
         return variableDeclaration;
     }
@@ -53,15 +58,9 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         return printStatement;
     }
 
-    // private void logVariableDeclarationStatementFound(TerminalNode varName, Variable variable) {
-    // final int line = varName.getSymbol().getLine();
-    // log.info("OK: Define variable '{}' with type '{}' and value '{}' at line {}",
-    // variable.getName(), variable.getVarType(), variable.getVarTextValue(), line);
-    // }
-
-    // private void logPrintStatementFound(TerminalNode varName, Variable variable) {
-    // final int line = varName.getSymbol().getLine();
-    // final String format = "OK: You instructed to print variable '{}' which has type '{}' value of '{}' at line {}";
-    // log.info(format, variable.getVarIndex(), variable.getVarType(), variable.getVarTextValue(), line);
-    // }
+    private void logVariableDeclarationStatementFound(TerminalNode varTerminalNode, Expression expression) {
+        final int line = varTerminalNode.getSymbol().getLine();
+        log.info("OK: Define variable '{}' with type '{}' at line {}",
+                varTerminalNode.getText(), expression.getType(), line);
+    }
 }

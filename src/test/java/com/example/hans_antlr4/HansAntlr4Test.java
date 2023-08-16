@@ -14,8 +14,8 @@ import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
 
 public class HansAntlr4Test {
     @Test
-    public void var_and_print_test() {
-        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x = 5\r\n" + //
+    public void varAndPrintTest() {
+        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x = 5\r\n" +
                 "print x\r\n" +
                 "var str = \"hello world\"\r\n" +
                 "print str\n" +
@@ -37,5 +37,24 @@ public class HansAntlr4Test {
                 treeString);
 
         Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());
+    }
+
+    @Test
+    public void expressionTest() {
+        HansAntlrLexer lexer = new HansAntlrLexer(
+                CharStreams.fromString("var x = 2 ** 3 * 3 ** 2 + 2 ** 3\r\n" + "print x\r\n"));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        HansAntlrParser parser = new HansAntlrParser(tokens);
+
+        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
+        HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
+        parser.addErrorListener(errorListener);
+
+        ParseTree tree = parser.compilationUnit();
+        tree.accept(compilationUnitVisitor);
+        String treeString = tree.toStringTree(parser);
+        Assert.assertEquals(
+                "(compilationUnit (statements (variable var x = (expression (expression (expression (expression (value 2)) ** (expression (value 3))) * (expression (expression (value 3)) ** (expression (value 2)))) + (expression (expression (value 2)) ** (expression (value 3))))) (print print (expression (variableReference x)))) <EOF>)",
+                treeString);
     }
 }

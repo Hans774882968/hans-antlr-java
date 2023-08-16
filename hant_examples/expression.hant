@@ -1,0 +1,22 @@
+var x0 = 1 + 2 * 3
+print x0
+var x1 = (1 + 2) * 3
+print x1
+print x0 * x1
+var x2 = 1 + 1
+print 3 / x2
+print (4 / (x2 + 1))
+var x3 = 40 + 30 * 20 + 10
+print x3
+var x4 = (40 + 30) * (20 + 10)
+print x4
+
+print "----- power examples -----"
+var x5 = 2 * 4 ** 3 - 16 / 2
+print x5
+var x6 = (2 * 4) ** 3 - 16 / 2 ** 3
+print x6
+var x7 = 2 ** 3 * 3 ** 2
+print x7
+var x8 = 2 ** 3 * 3 ** 2 + 2 ** 3
+print(x8 + 0)

@@ -71,14 +71,14 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitVarReference(HansAntlrParser.VarReferenceContext ctx);
 
 	/**
-	 * Visit a parse tree produced by the {@code SUBSTRACT}
+	 * Visit a parse tree produced by the {@code POW}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
 	 * @param ctx
 	 *            the parse tree
 	 * @return the visitor result
 	 */
-	T visitSUBSTRACT(HansAntlrParser.SUBSTRACTContext ctx);
+	T visitPOW(HansAntlrParser.POWContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code MULTIPLY}
@@ -89,6 +89,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMULTIPLY(HansAntlrParser.MULTIPLYContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code SUBTRACT}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitSUBTRACT(HansAntlrParser.SUBTRACTContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code DIVIDE}
