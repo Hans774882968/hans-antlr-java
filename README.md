@@ -587,7 +587,7 @@ public class BytecodeGenerator implements Opcodes {
             final long localVariablesCount = instructionQueue.stream()
                     .filter(instruction -> instruction instanceof VariableDeclaration)
                     .count();
-            final int maxStack = 100; // TODO: do that properly
+            final int maxStack = 100;
 
             // apply instructions generated from traversing parse tree!
             for (Instruction instruction : instructionQueue) {
@@ -983,7 +983,7 @@ public class CompilationUnit implements Opcodes {
             final long localVariablesCount = instructionsQueue.stream()
                     .filter(instruction -> instruction instanceof VariableDeclaration)
                     .count();
-            final int maxStack = 100; // TODO: do that properly
+            final int maxStack = 100;
 
             // apply instructions generated from traversing parse tree!
             for (Instruction instruction : instructionsQueue) {
@@ -1061,7 +1061,7 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
 │  │
 │  ├─scope
 │  │      LocalVariable.java：记录局部变量信息。
-│  │      Scope.java：记录作用域信息。可以理解为之前的 Queue<Instruction> instructionsQueue 的封装。数据结构变更为 List<LocalVariable> localVariables 。
+│  │      Scope.java：记录作用域信息。可以理解为之前的 Queue<Instruction> instructionsQueue 的封装。数据结构变更为 List<LocalVariable> localVariables 。值得注意的是，作用域数据结构的维护，即添加局部变量的操作，延迟到了字节码生成阶段。
 │  │
 │  ├─statement
 │  │      PrintStatement.java：记录 print 语句的信息。目前只记录了待 print 的 expression 。
@@ -1221,11 +1221,79 @@ public class TestLookAtBytecode {
     }
 ```
 
-## Part8：2-如何编写`bytecode_gen`下代码的单测
+## Part8：2-编写`bytecode_gen`下代码单测的解决方案：`Mockito`
 
-`Mockito`。
+`bytecode_gen`文件夹下代码的测试用例需要通过确认函数的调用次数符合预期，来间接保证生成的字节码正确。因此我们需要一个Mock框架，经过简单搜索我选择了`Mockito`。添加`Mockito`依赖：
+
+```xml
+<dependency>
+    <groupId>org.mockito</groupId>
+    <artifactId>mockito-all</artifactId>
+    <version>2.0.2-beta</version>
+</dependency>
+```
+
+顺便把`junit`升级到最新，以解决GitHub指出的安全漏洞：
+
+```xml
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.13.2</version>
+    <scope>test</scope>
+</dependency>
+```
+
+用法（[参考链接3](https://blog.csdn.net/shangboerds/article/details/99611079)）：
+
+1. `MethodVisitor mv = mock(MethodVisitor.class);`：规避对象初始化过程所依赖的环境，快速获得对象。
+2. `verify(mv, times(0)).visitLdcInsn(anyString());`：格式为：`verify(对象, times(方法的期望调用次数)).对象的方法(参数规则，如 anyString() 或 eq("foo"))`。值得注意的是，`verify`返回的对象不可以保存到变量里再进行多次调用，否则测试结果不符合预期。
+
+测试用例`src\test\java\com\example\hans_antlr4\HansAntlr4Test.java`示例：
+
+```java
+public class HansAntlr4Test {
+    // ...
+    @Test
+    public void variableDeclarationStatementGeneratorTest1() {
+        MethodVisitor mv = mock(MethodVisitor.class);
+        Scope scope = mock(Scope.class);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        statementGenerator.generate(new VariableDeclaration("v0", new Value(BuiltInType.INT, "114514")));
+        verify(mv, times(1)).visitVarInsn(eq(Opcodes.ISTORE), anyInt());
+        verify(mv, times(0)).visitVarInsn(eq(Opcodes.ASTORE), anyInt());
+        verify(mv, times(1)).visitIntInsn(eq(Opcodes.SIPUSH), anyInt());
+        verify(mv, times(0)).visitLdcInsn(anyString());
+    }
+}
+```
+
+值得注意的是，`Mockito`依赖`cglib`实现hook，导致Java17报非法反射的错。对于VSCode的`Test Runner for Java`插件，可以通过在`.vscode\settings.json`设置`--add-opens`解决：
+
+```json
+{
+    "java.test.config": {
+        "vmArgs": [
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
+        ]
+    }
+}
+```
+
+但这个虚拟机参数似乎没办法传入`mvn.cmd`，设置`MAVEN_OPTS`环境变量也未生效，导致打包时无法通过单测。所以只好先在`.vscode\settings.json`设置跳过测试的虚拟机参数了：
+
+```json
+{
+    "maven.executable.options": "-DskipTests"
+}
+```
+
+TODO: 想办法把`--add-opens=java.base/java.lang=ALL-UNNAMED`传入`mvn.cmd`，从而可以恢复打包命令的单测。
+
+另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们补充了`src\main\java\com\example\hans_antlr4\domain\expression\ArithmeticExpression.java`等4个继承`Expression`的类和`src\main\java\com\example\hans_antlr4\domain\statement\VariableDeclaration.java`的`equals`、`hashCode`方法。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改。
 
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html
 2. Creating JVM language中文翻译：https://juejin.cn/post/6844903671679942663
+3. `Mockito`：https://blog.csdn.net/shangboerds/article/details/99611079

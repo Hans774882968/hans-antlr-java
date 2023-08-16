@@ -20,3 +20,11 @@ var x7 = 2 ** 3 * 3 ** 2
 print x7
 var x8 = 2 ** 3 * 3 ** 2 + 2 ** 3
 print(x8 + 0)
+var x9 = 2 ** 3 ** 2 ** 2
+print x9
+var x10 = 3 ** 2 ** 2 ** 2
+print x10
+var x11 = 2 ** 2 ** 3
+print x11
+var x12 = 2 ** (2 ** 3)
+print x12

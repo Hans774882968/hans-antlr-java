@@ -2,9 +2,10 @@ package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.domain.expression.Expression;
 
-import lombok.Data;
+import lombok.Getter;
+import java.util.Objects;
 
-@Data
+@Getter
 public class VariableDeclaration implements Statement {
     private String name;
     private Expression expression;
@@ -12,5 +13,22 @@ public class VariableDeclaration implements Statement {
     public VariableDeclaration(String name, Expression expression) {
         this.name = name;
         this.expression = expression;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof VariableDeclaration)) {
+            return false;
+        }
+        VariableDeclaration variableDeclaration = (VariableDeclaration) o;
+        return Objects.equals(name, variableDeclaration.name)
+                && Objects.equals(expression, variableDeclaration.expression);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, expression);
     }
 }
