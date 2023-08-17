@@ -47,7 +47,13 @@ public class ExpressionGenerator implements Opcodes {
         String stringValue = value.getValue();
         if (type == BuiltInType.INT) {
             int intValue = Integer.parseInt(stringValue);
-            mv.visitIntInsn(SIPUSH, intValue);
+            if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
+                mv.visitIntInsn(BIPUSH, intValue);
+            } else if (Short.MIN_VALUE <= intValue && intValue <= Short.MAX_VALUE) {
+                mv.visitIntInsn(SIPUSH, intValue);
+            } else {
+                mv.visitLdcInsn(intValue);
+            }
         }
         if (type == BuiltInType.STRING) {
             stringValue = StringUtils.removeStart(stringValue, "\"");

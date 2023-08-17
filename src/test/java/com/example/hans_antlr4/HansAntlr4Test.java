@@ -35,7 +35,7 @@ import com.example.hans_antlr4.parsing.biz_visitor.StatementVisitor;
 public class HansAntlr4Test {
     @Test
     public void varAndPrintTest() {
-        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x = 5\r\n" +
+        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x = 114514\r\n" +
                 "print x\r\n" +
                 "var str = \"hello world\"\r\n" +
                 "print str\n" +
@@ -53,7 +53,7 @@ public class HansAntlr4Test {
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);
         Assert.assertEquals(
-                "(compilationUnit (statements (variable var x = (expression (value 5))) (print print (expression (variableReference x))) (variable var str = (expression (value \"hello world\"))) (print print (expression (variableReference str))) (variable var str2 = (expression (value \"支持输入中文\"))) (print print (expression (variableReference str2)))) <EOF>)",
+                "(compilationUnit (statements (variable var x = (expression (value 114514))) (print print (expression (variableReference x))) (variable var str = (expression (value \"hello world\"))) (print print (expression (variableReference str))) (variable var str2 = (expression (value \"支持输入中文\"))) (print print (expression (variableReference str2)))) <EOF>)",
                 treeString);
 
         Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());
@@ -135,7 +135,7 @@ public class HansAntlr4Test {
         statementGenerator.generate(new VariableDeclaration("v0", new Value(BuiltInType.INT, "114514")));
         verify(mv, times(1)).visitVarInsn(eq(Opcodes.ISTORE), anyInt());
         verify(mv, times(0)).visitVarInsn(eq(Opcodes.ASTORE), anyInt());
-        verify(mv, times(1)).visitIntInsn(eq(Opcodes.SIPUSH), anyInt());
+        verify(mv, times(1)).visitLdcInsn(eq(114514));
         verify(mv, times(0)).visitLdcInsn(anyString());
     }
 
@@ -161,7 +161,7 @@ public class HansAntlr4Test {
                 .visitFieldInsn(anyInt(), anyString(), anyString(), anyString());
         verify(mv, times(1)).visitMethodInsn(
                 anyInt(), anyString(), eq("println"), anyString(), eq(false));
-        verify(mv, times(1)).visitIntInsn(anyInt(), anyInt());
+        verify(mv, times(1)).visitLdcInsn(eq(114514));
         verify(mv, times(0)).visitLdcInsn(anyString());
     }
 }

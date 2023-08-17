@@ -654,18 +654,43 @@ public class PrintVariable implements Instruction, Opcodes {
 
 `VariableDeclaration`：
 
-- visitInsn - 第一个参数是操作符，第二个是操作数
-- BIPUSH - 把一个`byte(integer)`入栈，同理`SIPUSH`把两个`byte(integer)`入栈
-- ISTORE - int 类型的值出栈，并存储到局部变量中，需要指定局部变量的索引
-- ASTORE - 和`ISTORE`功能类似，但是数据类型是索引
+- `visitIntInsn` - 第一个参数是操作符，第二个是操作数，操作数类型为`int`。
+- `BIPUSH` - 把一个`byte(integer)`入栈，同理`SIPUSH`把两个`byte(integer)`入栈。
+- `ISTORE` - int 类型的值出栈，并存储到局部变量中，需要指定局部变量的索引。
+- `ASTORE` - 和`ISTORE`功能类似，但是数据类型是索引。
+- `visitLdcInsn` - 支持添加常量，从参数来看可以扔`Object`进去，所以`String`和`int`常量肯定都是支持的。
 
 `PrintVariable`：
 
-- GETSTATIC - 从java.lang.System.out获得静态属性，类型是 java.io.PrintStream
-- ILOAD - 把局部变量入栈，id 是局部变量的索引
-- visitMethodInsn - 访问方法指令
-- INVOKEVIRTUAL - 触发实例方法（调用 out 的 print 方法，该方法接受一个参数为整数类型，返回为空）
-- ALOAD - 和 ILOAD 类似，但是数据类型是引用
+- `GETSTATIC` - 从`java.lang.System.out`获得静态属性，类型是`java.io.PrintStream`。
+- `ILOAD` - 把局部变量入栈，id 是局部变量的索引。
+- `visitMethodInsn` - 访问方法指令。
+- `INVOKEVIRTUAL` - 触发实例方法（调用 out 的 print 方法，该方法接受一个参数为整数类型，返回为空）。
+- `ALOAD` - 和`ILOAD`类似，但是数据类型是引用。
+
+值得注意的是，`mv.visitIntInsn(SIPUSH, val);`只能处理`Short`范围的数据。为了解决这个问题，我们可以根据数值范围来决定所生成的指令。核心代码如下：
+
+```java
+public void generate(Value value) {
+    Type type = value.getType();
+    String stringValue = value.getValue();
+    if (type == BuiltInType.INT) {
+        int intValue = Integer.parseInt(stringValue);
+        if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
+            mv.visitIntInsn(BIPUSH, intValue);
+        } else if (Short.MIN_VALUE <= intValue && intValue <= Short.MAX_VALUE) {
+            mv.visitIntInsn(SIPUSH, intValue);
+        } else {
+            mv.visitLdcInsn(intValue);
+        }
+    }
+    if (type == BuiltInType.STRING) {
+        stringValue = StringUtils.removeStart(stringValue, "\"");
+        stringValue = StringUtils.removeEnd(stringValue, "\"");
+        mv.visitLdcInsn(stringValue);
+    }
+}
+```
 
 我们准备一个`.hant`文件`hant_examples\hello.hant`：
 
