@@ -863,6 +863,37 @@ public class CodeRunner {
 }
 ```
 
+## Part3：5-支持中文标识符和注释
+
+有一个很重要的观念是，要积极从现有编程语言的antlr规则文件中取经。
+
+为了支持中文标识符，我选择了[TS的语法规则](https://github.com/antlr/grammars-v4/blob/master/javascript/typescript/TypeScriptLexer.g4)：
+
+```g
+Identifier: IdentifierStart IdentifierPart*;
+fragment IdentifierStart:
+	[\p{L}]
+	| [$_]
+	| '\\' UnicodeEscapeSequence;
+fragment UnicodeEscapeSequence:
+	'u' HexDigit HexDigit HexDigit HexDigit;
+fragment HexDigit: [0-9a-fA-F];
+fragment IdentifierPart:
+	IdentifierStart
+	| [\p{Mn}]
+	| [\p{Nd}]
+	| [\p{Pc}]
+	| '\u200C'
+	| '\u200D';
+```
+
+为了支持注释，我选择了[Java的语法规则](https://github.com/antlr/grammars-v4/blob/master/java/java9/Java9Lexer.g4)
+
+```g
+COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
+LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
+```
+
 ## Part4~6：1-改用 Visitor 模式
 
 antlr提供了Listener和Visitor两种模式使得我们能方便地遍历AST，以提取代码文本中的信息。为什么这里我们需要把代码改造成Visitor模式呢？

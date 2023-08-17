@@ -33,7 +33,7 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
     @Override
     public VariableDeclaration visitVariable(HansAntlrParser.VariableContext ctx) {
-        final TerminalNode varTerminalNode = ctx.ID();
+        final TerminalNode varTerminalNode = ctx.Identifier();
         final String varName = varTerminalNode.getText();
         final ExpressionContext expressionContext = ctx.expression();
         final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);

@@ -4,3 +4,13 @@ var str = "hello world"
 print str
 var str2 = "hello\n支持输出中文~"
 print str2
+// 支持单行注释
+var 中文变量名1 = 123
+print 中文变量名1
+print "// 这不是单行注释"
+/*
+支持块注释
+*/
+var 変数名2です = 中文变量名1 ** (中文变量名1 - 120)
+print 変数名2です
+print "/* 这不是块注释 */"

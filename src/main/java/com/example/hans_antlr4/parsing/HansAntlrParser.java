@@ -21,7 +21,7 @@ public class HansAntlrParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache = new PredictionContextCache();
 	public static final int T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, VARIABLE = 8,
 			PRINT = 9,
-			EQUALS = 10, NUMBER = 11, STRING = 12, ID = 13, WS = 14;
+			EQUALS = 10, NUMBER = 11, STRING = 12, Identifier = 13, WS = 14, COMMENT = 15, LINE_COMMENT = 16;
 	public static final int RULE_compilationUnit = 0, RULE_statements = 1, RULE_variable = 2, RULE_expression = 3,
 			RULE_variableReference = 4, RULE_print = 5, RULE_value = 6;
 
@@ -46,7 +46,7 @@ public class HansAntlrParser extends Parser {
 	private static String[] makeSymbolicNames() {
 		return new String[] {
 				null, null, null, null, null, null, null, null, "VARIABLE", "PRINT",
-				"EQUALS", "NUMBER", "STRING", "ID", "WS"
+				"EQUALS", "NUMBER", "STRING", "Identifier", "WS", "COMMENT", "LINE_COMMENT"
 		};
 	}
 
@@ -244,8 +244,8 @@ public class HansAntlrParser extends Parser {
 			return getToken(HansAntlrParser.VARIABLE, 0);
 		}
 
-		public TerminalNode ID() {
-			return getToken(HansAntlrParser.ID, 0);
+		public TerminalNode Identifier() {
+			return getToken(HansAntlrParser.Identifier, 0);
 		}
 
 		public TerminalNode EQUALS() {
@@ -283,7 +283,7 @@ public class HansAntlrParser extends Parser {
 				setState(24);
 				match(VARIABLE);
 				setState(25);
-				match(ID);
+				match(Identifier);
 				setState(26);
 				match(EQUALS);
 				setState(27);
@@ -680,8 +680,8 @@ public class HansAntlrParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class VariableReferenceContext extends ParserRuleContext {
-		public TerminalNode ID() {
-			return getToken(HansAntlrParser.ID, 0);
+		public TerminalNode Identifier() {
+			return getToken(HansAntlrParser.Identifier, 0);
 		}
 
 		public VariableReferenceContext(ParserRuleContext parent, int invokingState) {
@@ -709,7 +709,7 @@ public class HansAntlrParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 				setState(84);
-				match(ID);
+				match(Identifier);
 			}
 		} catch (RecognitionException re) {
 			_localctx.exception = re;
@@ -856,7 +856,7 @@ public class HansAntlrParser extends Parser {
 		return true;
 	}
 
-	public static final String _serializedATN = "\u0004\u0001\u000e^\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"
+	public static final String _serializedATN = "\u0004\u0001\u0010^\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"
 			+
 			"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002" +
 			"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0001\u0000\u0001\u0000\u0001" +

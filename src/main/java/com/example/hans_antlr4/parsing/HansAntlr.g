@@ -8,7 +8,7 @@ package com.example.hans_antlr4.parsing;
 compilationUnit: statements EOF;
 // root rule - our code consist consist only of variables and prints (see definition below)
 statements: (variable | print)*;
-variable: VARIABLE ID EQUALS expression;
+variable: VARIABLE Identifier EQUALS expression;
 // requires VAR token followed by ID token followed by EQUALS TOKEN ...
 
 expression:
@@ -24,7 +24,7 @@ expression:
 	| expression '+' expression				# ADD
 	| '(' expression '-' expression ')'		# SUBTRACT
 	| expression '-' expression				# SUBTRACT;
-variableReference: ID;
+variableReference: Identifier;
 
 print:
 	PRINT expression; // print statement must consist of 'print' keyword and ID
@@ -39,5 +39,24 @@ EQUALS: '='; // must be '='
 NUMBER: [0-9]+; // must consist only of digits
 // must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式
 STRING: '"' .*? '"';
-ID: [a-zA-Z0-9]+; // must be any alphanumeric value
+
+Identifier: IdentifierStart IdentifierPart*;
+fragment IdentifierStart:
+	[\p{L}]
+	| [$_]
+	| '\\' UnicodeEscapeSequence;
+fragment UnicodeEscapeSequence:
+	'u' HexDigit HexDigit HexDigit HexDigit;
+fragment HexDigit: [0-9a-fA-F];
+fragment IdentifierPart:
+	IdentifierStart
+	| [\p{Mn}]
+	| [\p{Nd}]
+	| [\p{Pc}]
+	| '\u200C'
+	| '\u200D';
+
 WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces
+// 支持注释
+COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
+LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
