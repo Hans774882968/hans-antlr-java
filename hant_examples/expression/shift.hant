@@ -1,0 +1,11 @@
+var v1 = 19 << 1
+print v1 // 38
+var v2 = 19 >> 1
+print v2 // 9
+var v3 = (0 - 19) >>> 1
+print v3 // Integer.MAX_VALUE - 9
+var v4 = (0 - 19) >> 1
+print v4 // -10
+var tmp = 19
+var v5 = tmp << 2 >> 4 << 2
+print v5 // 16

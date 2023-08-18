@@ -2,8 +2,8 @@ package com.example.hans_antlr4.domain.expression;
 
 import com.example.hans_antlr4.bytecode_gen.ExpressionGenerator;
 
-public class Subtraction extends Additive {
-    public Subtraction(Expression leftExpression, Expression rightExpression) {
+public class Xor extends ArithmeticExpression {
+    public Xor(Expression leftExpression, Expression rightExpression) {
         super(leftExpression.getType(), leftExpression, rightExpression);
     }
 

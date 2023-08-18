@@ -5,14 +5,21 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.domain.expression.Addition;
+import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.expression.Mod;
 import com.example.hans_antlr4.domain.expression.Multiplication;
+import com.example.hans_antlr4.domain.expression.Or;
 import com.example.hans_antlr4.domain.expression.Pow;
+import com.example.hans_antlr4.domain.expression.Shl;
+import com.example.hans_antlr4.domain.expression.Shr;
 import com.example.hans_antlr4.domain.expression.Subtraction;
+import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
+import com.example.hans_antlr4.domain.expression.Xor;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
@@ -94,6 +101,41 @@ public class ExpressionGenerator implements Opcodes {
         String descriptor = "(DD)D";
         mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
         mv.visitInsn(D2I);
+    }
+
+    public void generate(Mod expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(IREM);
+    }
+
+    public void generate(Shl expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(ISHL);
+    }
+
+    public void generate(Shr expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(ISHR);
+    }
+
+    public void generate(UnsignedShr expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(IUSHR);
+    }
+
+    public void generate(And expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(IAND);
+    }
+
+    public void generate(Xor expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(IXOR);
+    }
+
+    public void generate(Or expression) {
+        evaluateArithmeticComponents(expression);
+        mv.visitInsn(IOR);
     }
 
     // 递归，直到走到 generate(VarReference varReference) or generate(Value value)

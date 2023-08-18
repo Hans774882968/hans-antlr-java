@@ -39,6 +39,7 @@ build/
 bin/
 gen/
 hant_examples/*.class
+hant_examples/**/*.class
 
 ### MAC ###
 .DS_Store

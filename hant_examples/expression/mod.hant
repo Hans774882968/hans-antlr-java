@@ -1,0 +1,9 @@
+var mod = 10001
+var v1 = 10000 ** 2 % mod
+print v1 // 1
+var v2 = 100 * 100 % mod * 100 % mod
+print v2 // 9901
+var v3 = 100 * 100 % mod * 100 % mod * 100 % mod
+print v3 // 1
+var v4 = 100 * 100 % mod * 100 % mod * 100 % mod * 100 % mod
+print v4 // 100

@@ -76,7 +76,7 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
-	public T visitADD(HansAntlrParser.ADDContext ctx) {
+	public T visitSHIFT(HansAntlrParser.SHIFTContext ctx) {
 		return visitChildren(ctx);
 	}
 
@@ -102,6 +102,58 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitOR(HansAntlrParser.ORContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitMULTIPLICATIVE(HansAntlrParser.MULTIPLICATIVEContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitAND(HansAntlrParser.ANDContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitPOW(HansAntlrParser.POWContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -115,33 +167,7 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
-	public T visitMULTIPLY(HansAntlrParser.MULTIPLYContext ctx) {
-		return visitChildren(ctx);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.
-	 * </p>
-	 */
-	@Override
-	public T visitSUBTRACT(HansAntlrParser.SUBTRACTContext ctx) {
-		return visitChildren(ctx);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.
-	 * </p>
-	 */
-	@Override
-	public T visitDIVIDE(HansAntlrParser.DIVIDEContext ctx) {
+	public T visitXOR(HansAntlrParser.XORContext ctx) {
 		return visitChildren(ctx);
 	}
 

@@ -12,18 +12,22 @@ variable: VARIABLE Identifier EQUALS expression;
 // requires VAR token followed by ID token followed by EQUALS TOKEN ...
 
 expression:
-	variableReference						# VarReference
-	| value									# ValueExpr
-	| '(' expression '**' expression ')'	# POW
-	| expression '**' expression			# POW
-	| '(' expression '*' expression ')'		# MULTIPLY
-	| expression '*' expression				# MULTIPLY
-	| '(' expression '/' expression ')'		# DIVIDE
-	| expression '/' expression				# DIVIDE
-	| '(' expression '+' expression ')'		# ADD
-	| expression '+' expression				# ADD
-	| '(' expression '-' expression ')'		# SUBTRACT
-	| expression '-' expression				# SUBTRACT;
+	variableReference								# VarReference
+	| value											# ValueExpr
+	| '(' expression POW expression ')'				# POW
+	| expression POW expression						# POW
+	| '(' expression MULTIPLICATIVE expression ')'	# MULTIPLICATIVE
+	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
+	| '(' expression ADDITIVE expression ')'		# ADDITIVE
+	| expression ADDITIVE expression				# ADDITIVE
+	| '(' expression SHIFT expression ')'			# SHIFT
+	| expression SHIFT expression					# SHIFT
+	| '(' expression AND expression ')'				# AND
+	| expression AND expression						# AND
+	| '(' expression XOR expression ')'				# XOR
+	| expression XOR expression						# XOR
+	| '(' expression OR expression ')'				# OR
+	| expression OR expression						# OR;
 variableReference: Identifier;
 
 print:
@@ -32,7 +36,14 @@ value:
 	op = NUMBER
 	| op = STRING; // must be NUMBER or STRING value (defined below)
 
-// TOKENS
+// hant TOKENS
+POW: '**';
+MULTIPLICATIVE: '*' | '/' | '%';
+ADDITIVE: '+' | '-';
+SHIFT: '<<' | '>>' | '>>>';
+AND: '&';
+XOR: '^';
+OR: '|';
 VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
 PRINT: 'print';
 EQUALS: '='; // must be '='
