@@ -44,6 +44,7 @@ SHIFT: '<<' | '>>' | '>>>';
 AND: '&';
 XOR: '^';
 OR: '|';
+
 VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
 PRINT: 'print';
 EQUALS: '='; // must be '='

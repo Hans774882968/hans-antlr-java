@@ -4,7 +4,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.domain.expression.Expression;
-import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
@@ -33,7 +32,5 @@ public class VariableDeclarationStatementGenerator implements Opcodes {
         } else {
             mv.visitVarInsn(ASTORE, index);
         }
-
-        scope.addLocalVariable(new LocalVariable(varName, expression.getType()));
     }
 }

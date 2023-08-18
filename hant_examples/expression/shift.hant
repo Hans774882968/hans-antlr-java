@@ -9,3 +9,5 @@ print v4 // -10
 var tmp = 19
 var v5 = tmp << 2 >> 4 << 2
 print v5 // 16
+var v6 = 3 << 4 >>> 5 - 6 + 2 >> 9 - 8
+print v6 // 12

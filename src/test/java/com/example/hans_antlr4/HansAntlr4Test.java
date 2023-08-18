@@ -20,7 +20,6 @@ import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Multiplication;
 import com.example.hans_antlr4.domain.expression.Pow;
 import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.global.MetaData;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
@@ -30,7 +29,6 @@ import com.example.hans_antlr4.parsing.HansAntlrErrorListener;
 import com.example.hans_antlr4.parsing.HansAntlrLexer;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
-import com.example.hans_antlr4.parsing.biz_visitor.StatementVisitor;
 
 public class HansAntlr4Test {
     @Test
@@ -39,7 +37,7 @@ public class HansAntlr4Test {
                 "print x\r\n" +
                 "var str = \"hello world\"\r\n" +
                 "print str\n" +
-                "var str2 = \"支持输入中文\"" +
+                "var str2 = \"支持输入中文\"\n" +
                 "print str2"));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);
@@ -57,6 +55,21 @@ public class HansAntlr4Test {
                 treeString);
 
         Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());
+    }
+
+    @Test
+    public void unicodeVarNameAndComments() {
+        Statement statement = TestUtils.getFirstStatementFromCode("var 変数名2です /* 这是一个注释 */ = \"// 这不是注释\"");
+
+        VariableDeclaration variableDeclaration = new VariableDeclaration("変数名2です",
+                new Value(BuiltInType.STRING, "\"// 这不是注释\""));
+        Assert.assertEquals(variableDeclaration, statement);
+
+        MethodVisitor mv = mock(MethodVisitor.class);
+        Scope scope = mock(Scope.class);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        statementGenerator.generate(statement);
+        verify(mv, times(1)).visitVarInsn(eq(Opcodes.ASTORE), eq(0));
     }
 
     @Test
@@ -92,38 +105,24 @@ public class HansAntlr4Test {
     @Test
     public void powerExpressionBuildTreeTest1() {
         // 验证乘方运算符的左结合
-        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x11 = 2 ** 2 ** 3"));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        HansAntlrParser parser = new HansAntlrParser(tokens);
-        ParseTree tree = parser.compilationUnit();
-        StatementVisitor statementVisitor = new StatementVisitor(new Scope(new MetaData(null)));
-        tree.accept(statementVisitor);
-
         Expression expression = new Pow(
                 new Pow(new Value(BuiltInType.INT, "2"), new Value(BuiltInType.INT, "2")),
                 new Value(BuiltInType.INT, "3"));
         VariableDeclaration variableDeclaration = new VariableDeclaration("x11", expression);
 
-        Statement firstStatement = statementVisitor.getInstructionsQueue().peek();
+        Statement firstStatement = TestUtils.getFirstStatementFromCode("var x11 = 2 ** 2 ** 3");
         Assert.assertEquals(variableDeclaration, firstStatement);
     }
 
     @Test
     public void powerExpressionBuildTreeTest2() {
         // powerExpressionBuildTreeTest1 的对照组
-        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x12 = 2 ** (2 ** 3)"));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        HansAntlrParser parser = new HansAntlrParser(tokens);
-        ParseTree tree = parser.compilationUnit();
-        StatementVisitor statementVisitor = new StatementVisitor(new Scope(new MetaData(null)));
-        tree.accept(statementVisitor);
-
         Expression expression = new Pow(
                 new Value(BuiltInType.INT, "2"),
                 new Pow(new Value(BuiltInType.INT, "2"), new Value(BuiltInType.INT, "3")));
         VariableDeclaration variableDeclaration = new VariableDeclaration("x12", expression);
 
-        Statement firstStatement = statementVisitor.getInstructionsQueue().peek();
+        Statement firstStatement = TestUtils.getFirstStatementFromCode("var x12 = 2 ** (2 ** 3)");
         Assert.assertEquals(variableDeclaration, firstStatement);
     }
 

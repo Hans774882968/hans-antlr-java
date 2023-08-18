@@ -4,14 +4,15 @@
 
 ## 引言
 
-TODO
-
 近几天我看到一个项目叫[Creating JVM language](https://juejin.cn/post/6844903671679942663)，目标是开发一门编译到JVM字节码的语言。在此我打算跟着这个项目做一遍，以学习：
 
-1. antlr4的使用
-2. `ASM`的使用和JVM字节码指令
+1. 使用antlr4生成Lexer和Parser的代码。
+2. 使用`ASM`，并熟悉大量JVM字节码指令。
+3. 使用`JUnit + Mockito`保证项目质量。
 
-为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。
+为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。另外，我修复了原作者项目的一些问题，在此列举：
+
+1. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。见本文《Part8：1-支持算数运算》一节。
 
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
@@ -1084,9 +1085,16 @@ public class App {
 
 ## Part4~7：2-语法规则新增`expression`，为实现表达式功能做准备
 
-TODO
+本节改动对应原作者的[这个commit](https://github.com/JakubDziworski/Enkel-JVM-language/commit/433179bfbf67e65b7d9dc19d74b244df546ad333)。原作者博客的有效信息十分少，只有直接阅读上述commit的代码才能明白为什么需要做这些改造。
 
-语法规则新增`expression`，为实现表达式功能做准备；新增作用域管理类`Scope`。本节需要引入大量的类，主要集中在`domain`文件夹。我们先看下文件夹的结构：
+为什么要做这些改造？我的理解如下：整个项目原本只需要一部分：在`visitor`中写完所有代码。但这样做很快项目就会失控。于是我们会拆为两部分：`visitor + utils`。这依旧不能解决visitor各个函数代码较为松散、受束缚的痛点。所以我们决定拆为三部分：`visitor + bytecode_gen + utils`。visitor部分负责提取AST中的数据，比如作用域。如果某个数据结构组织成树的形式，比如解析表达式的表达式树，那么可以认为我们提取了更为精炼的AST，有助于字节码生成阶段。`bytecode_gen`部分则专注于字节码生成。本节改动引入的`domain`文件夹就是visitor和`bytecode_gen`部分沟通的语言。总而言之，“分层”是保证项目质量的一种有效手段。
+
+本节主要工作：
+
+1. 给语法规则新增了`expression`的产生式，为实现表达式功能做准备。
+2. 新增作用域管理类`Scope`。
+
+本节需要引入大量的类，用于沟通visitor部分和`bytecode_gen`部分，新增的类主要集中在`domain`文件夹。因为时间紧迫、改动过大，在此我仅给出[commit传送门](https://github.com/Hans774882968/hans-antlr-java/commit/425c4eddd27fa80b3a5fc870a0ac08a892687f7e)，并简单介绍一下文件夹的结构和相关文件的作用：
 
 ```
 SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
@@ -1117,7 +1125,7 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
 │  │
 │  ├─scope
 │  │      LocalVariable.java：记录局部变量信息。
-│  │      Scope.java：记录作用域信息。可以理解为之前的 Queue<Instruction> instructionsQueue 的封装。数据结构变更为 List<LocalVariable> localVariables 。值得注意的是，作用域数据结构的维护，即添加局部变量的操作，延迟到了字节码生成阶段。
+│  │      Scope.java：记录作用域信息。可以理解为之前的 Queue<Instruction> instructionsQueue 的封装。数据结构变更为 List<LocalVariable> localVariables 。添加局部变量的操作移动到了 StatementVisitor ，被封装为 scope.addLocalVariable(new LocalVariable(varName, 类型))。
 │  │
 │  ├─statement
 │  │      PrintStatement.java：记录 print 语句的信息。目前只记录了待 print 的 expression 。
@@ -1159,28 +1167,129 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
 
 ## Part8：1-支持算数运算
 
+原作者给出的文法如下：
+
+```g
+expression:
+	varReference						# VARREFERENCE
+	| value								# VALUE
+	| functionCall						# FUNCALL
+	| '(' expression '*' expression ')'	# MULTIPLY
+	| expression '*' expression			# MULTIPLY
+	| '(' expression '/' expression ')'	# DIVIDE
+	| expression '/' expression			# DIVIDE
+	| '(' expression '+' expression ')'	# ADD
+	| expression '+' expression			# ADD
+	| '(' expression '-' expression ')'	# SUBSTRACT
+	| expression '-' expression			# SUBSTRACT; // “SUBSTRACT”是typo
+```
+
+tips：产生式的顺序就是优先级。比如，在这个文法里，加法的优先级大于减法。
+
+这个文法至少存在两个问题：
+
+1. 不支持`(x0)`，只支持`(x0 + 0)`；不支持`-x0`，只支持`0 - x0`。
+2. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。
+
+TODO: 参考Java等语言的antlr描述，改造文法解决问题1。
+
+为了解决问题2，需要让`'+'`和`'-'`出现在同一条产生式。改造后的文法如下：
+
+```g
+expression:
+	variableReference								# VarReference
+	| value											# ValueExpr
+	| '(' expression POW expression ')'				# POW
+	| expression POW expression						# POW
+	| '(' expression MULTIPLICATIVE expression ')'	# MULTIPLICATIVE
+	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
+	| '(' expression ADDITIVE expression ')'		# ADDITIVE
+	| expression ADDITIVE expression				# ADDITIVE
+	| '(' expression SHIFT expression ')'			# SHIFT
+	| expression SHIFT expression					# SHIFT
+	| '(' expression AND expression ')'				# AND
+	| expression AND expression						# AND
+	| '(' expression XOR expression ')'				# XOR
+	| expression XOR expression						# XOR
+	| '(' expression OR expression ')'				# OR
+	| expression OR expression						# OR;
+
+POW: '**';
+MULTIPLICATIVE: '*' | '/' | '%';
+ADDITIVE: '+' | '-';
+SHIFT: '<<' | '>>' | '>>>';
+AND: '&';
+XOR: '^';
+OR: '|';
+```
+
+接下来在visitor判断好当前优先级实际的运算符是`'+'`还是`'-'`，返回对应类型的类用于构建表达式树。`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\ExpressionVisitor.java`：
+
+```java
+@AllArgsConstructor
+public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
+    private Scope scope;
+
+    @Override
+    public Additive visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx) {
+        ExpressionContext leftExpressionContext = ctx.expression(0);
+        ExpressionContext rightExpressionContext = ctx.expression(1);
+        Expression leftExpression = leftExpressionContext.accept(this);
+        Expression rightExpression = rightExpressionContext.accept(this);
+        String op = ctx.ADDITIVE().getText();
+        if (op.equals("+")) {
+            return new Addition(leftExpression, rightExpression);
+        }
+        return new Subtraction(leftExpression, rightExpression);
+    }
+}
+```
+
+为了支持返回多种类型，需要引入一个中间父类：`src\main\java\com\example\hans_antlr4\domain\expression\Additive.java`。
+
+```java
+package com.example.hans_antlr4.domain.expression;
+
+import com.example.hans_antlr4.domain.type.Type;
+
+public abstract class Additive extends ArithmeticExpression {
+    Additive(Type type, Expression leftExpression, Expression rightExpression) {
+        super(type, leftExpression, rightExpression);
+    }
+}
+```
+
+如果当前运算优先级只有一个运算符，则不需要引入中间父类，比如：`&`、`^`、`|`。
+
+在原作者的设计里，`Addition`和`Subtraction`直接继承了`ArithmeticExpression`。我改造成了`Addition -> Additive -> ArithmeticExpression`。同理，乘除法、移位分别产生了中间父类`src\main\java\com\example\hans_antlr4\domain\expression\Multiplicative.java`、`src\main\java\com\example\hans_antlr4\domain\expression\Shift.java`。
+
+这样`src\main\java\com\example\hans_antlr4\bytecode_gen\ExpressionGenerator.java`就不必考虑当前优先级实际的运算符了，直接根据类型生成指令即可。
+
+其他改造：
+
 1. 给`Expression`添加`accept`抽象方法来调用`ExpressionGenerator`下的某个`generate`方法，于是`public void generate(Expression expression, Scope scope)`可以删除。
 2. `ExpressionGenerator`、`PrintStatementGenerator`、`StatementGenerator`、`VariableDeclarationStatementGenerator`添加成员`private Scope scope;`，在调用构造函数时就获得`scope`，这样它们各个方法就不需要额外传入`scope`了。
 
-### 支持乘方`**`运算
+### 支持乘方（`**`）运算
 
-语法规则修改：
+语法规则做出如下修改：
 
 ```g4
 expression:
-	variableReference						# VarReference
-	| value									# ValueExpr
-	| '(' expression '**' expression ')'	# POW
-	| expression '**' expression			# POW
-	| '(' expression '*' expression ')'		# MULTIPLY
-	| expression '*' expression				# MULTIPLY
-	| '(' expression '/' expression ')'		# DIVIDE
-	| expression '/' expression				# DIVIDE
-	| '(' expression '+' expression ')'		# ADD
-	| expression '+' expression				# ADD
-	| '(' expression '-' expression ')'		# SUBTRACT
-	| expression '-' expression				# SUBTRACT;
-variableReference: ID;
+	variableReference								# VarReference
+	| value											# ValueExpr
+	| '(' expression POW expression ')'				# POW
+	| expression POW expression						# POW
+	| '(' expression MULTIPLICATIVE expression ')'	# MULTIPLICATIVE
+	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
+	| '(' expression ADDITIVE expression ')'		# ADDITIVE
+	| expression ADDITIVE expression				# ADDITIVE;
+
+variableReference: Identifier;
+
+POW: '**';
+MULTIPLICATIVE: '*' | '/' | '%';
+ADDITIVE: '+' | '-';
 ```
 
 对`ExpressionVisitor`的改动和加减乘除一样：
@@ -1346,7 +1455,7 @@ public class HansAntlr4Test {
 
 TODO: 想办法把`--add-opens=java.base/java.lang=ALL-UNNAMED`传入`mvn.cmd`，从而可以恢复打包命令的单测。
 
-另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们补充了`src\main\java\com\example\hans_antlr4\domain\expression\ArithmeticExpression.java`等4个继承`Expression`的类和`src\main\java\com\example\hans_antlr4\domain\statement\VariableDeclaration.java`的`equals`、`hashCode`方法。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改。
+另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们补充了`src\main\java\com\example\hans_antlr4\domain\expression\ArithmeticExpression.java`等4个继承`Expression`的类和`src\main\java\com\example\hans_antlr4\domain\statement\VariableDeclaration.java`的`equals`、`hashCode`方法。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改。继承`ArithmeticExpression`的类，比如`Additive`、`Shift`等中间父类，都不需要再实现`equals`和`hashCode`方法。
 
 ## 参考资料
 

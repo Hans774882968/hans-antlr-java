@@ -5,17 +5,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.lang3.StringUtils;
 
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
-import com.example.hans_antlr4.parsing.HansAntlrErrorListener;
-import com.example.hans_antlr4.parsing.HansAntlrLexer;
-import com.example.hans_antlr4.parsing.HansAntlrParser;
-import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
+import com.example.hans_antlr4.parsing.ParseEntry;
 import com.example.hans_antlr4.validation.ARGUMENT_ERRORS;
 
 import lombok.Cleanup;
@@ -34,23 +27,6 @@ public class App {
             return ARGUMENT_ERRORS.BAD_FILE_EXTENSION;
         }
         return ARGUMENT_ERRORS.NONE;
-    }
-
-    private static CompilationUnit parse(String fileAbsolutePath) throws IOException {
-        CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
-        HansAntlrLexer lexer = new HansAntlrLexer(charStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        HansAntlrParser parser = new HansAntlrParser(tokens);
-
-        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
-        HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
-        parser.addErrorListener(errorListener);
-
-        ParseTree tree = parser.compilationUnit();
-        CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
-        String treeString = tree.toStringTree(parser);
-        System.out.println(treeString);
-        return compilationUnit;
     }
 
     private static void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
@@ -79,7 +55,7 @@ public class App {
         log.info("trying to parse hant file \"{}\" ...", fileAbsolutePath);
         CompilationUnit compilationUnit = null;
         try {
-            compilationUnit = parse(fileAbsolutePath);
+            compilationUnit = ParseEntry.parseFromFilePath(fileAbsolutePath);
         } catch (IOException e) {
             e.printStackTrace();
             return;
