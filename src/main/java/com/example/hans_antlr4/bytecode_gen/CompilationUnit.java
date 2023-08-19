@@ -30,7 +30,7 @@ public class CompilationUnit implements Opcodes {
             StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
             // apply instructions generated from traversing parse tree!
             for (Statement instruction : instructionsQueue) {
-                statementGenerator.generate(instruction);
+                instruction.accept(statementGenerator);
             }
             mv.visitInsn(RETURN); // add return instruction
 

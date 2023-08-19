@@ -35,7 +35,7 @@ public class HantIntRangeTest {
         Scope scope = mock(Scope.class);
         StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
 
-        statementGenerator.generate(statement);
+        statement.accept(statementGenerator);
         verify(mv, times(bipushTimes)).visitIntInsn(Opcodes.BIPUSH, intValue);
         verify(mv, times(sipushTimes)).visitIntInsn(Opcodes.SIPUSH, intValue);
         verify(mv, times(ldcTimes)).visitLdcInsn(intValue);

@@ -1,5 +1,7 @@
 package com.example.hans_antlr4.domain.statement;
 
-public interface Statement {
+import com.example.hans_antlr4.bytecode_gen.StatementGenerator;
 
+public interface Statement {
+    void accept(StatementGenerator generator);
 }

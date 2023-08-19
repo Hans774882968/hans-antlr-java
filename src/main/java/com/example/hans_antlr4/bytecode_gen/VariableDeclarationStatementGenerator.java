@@ -9,6 +9,9 @@ import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
 
+import lombok.Getter;
+
+@Getter
 public class VariableDeclarationStatementGenerator implements Opcodes {
     private MethodVisitor mv;
     private Scope scope;

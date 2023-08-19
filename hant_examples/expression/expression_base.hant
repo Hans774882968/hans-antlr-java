@@ -2,32 +2,32 @@ var x0 = 1 + 2 * 3
 print x0
 var x1 = (1 + 2) * 3
 print x1
-print x0 * x1
+print x0 * x1 // 63
 var x2 = 1 + 1
-print 3 / x2
-print (4 / (x2 + 1))
+print 3 / x2 // 1
+print (4 / (x2 + 1)) // 1
 var x3 = 40 + 30 * 20 + 10
-print x3
+print x3 // 650
 var x4 = (40 + 30) * (20 + 10)
-print x4
+print x4 // 2100
 
 print "----- power examples -----"
 var x5 = 2 * 4 ** 3 - 16 / 2
-print x5
+print x5 // 120
 var x6 = (2 * 4) ** 3 - 16 / 2 ** 3
-print x6
+print x6 // 510
 var x7 = 2 ** 3 * 3 ** 2
-print x7
+print x7 // 72
 var x8 = 2 ** 3 * 3 ** 2 + 2 ** 3
-print(x8 + 0)
+print(x8 + 0) // 80
 var x9 = 2 ** 3 ** 2 ** 2
-print x9
+print x9 // 4096
 var x10 = 3 ** 2 ** 2 ** 2
-print x10
+print x10 // 6561
 var x11 = 2 ** 2 ** 3
-print x11
+print x11 // 64
 var x12 = 2 ** (2 ** 3)
-print x12
+print x12 // 256
 print "----- 运算符相同优先级的情况 -----"
 var x13 = 3 - 1 + 2
 print x13 // 4

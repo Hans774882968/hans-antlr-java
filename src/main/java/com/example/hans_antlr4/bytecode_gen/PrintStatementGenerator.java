@@ -9,14 +9,21 @@ import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@AllArgsConstructor
+@Getter
 public class PrintStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
     private Scope scope;
+    private ExpressionGenerator expressionGenerator;
 
-    public void generate(MethodVisitor mv, PrintStatement printStatement) {
-        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, scope);
+    PrintStatementGenerator(MethodVisitor mv, Scope scope) {
+        this.mv = mv;
+        this.scope = scope;
+        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+    }
+
+    public void generate(PrintStatement printStatement) {
         Expression expression = printStatement.getExpression();
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
         expression.accept(expressionGenerator);

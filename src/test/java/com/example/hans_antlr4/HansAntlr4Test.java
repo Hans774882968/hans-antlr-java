@@ -51,7 +51,7 @@ public class HansAntlr4Test {
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);
         Assert.assertEquals(
-                "(compilationUnit (statements (variable var x = (expression (value 114514))) (print print (expression (variableReference x))) (variable var str = (expression (value \"hello world\"))) (print print (expression (variableReference str))) (variable var str2 = (expression (value \"支持输入中文\"))) (print print (expression (variableReference str2)))) <EOF>)",
+                "(compilationUnit (statements (statement (variable var x = (expression (value 114514)))) (statement (print print (expression (variableReference x)))) (statement (variable var str = (expression (value \"hello world\")))) (statement (print print (expression (variableReference str)))) (statement (variable var str2 = (expression (value \"\u652F\u6301\u8F93\u5165\u4E2D\u6587\")))) (statement (print print (expression (variableReference str2))))) <EOF>)",
                 treeString);
 
         Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());
@@ -68,7 +68,7 @@ public class HansAntlr4Test {
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
         StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
-        statementGenerator.generate(statement);
+        statement.accept(statementGenerator);
         verify(mv, times(1)).visitVarInsn(eq(Opcodes.ASTORE), eq(0));
     }
 
@@ -87,7 +87,7 @@ public class HansAntlr4Test {
         CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
         String treeString = tree.toStringTree(parser);
         Assert.assertEquals(
-                "(compilationUnit (statements (variable var x = (expression (expression (expression (expression (value 2)) ** (expression (value 3))) * (expression (expression (value 3)) ** (expression (value 2)))) + (expression (expression (value 2)) ** (expression (value 3))))) (print print (expression (variableReference x)))) <EOF>)",
+                "(compilationUnit (statements (statement (variable var x = (expression (expression (expression (expression (value 2)) ** (expression (value 3))) * (expression (expression (value 3)) ** (expression (value 2)))) + (expression (expression (value 2)) ** (expression (value 3)))))) (statement (print print (expression (variableReference x))))) <EOF>)",
                 treeString);
 
         Statement firstStatement = compilationUnit.getInstructionsQueue().peek();

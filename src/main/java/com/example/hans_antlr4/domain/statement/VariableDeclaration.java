@@ -1,5 +1,6 @@
 package com.example.hans_antlr4.domain.statement;
 
+import com.example.hans_antlr4.bytecode_gen.StatementGenerator;
 import com.example.hans_antlr4.domain.expression.Expression;
 
 import lombok.Getter;
@@ -13,6 +14,11 @@ public class VariableDeclaration implements Statement {
     public VariableDeclaration(String name, Expression expression) {
         this.name = name;
         this.expression = expression;
+    }
+
+    @Override
+    public void accept(StatementGenerator generator) {
+        generator.generate(this);
     }
 
     @Override

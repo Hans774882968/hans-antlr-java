@@ -4,12 +4,16 @@ grammar HansAntlr;
 package com.example.hans_antlr4.parsing;
 }
 
-// RULES
+// compilationUnit: root rule
 compilationUnit: statements EOF;
-// root rule - our code consist consist only of variables and prints (see definition below)
-statements: (variable | print)*;
+statements: statement*;
+block: '{' statements '}';
+statement: block | variable | ifStatement | print;
 variable: VARIABLE Identifier EQUALS expression;
-// requires VAR token followed by ID token followed by EQUALS TOKEN ...
+ifStatement:
+	'if' ('(')? expression (')')? trueStatement = statement (
+		'else' falseStatement = statement
+	)?;
 
 expression:
 	variableReference								# VarReference
@@ -30,11 +34,8 @@ expression:
 	| expression OR expression						# OR;
 variableReference: Identifier;
 
-print:
-	PRINT expression; // print statement must consist of 'print' keyword and ID
-value:
-	op = NUMBER
-	| op = STRING; // must be NUMBER or STRING value (defined below)
+print: PRINT expression;
+value: op = NUMBER | op = STRING;
 
 // hant TOKENS
 POW: '**';
@@ -45,10 +46,10 @@ AND: '&';
 XOR: '^';
 OR: '|';
 
-VARIABLE: 'var'; // VARIABLE TOKEN must match exactly 'var'
+VARIABLE: 'var';
 PRINT: 'print';
-EQUALS: '='; // must be '='
-NUMBER: [0-9]+; // must consist only of digits
+EQUALS: '=';
+NUMBER: [0-9]+;
 // must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式
 STRING: '"' .*? '"';
 

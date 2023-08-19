@@ -12,7 +12,8 @@
 
 为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。另外，我修复了原作者项目的一些问题，在此列举：
 
-1. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。见本文《Part8：1-支持算数运算》一节。
+1. 原作者给出的规则`STRING: '"' .* '"';`是贪婪模式，会导致`"1"\n"2"`这个例子只匹配到一个字符串。我把它改成了非贪婪模式`STRING: '"' .*? '"';`。
+2. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。见本文《Part8：1-支持算数运算》一节。
 
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
@@ -50,7 +51,7 @@ java -cp C:\java_project\softs\antlr-4.13.0-complete.jar org.antlr.v4.Tool $args
 antlr src\main\java\com\example\antlr4_hello\Hello.g
 ```
 
-生成了名称前缀为Hello的8个文件：`src\main\java\com\example\antlr4_hello\HelloBaseListener.java`、`src\main\java\com\example\antlr4_hello\HelloLexer.java`、`src\main\java\com\example\antlr4_hello\HelloListener.java`、`src\main\java\com\example\antlr4_hello\HelloParser.java`、`Hello.tokens  `、`HelloLexer.interp`、`Hello.interp`、`HelloLexer.tokens`
+生成了名称前缀为Hello的8个文件：`src\main\java\com\example\antlr4_hello\HelloBaseListener.java`、`src\main\java\com\example\antlr4_hello\HelloLexer.java`、`src\main\java\com\example\antlr4_hello\HelloListener.java`、`src\main\java\com\example\antlr4_hello\HelloParser.java`、`Hello.tokens`、`HelloLexer.interp`、`Hello.interp`、`HelloLexer.tokens`
 
 现在开始准备编译由antlr4生成的Java代码。准备一个ps1脚本`antlr-compile.ps1`：
 
@@ -167,8 +168,9 @@ TODO: 这样改造后就不能通过上一节的命令行来获取gui输出了�
 - 打印变量：`print str`
 - 简单的类型推断
 - 支持`java -jar xx.jar hello.hant`编译`hello.hant`，以及`java -jar xx.jar run hello.hant`直接运行`hello.hant`生成的字节码。
+- 支持中文标识符和注释。
 
-这一节的语法规则文件为`src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g`。
+这一节的语法规则文件为`src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g4`。
 
 ```g4
 grammar HansAntlr;
@@ -199,7 +201,7 @@ ID: [a-zA-Z0-9]+; // must be any alphanumeric value
 WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces
 ```
 
-使用上一节编写的`antlr.ps1`来生成lexer、parser和listener：`antlr src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g`。
+使用上一节编写的`antlr.ps1`来生成lexer、parser和listener：`antlr src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g4`。
 
 上一节提到，antlr4为我们生成了4个Java文件：
 
@@ -344,6 +346,35 @@ OK: You instructed to print variable '1' which has type '5' value of '"hello wor
 (compilationUnit (variable var x1 = (value 114514)) (print print x1) (variable var str = (value \"hello world\")) (print print str) <EOF>)
 ```
 
+### VSCode快速运行本项目
+
+点击VSCode界面左侧`Run and Debug`，即可快速生成`.vscode\launch.json`。给某个运行配置加上`args`属性（`string[]`）即可。我目前使用的配置如下：
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "com.example.hans_antlr4.App",
+            "projectName": "hans_antlr",
+            "args": [
+                "run",
+                "<.hant文件路径>"
+            ]
+        }
+    ]
+}
+```
+
 ## Part3：2-接受文件输入+打包
 
 为了接受文件输入，我们需要改下入口`src\main\java\com\example\hans_antlr4\App.java`：
@@ -458,7 +489,7 @@ public class App {
     private static Queue<Instruction> parse(String fileAbsolutePath) throws IOException {
         CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
         HansAntlrLexer lexer = new HansAntlrLexer(charStream);
-        // 其他语句省略了，只需要知道这里返回了 instructionQueue
+        // 其他语句省略了，只需要知道这里返回了 instructionsQueue
         return listener.getInstructionsQueue();
     }
 
@@ -577,7 +608,7 @@ import com.example.hans_antlr4.bytecode_gen.instructions.Instruction;
 import com.example.hans_antlr4.bytecode_gen.instructions.VariableDeclaration;
 
 public class BytecodeGenerator implements Opcodes {
-    public byte[] generateBytecode(Queue<Instruction> instructionQueue, String name) {
+    public byte[] generateBytecode(Queue<Instruction> instructionsQueue, String name) {
         ClassWriter cw = new ClassWriter(0);
         MethodVisitor mv;
         // version, access, name, signature, base class, interfaces
@@ -585,13 +616,13 @@ public class BytecodeGenerator implements Opcodes {
         {
             // declare static void main
             mv = cw.visitMethod(ACC_PUBLIC + ACC_STATIC, "main", "([Ljava/lang/String;)V", null, null);
-            final long localVariablesCount = instructionQueue.stream()
+            final long localVariablesCount = instructionsQueue.stream()
                     .filter(instruction -> instruction instanceof VariableDeclaration)
                     .count();
             final int maxStack = 100;
 
             // apply instructions generated from traversing parse tree!
-            for (Instruction instruction : instructionQueue) {
+            for (Instruction instruction : instructionsQueue) {
                 instruction.apply(mv);
             }
             mv.visitInsn(RETURN); // add return instruction
@@ -608,7 +639,7 @@ public class BytecodeGenerator implements Opcodes {
 
 为了简单，编译后的类直接继承自`Object`, 包含一个`main`函数。`MethodVisitor`需要提供局部变量以及栈的深度。
 
-至此我们可以梳理出主流程：`App.java Listener 获取到 instructionQueue -> BytecodeGenerator.generateBytecode 输入 instructionQueue ，输出 byte[] -> PrintVariable 和 VariableDeclaration 生成字节码`。
+至此我们可以梳理出主流程：`App.java Listener 获取到 instructionsQueue -> BytecodeGenerator.generateBytecode 输入 instructionsQueue ，输出 byte[] -> PrintVariable 和 VariableDeclaration 生成字节码`。
 
 接下来关注`PrintVariable`和`VariableDeclaration`的实现。
 
@@ -692,6 +723,8 @@ public void generate(Value value) {
     }
 }
 ```
+
+### 效果
 
 我们准备一个`.hant`文件`hant_examples\hello.hant`：
 
@@ -833,7 +866,7 @@ public class App {
 }
 ```
 
-TODO: 这部分代码开始乱了，要整理下~
+TODO: 这部分代码开始乱了，要整理下~考虑引入命令行参数解析框架
 
 新增的`src\main\java\com\example\hans_antlr4\CodeRunner.java`从`byte[]`加载类并调用其`main`函数：
 
@@ -870,7 +903,7 @@ public class CodeRunner {
 
 为了支持中文标识符，我选择了[TS的语法规则](https://github.com/antlr/grammars-v4/blob/master/javascript/typescript/TypeScriptLexer.g4)：
 
-```g
+```g4
 Identifier: IdentifierStart IdentifierPart*;
 fragment IdentifierStart:
 	[\p{L}]
@@ -890,9 +923,37 @@ fragment IdentifierPart:
 
 为了支持注释，我选择了[Java的语法规则](https://github.com/antlr/grammars-v4/blob/master/java/java9/Java9Lexer.g4)
 
-```g
+```g4
 COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
 LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
+```
+
+### 效果
+
+准备一个`.hant`文件：
+
+```js
+var x = "// 这不是单行注释" // 注释
+print /* 注释 */ "/* 这不是块注释 */"
+```
+
+也可以查看`src\test\java\com\example\hans_antlr4\HansAntlr4Test.java` `unicodeVarNameAndComments()`这个单测用例。
+
+```java
+@Test
+public void unicodeVarNameAndComments() {
+    Statement statement = TestUtils.getFirstStatementFromCode("var 変数名2です /* 这是一个注释 */ = \"// 这不是注释\"");
+
+    VariableDeclaration variableDeclaration = new VariableDeclaration("変数名2です",
+            new Value(BuiltInType.STRING, "\"// 这不是注释\""));
+    Assert.assertEquals(variableDeclaration, statement);
+
+    MethodVisitor mv = mock(MethodVisitor.class);
+    Scope scope = mock(Scope.class);
+    StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+    statementGenerator.generate(statement);
+    verify(mv, times(1)).visitVarInsn(eq(Opcodes.ASTORE), eq(0));
+}
 ```
 
 ## Part4~6：1-改用 Visitor 模式
@@ -939,7 +1000,7 @@ listener和visitor都支持拆分，只不过我目前的实现规模较小，�
 给`antlr.jar`显式传入`-visitor`即可获取`BaseVisitor.java`：
 
 ```ps1
-antlr src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g -visitor -no-listener
+antlr src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g4 -visitor -no-listener
 ```
 
 为了方便visitor的实现，需要改下文法：
@@ -1127,7 +1188,7 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
 │  │      LocalVariable.java：记录局部变量信息。
 │  │      Scope.java：记录作用域信息。可以理解为之前的 Queue<Instruction> instructionsQueue 的封装。数据结构变更为 List<LocalVariable> localVariables 。添加局部变量的操作移动到了 StatementVisitor ，被封装为 scope.addLocalVariable(new LocalVariable(varName, 类型))。
 │  │
-│  ├─statement
+│  ├─statement：语句相关的类
 │  │      PrintStatement.java：记录 print 语句的信息。目前只记录了待 print 的 expression 。
 │  │      Statement.java：用于记录语句信息。是其他语句类的基类。
 │  │      VariableDeclaration.java：记录变量定义语句的信息。目前只记录了变量名和变量初始值的表达式。
@@ -1142,7 +1203,7 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
 │      UnsupportedArithmeticOperationException.java
 │
 ├─parsing
-│  │  HansAntlr.g：语法规则。下面其他的文件都是由 antlr.jar 工具生成，不需要改动。主要逻辑都在 biz_visitor 文件夹下。
+│  │  HansAntlr.g4：语法规则。下面其他的文件都是由 antlr.jar 工具生成，不需要改动。主要逻辑都在 biz_visitor 文件夹下。
 │  │  HansAntlr.interp
 │  │  HansAntlr.tokens
 │  │  HansAntlrBaseVisitor.java
@@ -1165,11 +1226,42 @@ SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4
         ARGUMENT_ERRORS.java：用于入口，解析命令行参数。
 ```
 
+另外，最好在本节就将`ExpressionGenerator`和`StatementGenerator`改造成若干不同签名的`generate`方法，并分别给对应的`Expression`和`Statement`添加`accept`抽象方法来调用`generate`方法——虽然我是在后续才做了这个改动。以`StatementGenerator`为例：
+
+```java
+public class StatementGenerator {
+    private MethodVisitor mv;
+    private Scope scope;
+
+    public StatementGenerator(MethodVisitor mv, Scope scope) {
+        this.mv = mv;
+        this.scope = scope;
+    }
+
+    public void generate(PrintStatement printStatement) {
+        new PrintStatementGenerator(mv, scope).generate(printStatement);
+    }
+
+    public void generate(VariableDeclaration variableDeclaration) {
+        new VariableDeclarationStatementGenerator(mv, scope).generate(variableDeclaration);
+    }
+}
+```
+
+相应地，遍历`instructionsQueue`的代码也应变为：
+
+```java
+StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+for (Statement instruction : instructionsQueue) {
+    instruction.accept(statementGenerator);
+}
+```
+
 ## Part8：1-支持算数运算
 
 原作者给出的文法如下：
 
-```g
+```g4
 expression:
 	varReference						# VARREFERENCE
 	| value								# VALUE
@@ -1184,7 +1276,10 @@ expression:
 	| expression '-' expression			# SUBSTRACT; // “SUBSTRACT”是typo
 ```
 
-tips：产生式的顺序就是优先级。比如，在这个文法里，加法的优先级大于减法。
+tips：
+
+1. 产生式的顺序就是优先级。比如，在这个文法里，加法的优先级大于减法。
+2. 这条规则有直接左递归，不过antlr4是允许直接左递归的，所以没问题。但编写规则的时候要注意，antlr4目前不支持间接左递归。
 
 这个文法至少存在两个问题：
 
@@ -1195,7 +1290,7 @@ TODO: 参考Java等语言的antlr描述，改造文法解决问题1。
 
 为了解决问题2，需要让`'+'`和`'-'`出现在同一条产生式。改造后的文法如下：
 
-```g
+```g4
 expression:
 	variableReference								# VarReference
 	| value											# ValueExpr
@@ -1272,7 +1367,12 @@ public abstract class Additive extends ArithmeticExpression {
 
 ### 支持乘方（`**`）运算
 
-语法规则做出如下修改：
+我们知道，Python支持乘方运算符，所以在此我也尝试支持。首先确定一下其特性：
+
+1. 乘方运算符优先级大于乘法、除法、取模。
+2. 乘方运算符也是左结合的。
+
+接着据此修改规则：
 
 ```g4
 expression:
@@ -1320,7 +1420,7 @@ public class Pow extends ArithmeticExpression {
 }
 ```
 
-字节码生成是支持乘方运算符的难点，我们打算先研究字节码再。我们写一段Java代码：
+字节码生成是支持乘方运算符的难点，我们打算先研究相关字节码再写代码。我们快速写一段Java代码：
 
 ```java
 public class TestLookAtBytecode {
@@ -1364,9 +1464,9 @@ public class TestLookAtBytecode {
 ```
 
 要点：
-1. 生成好`expression`的字节码后，需要生成`i2d`语句强转为`double`
-2. 两个参数都准备好后即可生成`Math.pow`的调用语句`invokestatic`
-3. 因为目前 hant 语言只支持整型，所以需要生成`d2i`语句强转回`int`
+1. 生成好`expression`的字节码后，需要生成`i2d`语句强转为`double`。
+2. 两个参数都准备好后即可生成`Math.pow`的调用语句`invokestatic`。
+3. 因为目前 hant 语言只支持整型，所以需要生成`d2i`语句强转回`int`。
 
 于是可以写出其`generate(Pow expression)`方法：
 
@@ -1385,6 +1485,15 @@ public class TestLookAtBytecode {
         mv.visitInsn(D2I);
     }
 ```
+
+### 效果
+
+`hant_examples\expression`下的`.hant`文件：
+
+- `https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/bitwise.hant`
+- `https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/expression_base.hant`
+- `https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/mod.hant`
+- `https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/shift.hant`
 
 ## Part8：2-编写`bytecode_gen`下代码单测的解决方案：`Mockito`
 
@@ -1456,6 +1565,10 @@ public class HansAntlr4Test {
 TODO: 想办法把`--add-opens=java.base/java.lang=ALL-UNNAMED`传入`mvn.cmd`，从而可以恢复打包命令的单测。
 
 另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们补充了`src\main\java\com\example\hans_antlr4\domain\expression\ArithmeticExpression.java`等4个继承`Expression`的类和`src\main\java\com\example\hans_antlr4\domain\statement\VariableDeclaration.java`的`equals`、`hashCode`方法。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改。继承`ArithmeticExpression`的类，比如`Additive`、`Shift`等中间父类，都不需要再实现`equals`和`hashCode`方法。
+
+## Part10：支持if语句
+
+TODO
 
 ## 参考资料
 

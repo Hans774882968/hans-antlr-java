@@ -1,4 +1,4 @@
-// Generated from src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g by ANTLR 4.13.0
+// Generated from src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g4 by ANTLR 4.13.0
 
 package com.example.hans_antlr4.parsing;
 
@@ -32,6 +32,24 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitStatements(HansAntlrParser.StatementsContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#block}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock(HansAntlrParser.BlockContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#statement}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitStatement(HansAntlrParser.StatementContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#variable}.
 	 * 
 	 * @param ctx
@@ -39,6 +57,15 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariable(HansAntlrParser.VariableContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#ifStatement}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitIfStatement(HansAntlrParser.IfStatementContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code ValueExpr}
