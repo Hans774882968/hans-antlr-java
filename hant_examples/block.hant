@@ -11,3 +11,19 @@ print x
     var y = x + 20
     print y // 30
 }
+
+{
+    var y = 30
+    {
+        var z1 = x + y
+        print z1 // 40
+        /*
+        var x = 40
+        var z2 = x + y
+        print z2
+        TODO: 这是 use before declare 的场景，生成的字节码把40赋值给最新的3号位置是符合预期的。
+        考虑怎么给出一个友好的编译时错误提示。
+        */
+    }
+    print x + y // 40
+}

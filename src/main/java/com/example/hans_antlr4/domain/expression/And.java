@@ -1,6 +1,6 @@
 package com.example.hans_antlr4.domain.expression;
 
-import com.example.hans_antlr4.bytecode_gen.ExpressionGenerator;
+import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 
 public class And extends ArithmeticExpression {
     public And(Expression leftExpression, Expression rightExpression) {

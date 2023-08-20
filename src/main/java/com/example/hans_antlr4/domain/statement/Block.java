@@ -3,7 +3,7 @@ package com.example.hans_antlr4.domain.statement;
 import java.util.Collections;
 import java.util.List;
 
-import com.example.hans_antlr4.bytecode_gen.StatementGenerator;
+import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.domain.scope.Scope;
 
 import lombok.AllArgsConstructor;

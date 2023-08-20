@@ -1,6 +1,6 @@
 package com.example.hans_antlr4.domain.expression;
 
-import com.example.hans_antlr4.bytecode_gen.ExpressionGenerator;
+import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 
 public class UnsignedShr extends Shift {
     public UnsignedShr(Expression leftExpression, Expression rightExpression) {

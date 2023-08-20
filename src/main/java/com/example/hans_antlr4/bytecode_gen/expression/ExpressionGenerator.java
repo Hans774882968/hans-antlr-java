@@ -1,4 +1,4 @@
-package com.example.hans_antlr4.bytecode_gen;
+package com.example.hans_antlr4.bytecode_gen.expression;
 
 import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.MethodVisitor;

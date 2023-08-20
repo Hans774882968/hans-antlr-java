@@ -1836,7 +1836,9 @@ public class IfStatement implements Statement {
 }
 ```
 
-`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\StatementVisitor.java`的改造：
+看不惯Java啰嗦的你可能会问：直接把`newTrueScope`和`newFalseScope`挂到`IfStatement`下不就行？的确引入`StatementAfterIf`不是必要的，这里引入`StatementAfterIf`是为了可读性。
+
+接下来改造`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\StatementVisitor.java`：
 
 ```java
     @Override

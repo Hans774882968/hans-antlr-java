@@ -12,7 +12,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
-import com.example.hans_antlr4.bytecode_gen.StatementGenerator;
+import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.parsing.HansAntlrLexer;
