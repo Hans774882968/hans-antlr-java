@@ -102,6 +102,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitRELATIONAL(HansAntlrParser.RELATIONALContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitValueExpr(HansAntlrParser.ValueExprContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -168,6 +181,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitEQUALITY(HansAntlrParser.EQUALITYContext ctx) {
 		return visitChildren(ctx);
 	}
 

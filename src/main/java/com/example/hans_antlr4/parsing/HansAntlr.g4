@@ -26,6 +26,10 @@ expression:
 	| expression ADDITIVE expression				# ADDITIVE
 	| '(' expression SHIFT expression ')'			# SHIFT
 	| expression SHIFT expression					# SHIFT
+	| '(' expression RELATIONAL expression ')'		# RELATIONAL
+	| expression RELATIONAL expression				# RELATIONAL
+	| '(' expression EQUALITY expression ')'		# EQUALITY
+	| expression EQUALITY expression				# EQUALITY
 	| '(' expression AND expression ')'				# AND
 	| expression AND expression						# AND
 	| '(' expression XOR expression ')'				# XOR
@@ -42,10 +46,13 @@ POW: '**';
 MULTIPLICATIVE: '*' | '/' | '%';
 ADDITIVE: '+' | '-';
 SHIFT: '<<' | '>>' | '>>>';
+RELATIONAL: '<' | '<=' | '>' | '>=';
+EQUALITY: '==' | '!=';
 AND: '&';
 XOR: '^';
 OR: '|';
 
+// keywords 应定义在 Identifier 之前
 VARIABLE: 'var';
 PRINT: 'print';
 EQUALS: '=';

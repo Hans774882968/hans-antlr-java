@@ -1,0 +1,44 @@
+print "分别输出 10 200 3000"
+if 1
+    if 1 print 10
+    else print 20
+else print 30
+
+if 1
+    if 0 print 100
+    else print 200
+else print 300
+
+if 0
+    if 1 print 1000
+    else print 2000
+else print 3000
+
+print "因为 else 要和最接近的 if 匹配，所以输出 40 500"
+if 1
+    if 1 print 40
+else print 50
+
+if 1
+    if 0 print 400
+else print 500
+
+if 0
+    if 1 print 4000
+else print 5000
+
+print "加大括号后输出 40 5000"
+if 1 {
+    if 1 print 40
+}
+else print 50
+
+if 1 {
+    if 0 print 400
+}
+else print 500
+
+if 0 {
+    if 1 print 4000
+}
+else print 5000

@@ -17,7 +17,7 @@ public class Scope {
 
     public Scope(Scope scope) {
         metaData = scope.metaData;
-        localVariables = new ArrayList<>();
+        localVariables = new ArrayList<>(scope.localVariables);
     }
 
     public void addLocalVariable(LocalVariable localVariable) {
@@ -25,15 +25,22 @@ public class Scope {
     }
 
     public LocalVariable getLocalVariable(String varName) {
+        // 越靠后的元素作用域层级越大，所以可以通过返回最后一个元素来实现变量 shadow
         return localVariables.stream()
                 .filter(variable -> variable.getVarName().equals(varName))
-                .findFirst()
+                .reduce((result, item) -> item)
                 .orElseThrow(() -> new LocalVariableNotFoundException(this, varName));
     }
 
     public int getLocalVariableIndex(String varName) {
         LocalVariable localVariable = getLocalVariable(varName);
-        return localVariables.indexOf(localVariable);
+        // 这里必须使用 == 比较对象地址，所以不能使用 indexOf
+        for (int i = 0; i < localVariables.size(); i++) {
+            if (localVariables.get(i) == localVariable) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public String getClassName() {

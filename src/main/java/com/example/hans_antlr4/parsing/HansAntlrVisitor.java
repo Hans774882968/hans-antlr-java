@@ -68,6 +68,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitIfStatement(HansAntlrParser.IfStatementContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code RELATIONAL}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitRELATIONAL(HansAntlrParser.RELATIONALContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code ValueExpr}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -126,6 +136,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code EQUALITY}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitEQUALITY(HansAntlrParser.EQUALITYContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code AND}

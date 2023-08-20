@@ -14,6 +14,8 @@
 
 1. 原作者给出的规则`STRING: '"' .* '"';`是贪婪模式，会导致`"1"\n"2"`这个例子只匹配到一个字符串。我把它改成了非贪婪模式`STRING: '"' .*? '"';`。
 2. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。见本文《Part8：1-支持算数运算》一节。
+3. 原作者的`if`语句后跟的statement只有为块语句时才新建了作用域，我进行了修复。
+4. 原作者项目存在变量shadow问题，我进行了修复，详见《原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复》。
 
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
@@ -22,6 +24,13 @@
 - VSCode快速创建的Maven项目
 
 **作者：[hans774882968](https://blog.csdn.net/hans774882968)以及[hans774882968](https://juejin.cn/user/1464964842528888)以及[hans774882968](https://www.52pojie.cn/home.php?mod=space&uid=1906177)**
+
+## 致敬原作者：如何运行[原项目](https://github.com/JakubDziworski/Enkel-JVM-language)
+
+原项目的README已经足够清晰，我在此仅给出一些注意点。
+
+1. mvn编译时需要跳过单测，因为单测有3个case会失败：`mvn.cmd clean package -DskipTests`。产物是`compiler\target\compiler-1.0-SNAPSHOT-jar-with-dependencies.jar`而不是`target\enkel-1.0-SNAPSHOT-jar-with-dependencies.jar`。
+2. 编译`.enk`文件的命令：原作者给出的命令是`java -classpath compiler/target/compiler-1.0-SNAPSHOT-jar-with-dependencies.jar:. com.kubadziworski.compiler.Compiler EnkelExamples/DefaultParamTest.enk`，但也可以用一个更简单的命令：`java -jar <compiler-1.0-SNAPSHOT-jar-with-dependencies.jar的路径> <enk文件路径>`。编译产生的`.class`文件在根目录，在原作者项目的`.gitignore`中。
 
 ## antlr4 hello world（可以跳过）
 
@@ -1566,7 +1575,457 @@ TODO: 想办法把`--add-opens=java.base/java.lang=ALL-UNNAMED`传入`mvn.cmd`�
 
 另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们补充了`src\main\java\com\example\hans_antlr4\domain\expression\ArithmeticExpression.java`等4个继承`Expression`的类和`src\main\java\com\example\hans_antlr4\domain\statement\VariableDeclaration.java`的`equals`、`hashCode`方法。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改。继承`ArithmeticExpression`的类，比如`Additive`、`Shift`等中间父类，都不需要再实现`equals`和`hashCode`方法。
 
-## Part10：支持if语句
+## Part10：1-支持block语句和if语句
+
+首先修改文法规则：
+
+```g4
+compilationUnit: statements EOF;
+statements: statement*;
+block: '{' statements '}';
+statement: block | variable | ifStatement | print;
+variable: VARIABLE Identifier EQUALS expression;
+ifStatement:
+	'if' ('(')? expression (')')? trueStatement = statement (
+		'else' falseStatement = statement
+	)?;
+
+expression:
+	// ... 
+	| '(' expression RELATIONAL expression ')'		# RELATIONAL
+	| expression RELATIONAL expression				# RELATIONAL
+	| '(' expression EQUALITY expression ')'		# EQUALITY
+	| expression EQUALITY expression				# EQUALITY
+```
+
+- `ifStatement`的`expression`是一个真值表达式。
+- 真值表达式放到括号里是非必要的，问号意味着是可选的。
+- 为 true 时`trueStatement`会被执行。
+- if 后面可以跟随者 else。
+- 当 false 时`falseStatement`会被执行。
+
+我们不需要专门处理`if ... else if`，因为`else if`就是`falseStatement`为if语句的情况。
+
+值得注意的是，IDEA antlr插件告诉我们，这个文法有二义性。
+
+![2-if的二义性文法-IDEA antlr插件](./README_assets/2-if的二义性文法.JPG)
+
+我尝试了[antlr4解决else悬空问题的GitHub issue](https://github.com/antlr/antlr4/issues/42)给出的写法，都不能消除IDEA antlr插件报告的二义性问题。实际上antlr4处理这个二义性问题已有默认策略，就是匹配最近的`if`，所以这个问题可以不解决。TODO: 但后续可以参考《编译原理》第2版例4.16解决，也可以参考[参考链接4](https://www.jianshu.com/p/2d55d50f8bc4)解决，两者描述的是同一个文法。
+
+### 支持block语句
+
+支持block的改造比较常规，保证传入`newScope`即可。
+
+`Block`定义（`src\main\java\com\example\hans_antlr4\domain\statement\Block.java`）：
+
+```java
+@AllArgsConstructor
+@Getter
+public class Block implements Statement {
+    private final List<Statement> statements;
+    private final Scope scope;
+
+    @Override
+    public void accept(StatementGenerator generator) {
+        generator.generate(this);
+    }
+
+    public List<Statement> getStatements() {
+        return Collections.unmodifiableList(statements);
+    }
+}
+```
+
+`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\StatementVisitor.java`的改造：
+
+```java
+@Override
+public Block visitBlock(HansAntlrParser.BlockContext ctx) {
+    Scope newScope = new Scope(scope);
+    StatementsVisitor statementsVisitor = new StatementsVisitor(newScope);
+    List<Statement> statements = ctx.statements().accept(statementsVisitor);
+    Block block = new Block(statements, newScope);
+    instructionsQueue.add(block);
+    return block;
+}
+```
+
+为了接收`List<Statement>`，我们不得不引入`StatementsGenerator`。`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\StatementsVisitor.java`如下：
+
+```java
+public class StatementsVisitor extends HansAntlrBaseVisitor<List<Statement>> {
+    private Scope scope;
+
+    public StatementsVisitor(Scope scope) {
+        super();
+        this.scope = scope;
+    }
+
+    @Override
+    public List<Statement> visitStatements(HansAntlrParser.StatementsContext ctx) {
+        StatementVisitor statementVisitor = new StatementVisitor(scope);
+        List<Statement> statements = ctx.statement().stream()
+                .map(stmt -> stmt.accept(statementVisitor))
+                .collect(Collectors.toList());
+        return statements;
+    }
+}
+```
+
+`src\main\java\com\example\hans_antlr4\bytecode_gen\StatementGenerator.java`的改造：
+
+```java
+public void generate(Block block) {
+    new BlockStatementGenerator(mv).generate(block);
+}
+```
+
+新增的`BlockStatementGenerator`也比较常规，`src\main\java\com\example\hans_antlr4\bytecode_gen\BlockStatementGenerator.java`如下：
+
+```java
+@AllArgsConstructor
+@Getter
+public class BlockStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(Block blockStatement) {
+        Scope newScope = blockStatement.getScope();
+        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope);
+        blockStatement.getStatements().forEach(stmt -> stmt.accept(statementGenerator));
+    }
+}
+```
+
+相关测试代码：`https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/block.hant`。
+
+### 支持if语句
+
+在介绍if语句visitor的改造之前，需要先讨论作用域问题。我发现原作者项目并没有专门为`if`语句处理作用域，而是使用了`block`语句自带的作用域处理能力。我们编写以下`.enk`文件：
+
+```enk
+IfTest {
+    start {
+        if true var x = "x"
+        else var y = "y"
+        var z = "z"
+        print z+"z"
+    }
+}
+```
+
+编译方式见上文《致敬原作者：如何运行原项目》。生成的`.class`文件如下：
+
+```
+  public void start();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=4, args_size=1
+         0: ldc           #7                  // int 1
+         2: ifne          11
+         5: ldc           #9                  // String y
+         7: astore_2
+         8: goto          14
+        11: ldc           #11                 // String x
+        13: astore_1
+        14: ldc           #13                 // String z
+        16: astore_3
+        17: getstatic     #19                 // Field java/lang/System.out:Ljava/io/PrintStream;
+        20: new           #21                 // class java/lang/StringBuilder
+        23: dup
+        24: invokespecial #24                 // Method java/lang/StringBuilder."<init>":()V
+        27: aload_3
+        28: invokevirtual #28                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        31: ldc           #13                 // String z
+        33: invokevirtual #28                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        36: invokevirtual #32                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        39: invokevirtual #38                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V  
+        42: return
+      StackMapTable: number_of_entries = 2
+        frame_type = 11 /* same */
+        frame_type = 2 /* same */
+```
+
+可见变量`z`索引为3，但我们期望的索引为1。
+
+另外，如果尝试访问if块内定义的变量，则会报运行时错误。比如对于以下`.enk`代码：
+
+```enk
+IfTest {
+    start {
+        if true var x = "x"
+        else var y = "y"
+        print x
+    }
+}
+```
+
+报错：
+
+```
+java.lang.VerifyError: Bad local variable type
+Exception Details:
+  Location:
+    IfTest.start()V @17: aload_1
+  Reason:
+    Type top (current frame, locals[1]) is not assignable to reference type
+```
+
+为了满足期望，应该保证出block后能够销毁`if`的语句块所产生的变量。幸好`StatementGenerator`要求传入`Scope`，我们只需要保证`StatementGenerator`获取的是`newScope`即可。为此，我们引入了`StatementAfterIf`对象，如下（`src\main\java\com\example\hans_antlr4\domain\statement\StatementAfterIf.java`）：
+
+```java
+package com.example.hans_antlr4.domain.statement;
+
+import com.example.hans_antlr4.bytecode_gen.StatementGenerator;
+import com.example.hans_antlr4.domain.scope.Scope;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class StatementAfterIf implements Statement {
+    private final Scope newScope;
+    private final Statement statement;
+
+    @Override
+    public void accept(StatementGenerator generator) {
+        generator.generate(this);
+    }
+}
+```
+
+对应地，要给`StatementGenerator`添加一个`StatementAfterIf`的`generate`方法：
+
+```java
+public void generate(StatementAfterIf statementAfterIf) {
+    StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+    statementAfterIf.getStatement().accept(statementGenerator);
+}
+```
+
+于是`IfStatement`可以改成持有`StatementAfterIf`对象了：
+
+```java
+@Getter
+public class IfStatement implements Statement {
+    private final Expression condition;
+    private final StatementAfterIf trueStatement;
+    private final Optional<StatementAfterIf> falseStatement;
+
+    public IfStatement(Expression condition, StatementAfterIf trueStatement, StatementAfterIf falseStatement) {
+        this.condition = condition;
+        this.trueStatement = trueStatement;
+        this.falseStatement = Optional.ofNullable(falseStatement);
+    }
+
+    public IfStatement(Expression condition, StatementAfterIf trueStatement) {
+        this.condition = condition;
+        this.trueStatement = trueStatement;
+        this.falseStatement = Optional.empty();
+    }
+
+    @Override
+    public void accept(StatementGenerator generator) {
+        generator.generate(this);
+    }
+
+    public Optional<StatementAfterIf> getFalseStatement() {
+        return falseStatement;
+    }
+}
+```
+
+`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\StatementVisitor.java`的改造：
+
+```java
+    @Override
+public IfStatement visitIfStatement(HansAntlrParser.IfStatementContext ctx) {
+    final ExpressionContext conditionalExpressionContext = ctx.expression();
+    final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+    final Expression condition = conditionalExpressionContext.accept(expressionVisitor);
+    // if 的两个语句应该各自新开作用域
+    Scope newTrueScope = new Scope(scope);
+    final StatementVisitor trueStatementVisitor = new StatementVisitor(newTrueScope);
+    final Statement trueStatement = ctx.trueStatement.accept(trueStatementVisitor);
+    final StatementAfterIf trueStatementAfterIf = new StatementAfterIf(newTrueScope, trueStatement);
+    if (ctx.falseStatement == null) {
+        IfStatement ifStatementResult = new IfStatement(condition, trueStatementAfterIf);
+        instructionsQueue.add(ifStatementResult);
+        return ifStatementResult;
+    }
+    Scope newFalseScope = new Scope(scope);
+    final StatementVisitor falseStatementVisitor = new StatementVisitor(newFalseScope);
+    final Statement falseStatement = ctx.falseStatement.accept(falseStatementVisitor);
+    final StatementAfterIf falseStatementAfterIf = new StatementAfterIf(newFalseScope, falseStatement);
+    IfStatement ifStatementResult = new IfStatement(condition, trueStatementAfterIf, falseStatementAfterIf);
+    instructionsQueue.add(ifStatementResult);
+    return ifStatementResult;
+}
+```
+
+只需要注意，`if`的两个语句应该各自新开作用域。
+
+接下来看`generator`部分。`StatementGenerator`的改造：
+
+```java
+public void generate(IfStatement ifStatement) {
+    new IfStatementGenerator(mv, scope).generate(ifStatement);
+}
+```
+
+新增的`src\main\java\com\example\hans_antlr4\bytecode_gen\IfStatementGenerator.java`：
+
+```java
+@AllArgsConstructor
+@Getter
+public class IfStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+    private Scope scope;
+
+    public void generate(IfStatement ifStatement) {
+        Expression condition = ifStatement.getCondition();
+        condition.accept(new ExpressionGenerator(mv, scope));
+        Label trueLabel = new Label();
+        Label endLabel = new Label();
+        mv.visitJumpInsn(IFNE, trueLabel);
+
+        Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
+        if (falseStatement.isPresent()) {
+            StatementGenerator statementGenerator = new StatementGenerator(mv, falseStatement.get().getNewScope());
+            falseStatement.get().accept(statementGenerator);
+        }
+
+        mv.visitJumpInsn(GOTO, endLabel);
+        mv.visitLabel(trueLabel);
+        StatementAfterIf trueStatement = ifStatement.getTrueStatement();
+        StatementGenerator statementGenerator = new StatementGenerator(mv, trueStatement.getNewScope());
+        trueStatement.accept(statementGenerator);
+        mv.visitLabel(endLabel);
+    }
+}
+```
+
+相关测试代码：`hant_examples\if`下的`.hant`文件：
+
+- `hant_examples\if\ambiguity.hant`：测试二义性。
+- `hant_examples\if\if_scope_test.hant`：测试确实新建了作用域，尤其是`if`后跟单个语句的情况。
+- `hant_examples\if\if.hant`：一些杂乱的测试。
+
+这次需要加`-noverify`才能运行，否则报错：
+
+```
+java.lang.VerifyError: Expecting a stackmap frame at branch target 24
+Exception Details:
+  Location:
+    ambiguity.main([Ljava/lang/String;)V @10: ifne
+  Reason:
+    Expected stackmap frame at this location.
+```
+
+TODO: 原因未知。
+
+### 原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复
+
+在我以为`if`语句已经支持完毕时，我又发现了一个和作用域有关的问题：
+
+```hant
+var x = 10
+print x
+{
+    var x = 20
+    print x
+}
+{
+    // 一开始发现 y 输出40，不符合预期。有几个选项：
+    // 1、Scope 改造成跳 parent 的逻辑。2、检测变量 shadow 并报错。3、getLocalVariable 改成 findLast。
+    // 最后选择了3。
+    var y = x + 20
+    print y // 30
+}
+```
+
+子作用域的变量预期外地修改了祖先作用域的变量。实际上原作者的项目也有这个问题。测试`.enk`代码如下（`https://github.com/JakubDziworski/Enkel-JVM-language/blob/master/EnkelExamples/ifTest3.enk`）：
+
+```enk
+IfTest3 {
+    start {
+        var x = 10
+        print x
+        if 1 {
+            var x = 20
+            print x
+        }
+        if 1 {
+            var y = x + 20
+            print y
+        }
+        print (3 * 10 + 70)
+    }
+}
+```
+
+我们关注`https://github.com/JakubDziworski/Enkel-JVM-language/blob/master/compiler/src/main/java/com/kubadziworski/domain/scope/Scope.java`的相关代码：
+
+```java
+public LocalVariable getLocalVariable(String varName) {
+    return Optional.ofNullable(localVariables.get(varName))
+            .orElseThrow(() -> new LocalVariableNotFoundException(this, varName));
+}
+
+public int getLocalVariableIndex(String varName) {
+    return localVariables.indexOf(varName);
+}
+```
+
+因为`indexOf`比较相等调用的是`.equals`方法，但这里应该比较的是对象地址，即使用`==`。如何解决？如上述`hant`代码注释所说，因为祖先作用域的变量都是有序添加到列表的最后的，所以我们可以把查找时的`findFirst`改造为`findLast`，并将`indexOf`修改为自己实现的查找算法。修改后的`Scope`类相关方法：
+
+```java
+public LocalVariable getLocalVariable(String varName) {
+    // 越靠后的元素作用域层级越大，所以可以通过返回最后一个元素来实现变量 shadow
+    return localVariables.stream()
+            .filter(variable -> variable.getVarName().equals(varName))
+            .reduce((result, item) -> item)
+            .orElseThrow(() -> new LocalVariableNotFoundException(this, varName));
+}
+
+public int getLocalVariableIndex(String varName) {
+    LocalVariable localVariable = getLocalVariable(varName);
+    // 这里必须使用 == 比较对象地址，所以不能使用 indexOf
+    for (int i = 0; i < localVariables.size(); i++) {
+        if (localVariables.get(i) == localVariable) {
+            return i;
+        }
+    }
+    return -1;
+}
+```
+
+验证问题已修复的`hant`代码（`hant_examples\if\if_scope_test.hant`）：
+
+```hant
+print "scope test about variable x"
+if 1 {
+    var x = 20
+    print x ** 2
+    if 1 {
+        var x = 30
+        {
+            var x = 40
+            print x ** 2
+        }
+        print x ** 2
+    }
+} else {
+    var x = 1234
+    print x ** 2
+}
+if 1 var x = 50
+else if 1 var x = 60
+print x ** 2
+```
+
+## Part10：2-支持关系运算符
 
 TODO
 
@@ -1575,3 +2034,4 @@ TODO
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html
 2. Creating JVM language中文翻译：https://juejin.cn/post/6844903671679942663
 3. `Mockito`：https://blog.csdn.net/shangboerds/article/details/99611079
+4. 编译原理笔记9：语法分析树、语法树、二义性的消除：https://www.jianshu.com/p/2d55d50f8bc4

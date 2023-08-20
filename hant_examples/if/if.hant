@@ -1,0 +1,48 @@
+var x = 10
+
+if 1 {
+    var y = 20
+    print x + y // 30
+}
+
+if 0 {
+
+} else {
+    var y = 30
+    print x + y // 40
+}
+
+if 0 {
+    var unused = 123
+} else if 1 {
+    var y = 40
+    print x + y // 50
+} else {}
+
+if 0 {
+    var unused = 124
+} else if 0 {
+    var unused = 125
+} else {
+    var y = 50
+    print x + y // 60
+}
+
+var y = 60
+print x + y // 70
+
+if 1 {
+    var y = 70
+    print x + y // 80
+    if 1 {
+        var y = 80
+        print x + y // 90
+        if 1 var y = 90
+        else var y = 100
+        var z = 90
+        print x + y // 90
+        print x + z // 100
+    }
+    print x + y // 80
+}
+print x + y // 70

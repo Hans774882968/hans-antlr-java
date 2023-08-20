@@ -1,0 +1,38 @@
+var x = 10
+if 1 var y = 20
+else var z = 30
+var w = 40
+print x + w // 50
+
+if x - 10 var y = 40
+else var z = 50
+var w2 = 60
+print x + w2 // 70
+
+if x ** 2 - 100 var y = 60
+else {
+    var z = 70
+    print (3 * x + z) // 100
+}
+var w3 = x ** 2 + w + w2
+print w3 // 200
+
+print "scope test about variable x"
+if 1 {
+    var x = 20
+    print x ** 2
+    if 1 {
+        var x = 30
+        {
+            var x = 40
+            print x ** 2
+        }
+        print x ** 2
+    }
+} else {
+    var x = 1234
+    print x ** 2
+}
+if 1 var x = 50
+else if 1 var x = 60
+print x ** 2
