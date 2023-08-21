@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes;
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
+import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Mod;
@@ -20,20 +21,28 @@ import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
+import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
+import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
+import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@AllArgsConstructor
 @Data
 public class ExpressionGenerator implements Opcodes {
     private MethodVisitor mv;
     private Scope scope;
+    private ConditionalExpressionGenerator conditionalExpressionGenerator;
+
+    public ExpressionGenerator(MethodVisitor mv, Scope scope) {
+        this.mv = mv;
+        this.scope = scope;
+        this.conditionalExpressionGenerator = new ConditionalExpressionGenerator(this, mv);
+    }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
     public void generate(VarReference varReference) {
@@ -67,6 +76,21 @@ public class ExpressionGenerator implements Opcodes {
             stringValue = StringUtils.removeEnd(stringValue, "\"");
             mv.visitLdcInsn(stringValue);
         }
+    }
+
+    public void generate(UnaryPositive expression) {
+        expression.getExpression().accept(this);
+    }
+
+    public void generate(UnaryNegative expression) {
+        expression.getExpression().accept(this);
+        mv.visitInsn(INEG);
+    }
+
+    public void generate(UnaryTilde expression) {
+        expression.getExpression().accept(this);
+        mv.visitInsn(ICONST_M1);
+        mv.visitInsn(IXOR);
     }
 
     public void generate(Addition expression) {
@@ -136,6 +160,10 @@ public class ExpressionGenerator implements Opcodes {
     public void generate(Or expression) {
         evaluateArithmeticComponents(expression);
         mv.visitInsn(IOR);
+    }
+
+    public void generate(ConditionalExpression conditionalExpression) {
+        conditionalExpressionGenerator.generate(conditionalExpression);
     }
 
     // 递归，直到走到 generate(VarReference varReference) or generate(Value value)

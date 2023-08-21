@@ -1,0 +1,30 @@
+if 4 <= 4 {
+    print "4 <= 4"
+}
+
+var const1 = 55
+if const1 >= 44 {
+    print "55 >= 44"
+}
+
+if const1 < 44 {} else {
+    print "!(55 < 44)"
+}
+
+if const1 > 44 {
+    print "55 > 44"
+}
+
+if const1 <= 44 {} else {
+    print "!(55 <= 44)"
+}
+
+/* Unsupported arithmetic operation between Expression(type=BOOLEAN) and Expression(type=INT)
+var x = (55 >= 44) - 3
+print x
+*/
+
+/* TODO: 支持 boolean 类型后才能打印
+var x = 55 >= 44
+print x
+*/

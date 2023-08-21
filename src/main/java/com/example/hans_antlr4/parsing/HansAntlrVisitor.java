@@ -88,6 +88,26 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitValueExpr(HansAntlrParser.ValueExprContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code OR}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitOR(HansAntlrParser.ORContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code ADDITIVE}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code SHIFT}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -108,14 +128,14 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitVarReference(HansAntlrParser.VarReferenceContext ctx);
 
 	/**
-	 * Visit a parse tree produced by the {@code OR}
+	 * Visit a parse tree produced by the {@code BRACKET}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
 	 * @param ctx
 	 *            the parse tree
 	 * @return the visitor result
 	 */
-	T visitOR(HansAntlrParser.ORContext ctx);
+	T visitBRACKET(HansAntlrParser.BRACKETContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code MULTIPLICATIVE}
@@ -126,16 +146,6 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMULTIPLICATIVE(HansAntlrParser.MULTIPLICATIVEContext ctx);
-
-	/**
-	 * Visit a parse tree produced by the {@code ADDITIVE}
-	 * labeled alternative in {@link HansAntlrParser#expression}.
-	 * 
-	 * @param ctx
-	 *            the parse tree
-	 * @return the visitor result
-	 */
-	T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code EQUALITY}
@@ -176,6 +186,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitXOR(HansAntlrParser.XORContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code UNARY}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitUNARY(HansAntlrParser.UNARYContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#variableReference}.

@@ -15,9 +15,16 @@
 1. 原作者给出的规则`STRING: '"' .* '"';`是贪婪模式，会导致`"1"\n"2"`这个例子只匹配到一个字符串。我把它改成了非贪婪模式`STRING: '"' .*? '"';`。
 2. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。见本文《Part8：1-支持算数运算》一节。
 3. 原作者的`if`语句后跟的statement只有为块语句时才新建了作用域，我进行了修复。
-4. 原作者项目存在变量shadow问题，我进行了修复，详见《原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复》。
+4. 原作者项目存在变量shadow问题，我进行了修复，详见《原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复》一节。
+5. 原作者项目括号表达式定义的优先级有问题，我进行了修复，详见《Part10：2-支持关系运算符+原作者项目括号优先级问题修复》一节。
 
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
+
+目前支持的语言特性：
+
+- 定义变量：`var foo = 123`。
+- 输出到控制台：`print expression`。
+- 完整的表达式支持。相比于C语言仅三目运算符、逗号表达式不支持。
 
 环境：
 - Windows10
@@ -1290,12 +1297,13 @@ tips：
 1. 产生式的顺序就是优先级。比如，在这个文法里，加法的优先级大于减法。
 2. 这条规则有直接左递归，不过antlr4是允许直接左递归的，所以没问题。但编写规则的时候要注意，antlr4目前不支持间接左递归。
 
-这个文法至少存在两个问题：
+这个文法至少存在3个问题：
 
 1. 不支持`(x0)`，只支持`(x0 + 0)`；不支持`-x0`，只支持`0 - x0`。
 2. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。
+3. 确定的括号优先级不正确，导致`3 * 10 + 70`算出100，但`(3 * 10 + 70)`算出240。
 
-TODO: 参考Java等语言的antlr描述，改造文法解决问题1。
+问题1和3将在《Part10：2-支持关系运算符+原作者项目括号优先级问题修复》一节解决。
 
 为了解决问题2，需要让`'+'`和`'-'`出现在同一条产生式。改造后的文法如下：
 
@@ -2027,9 +2035,46 @@ else if 1 var x = 60
 print x ** 2
 ```
 
-## Part10：2-支持关系运算符
+## Part10：2-支持关系运算符+原作者项目括号优先级问题修复
 
 TODO
+
+参考[参考链接5](https://blog.csdn.net/weixin_41960890/article/details/105263228)重新设计表达式的语法规则：
+
+```g4
+expression:
+	variableReference								# VarReference
+	| value											# ValueExpr
+	| '(' expression ')'							# BRACKET
+	| UNARY = ('+' | '-' | '~') expression			# UNARY
+	| expression POW expression						# POW
+	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
+	| expression ADDITIVE = ('+' | '-') expression	# ADDITIVE
+	| expression SHIFT expression					# SHIFT
+	| expression RELATIONAL expression				# RELATIONAL
+	| expression EQUALITY expression				# EQUALITY
+	| expression AND expression						# AND
+	| expression XOR expression						# XOR
+	| expression OR expression						# OR;
+
+// hant TOKENS
+POW: '**';
+MULTIPLICATIVE: '*' | '/' | '%';
+SHIFT: '<<' | '>>' | '>>>';
+RELATIONAL: '<' | '<=' | '>' | '>=';
+EQUALITY: '==' | '!=';
+AND: '&';
+XOR: '^';
+OR: '|';
+```
+
+1. 括号表达式应该处于最高优先级。`variableReference`、`value`和`'(' expression ')'`的优先级关系随意。
+2. `UNARY`表达式的优先级目前仅次于括号表达式。
+2. `UNARY`和之前的词法规则`ADDITIVE`在一起会产生歧义，因此我们把词法规则`ADDITIVE`删除，并改成Token，这样获取运算符的方式就由`String op = ctx.ADDITIVE().getText();`变为`String op = ctx.ADDITIVE.getText();`。
+
+[表达式优先级相关单测用例](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/HantOperatorPriorityTest.java)。
+
+[表达式优先级相关`.hant`测试代码](https://github.com/Hans774882968/hans-antlr-java/blob/495ecef88aaa3b2289210290a0fbb72e23a57bef/hant_examples/expression/expression_base.hant)。
 
 ## 参考资料
 
@@ -2037,3 +2082,4 @@ TODO
 2. Creating JVM language中文翻译：https://juejin.cn/post/6844903671679942663
 3. `Mockito`：https://blog.csdn.net/shangboerds/article/details/99611079
 4. 编译原理笔记9：语法分析树、语法树、二义性的消除：https://www.jianshu.com/p/2d55d50f8bc4
+5. 【小白打造编译器系列7】Anltr 重构脚本语言：https://blog.csdn.net/weixin_41960890/article/details/105263228

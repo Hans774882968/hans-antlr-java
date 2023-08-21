@@ -18,23 +18,16 @@ ifStatement:
 expression:
 	variableReference								# VarReference
 	| value											# ValueExpr
-	| '(' expression POW expression ')'				# POW
+	| '(' expression ')'							# BRACKET
+	| UNARY = ('+' | '-' | '~') expression			# UNARY
 	| expression POW expression						# POW
-	| '(' expression MULTIPLICATIVE expression ')'	# MULTIPLICATIVE
 	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
-	| '(' expression ADDITIVE expression ')'		# ADDITIVE
-	| expression ADDITIVE expression				# ADDITIVE
-	| '(' expression SHIFT expression ')'			# SHIFT
+	| expression ADDITIVE = ('+' | '-') expression	# ADDITIVE
 	| expression SHIFT expression					# SHIFT
-	| '(' expression RELATIONAL expression ')'		# RELATIONAL
 	| expression RELATIONAL expression				# RELATIONAL
-	| '(' expression EQUALITY expression ')'		# EQUALITY
 	| expression EQUALITY expression				# EQUALITY
-	| '(' expression AND expression ')'				# AND
 	| expression AND expression						# AND
-	| '(' expression XOR expression ')'				# XOR
 	| expression XOR expression						# XOR
-	| '(' expression OR expression ')'				# OR
 	| expression OR expression						# OR;
 variableReference: Identifier;
 
@@ -44,7 +37,6 @@ value: op = NUMBER | op = STRING;
 // hant TOKENS
 POW: '**';
 MULTIPLICATIVE: '*' | '/' | '%';
-ADDITIVE: '+' | '-';
 SHIFT: '<<' | '>>' | '>>>';
 RELATIONAL: '<' | '<=' | '>' | '>=';
 EQUALITY: '==' | '!=';

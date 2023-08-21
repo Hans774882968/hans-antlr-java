@@ -3,11 +3,11 @@ var x2 = 177
 var v1 = x1 & x2
 var v2 = x1 | x2
 var v3 = x1 ^ x2
-print v1
-print v2
-print v3
+print v1 // 32
+print v2 // 245
+print v3 // 213
 var v4 = x1 << 1 | 1
 print v4
 var v5 = x2 << 1 | 1
 print v5
-print x1 & x2 | 250 ^ 260
+print x1 & x2 | 250 ^ 260 // 510

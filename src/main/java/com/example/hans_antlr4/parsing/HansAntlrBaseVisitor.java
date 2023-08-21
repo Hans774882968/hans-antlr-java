@@ -128,6 +128,32 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitOR(HansAntlrParser.ORContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitSHIFT(HansAntlrParser.SHIFTContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -154,7 +180,7 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
-	public T visitOR(HansAntlrParser.ORContext ctx) {
+	public T visitBRACKET(HansAntlrParser.BRACKETContext ctx) {
 		return visitChildren(ctx);
 	}
 
@@ -168,19 +194,6 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitMULTIPLICATIVE(HansAntlrParser.MULTIPLICATIVEContext ctx) {
-		return visitChildren(ctx);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.
-	 * </p>
-	 */
-	@Override
-	public T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx) {
 		return visitChildren(ctx);
 	}
 
@@ -233,6 +246,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitXOR(HansAntlrParser.XORContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitUNARY(HansAntlrParser.UNARYContext ctx) {
 		return visitChildren(ctx);
 	}
 

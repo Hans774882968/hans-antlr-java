@@ -1,8 +1,11 @@
 package com.example.hans_antlr4.parsing.biz_visitor;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Additive;
 import com.example.hans_antlr4.domain.expression.And;
+import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Mod;
@@ -18,8 +21,14 @@ import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
+import com.example.hans_antlr4.domain.expression.unary.Unary;
+import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
+import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
+import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
+import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
+import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
@@ -47,6 +56,25 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
     }
 
     @Override
+    public Expression visitBRACKET(HansAntlrParser.BRACKETContext ctx) {
+        Expression expression = ctx.expression().accept(this);
+        return expression;
+    }
+
+    @Override
+    public Unary visitUNARY(HansAntlrParser.UNARYContext ctx) {
+        Expression expression = ctx.expression().accept(this);
+        String op = ctx.UNARY.getText();
+        if (op.equals("+")) {
+            return new UnaryPositive(expression);
+        }
+        if (op.equals("-")) {
+            return new UnaryNegative(expression);
+        }
+        return new UnaryTilde(expression);
+    }
+
+    @Override
     public Pow visitPOW(HansAntlrParser.POWContext ctx) {
         ExpressionContext leftExpressionContext = ctx.expression(0);
         ExpressionContext rightExpressionContext = ctx.expression(1);
@@ -61,7 +89,7 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         ExpressionContext rightExpressionContext = ctx.expression(1);
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
-        String op = ctx.ADDITIVE().getText();
+        String op = ctx.ADDITIVE.getText();
         if (op.equals("+")) {
             return new Addition(leftExpression, rightExpression);
         }
@@ -98,6 +126,34 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
             return new Shr(leftExpression, rightExpression);
         }
         return new UnsignedShr(leftExpression, rightExpression);
+    }
+
+    public ConditionalExpression getConditionalExpression(
+            ExpressionContext leftExpressionContext,
+            ExpressionContext rightExpressionContext,
+            TerminalNode terminalNode) {
+        Expression leftExpression = leftExpressionContext.accept(this);
+        Expression rightExpression = rightExpressionContext != null
+                ? rightExpressionContext.accept(this)
+                : new Value(BuiltInType.INT, "0");
+        CompareSign cmpSign = terminalNode != null
+                ? CompareSign.fromString(terminalNode.getText())
+                : CompareSign.NOT_EQUAL;
+        return new ConditionalExpression(leftExpression, rightExpression, cmpSign);
+    }
+
+    @Override
+    public ConditionalExpression visitRELATIONAL(HansAntlrParser.RELATIONALContext ctx) {
+        ExpressionContext leftExpressionContext = ctx.expression(0);
+        ExpressionContext rightExpressionContext = ctx.expression(1);
+        return getConditionalExpression(leftExpressionContext, rightExpressionContext, ctx.RELATIONAL());
+    }
+
+    @Override
+    public ConditionalExpression visitEQUALITY(HansAntlrParser.EQUALITYContext ctx) {
+        ExpressionContext leftExpressionContext = ctx.expression(0);
+        ExpressionContext rightExpressionContext = ctx.expression(1);
+        return getConditionalExpression(leftExpressionContext, rightExpressionContext, ctx.EQUALITY());
     }
 
     @Override

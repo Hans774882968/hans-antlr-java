@@ -33,4 +33,40 @@ var x13 = 3 - 1 + 2
 print x13 // 4
 var x14 = 12 + 2 * 6 / 3 * 2
 print x14 // 20
-print (3 * 10 + 70) // TODO: 居然输出240……后来发现原作者的项目也有这个bug。应修改文法规则解决这个问题！
+print (3 * 10 + 70) // 100
+print 3 * 10 + 70 // 100
+print (3 * (10 + 70)) // 240
+
+print "----- unary -----"
+var x15 = -114514
+print x15
+var x16 = +114514
+print x16
+var x17 = ~114514
+print x17 // -114515
+var x18 = ~-~~-+~-+114514
+print x18 // -114514
+var const1 = 114514
+var const2 = 10
+var x19 = const1 - +~~- -+~ const2
+print x19 // 114525
+var x20 = (const1 - +~~- -+~ const2)
+print x20 // 114525
+var x21 = -const1 - +~~- -+~ const2
+print x21 // -114503
+var x22 = const1 - (const1 % const2) + const2
+print x22 // 114520
+var x23 = x22 - (const1 - const1 % const2 + const2)
+print x23 // 0
+var x24 = 20&-20
+print x24 // 4
+
+print "----- 综合 -----"
+var x25 = ~(40 + 30) * ~(20 + 10)
+print x25 // 2201
+var x26 = -+-~(10 + 2 * -+~~-30 / 2 * 2)
+print x26 // -71
+var x27 = (2+3)*4+5+5*2/(5-3)
+print x27 // 30
+var x28 = ((2 + 3) * 4 + 5 + 5 * 2 / (5 - 3))
+print x28 // 30
