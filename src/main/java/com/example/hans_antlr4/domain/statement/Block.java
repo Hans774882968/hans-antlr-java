@@ -8,6 +8,7 @@ import com.example.hans_antlr4.domain.scope.Scope;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
@@ -22,5 +23,21 @@ public class Block implements Statement {
 
     public List<Statement> getStatements() {
         return Collections.unmodifiableList(statements);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Block)) {
+            return false;
+        }
+        Block block = (Block) o;
+        return Objects.equals(statements, block.statements) && Objects.equals(scope, block.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(statements, scope);
     }
 }

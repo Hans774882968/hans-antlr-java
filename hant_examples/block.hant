@@ -27,3 +27,7 @@ print x
     }
     print x + y // 40
 }
+
+print "-----"
+
+{ var x1 = 10 } var x1 = 15 { var x1 = 30 { var y1 = 40 } { var y1 = 50 print x1 + y1 } } var y1 = 60 print x1 + y1 // 80和75

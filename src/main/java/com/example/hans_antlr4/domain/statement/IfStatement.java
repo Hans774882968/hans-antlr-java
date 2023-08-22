@@ -6,6 +6,7 @@ import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.domain.expression.Expression;
 
 import lombok.Getter;
+import java.util.Objects;
 
 @Getter
 public class IfStatement implements Statement {
@@ -32,5 +33,23 @@ public class IfStatement implements Statement {
 
     public Optional<StatementAfterIf> getFalseStatement() {
         return falseStatement;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof IfStatement)) {
+            return false;
+        }
+        IfStatement ifStatement = (IfStatement) o;
+        return Objects.equals(condition, ifStatement.condition)
+                && Objects.equals(trueStatement, ifStatement.trueStatement)
+                && Objects.equals(falseStatement, ifStatement.falseStatement);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(condition, trueStatement, falseStatement);
     }
 }

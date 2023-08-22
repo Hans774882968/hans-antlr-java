@@ -1,5 +1,5 @@
 var x = 10
-if 1 var y = 20
+if 123 var y = 20
 else var z = 30
 var w = 40
 print x + w // 50
@@ -20,19 +20,20 @@ print w3 // 200
 print "scope test about variable x"
 if 1 {
     var x = 20
-    print x ** 2
+    print x ** 2 // 400
     if 1 {
         var x = 30
         {
             var x = 40
-            print x ** 2
+            print x ** 2 // 1600
         }
-        print x ** 2
+        print x ** 2 // 900
     }
 } else {
     var x = 1234
     print x ** 2
 }
+print x ** 2 // 100
 if 1 var x = 50
 else if 1 var x = 60
-print x ** 2
+print x ** 2 // 100

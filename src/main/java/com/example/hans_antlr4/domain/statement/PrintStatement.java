@@ -5,6 +5,7 @@ import com.example.hans_antlr4.domain.expression.Expression;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Data
@@ -14,5 +15,21 @@ public class PrintStatement implements Statement {
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof PrintStatement)) {
+            return false;
+        }
+        PrintStatement printStatement = (PrintStatement) o;
+        return Objects.equals(expression, printStatement.expression);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(expression);
     }
 }

@@ -2,6 +2,7 @@ package com.example.hans_antlr4.domain.scope;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.example.hans_antlr4.domain.global.MetaData;
 import com.example.hans_antlr4.exception.LocalVariableNotFoundException;
@@ -45,5 +46,21 @@ public class Scope {
 
     public String getClassName() {
         return metaData.getClassName();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Scope)) {
+            return false;
+        }
+        Scope scope = (Scope) o;
+        return Objects.equals(localVariables, scope.localVariables) && Objects.equals(metaData, scope.metaData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(localVariables, metaData);
     }
 }

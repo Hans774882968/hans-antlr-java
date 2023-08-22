@@ -1,5 +1,7 @@
 package com.example.hans_antlr4.domain.expression;
 
+import java.util.Objects;
+
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 
 public class Pow extends ArithmeticExpression {
@@ -10,5 +12,23 @@ public class Pow extends ArithmeticExpression {
     @Override
     public void accept(ExpressionGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof Pow)) {
+            return false;
+        }
+        Pow powExpression = (Pow) o;
+        return Objects.equals(getType(), powExpression.getType())
+                && Objects.equals(getLeftExpression(), powExpression.getLeftExpression())
+                && Objects.equals(getRightExpression(), powExpression.getRightExpression());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getType(), getLeftExpression(), getRightExpression());
     }
 }

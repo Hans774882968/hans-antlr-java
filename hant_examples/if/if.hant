@@ -31,7 +31,7 @@ if 0 {
 var y = 60
 print x + y // 70
 
-if 1 {
+if x & 1 ^ 8 {
     var y = 70
     print x + y // 80
     if 1 {

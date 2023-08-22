@@ -1581,7 +1581,49 @@ public class HansAntlr4Test {
 
 TODO: 想办法把`--add-opens=java.base/java.lang=ALL-UNNAMED`传入`mvn.cmd`，从而可以恢复打包命令的单测。
 
-另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们补充了`src\main\java\com\example\hans_antlr4\domain\expression\ArithmeticExpression.java`等4个继承`Expression`的类和`src\main\java\com\example\hans_antlr4\domain\statement\VariableDeclaration.java`的`equals`、`hashCode`方法。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改。继承`ArithmeticExpression`的类，比如`Additive`、`Shift`等中间父类，都不需要再实现`equals`和`hashCode`方法。
+另外，为了支持使用junit的`Assert.assertEquals()`方便地验证表达式树符合预期，我们需要补充`domain`下所有用到的类——在本项目中是所有没有子类的类的`equals`和`hashCode`方法。比如，`Unary, Additive`有子类，没被直接用到，不需要补充；`Addition`没有子类，会被直接用到，需要补充。补充过程为：先使用VSCode插件`Java Code Generators`生成`equals`和`hashCode`方法，再进行修改，把这个类具有的所有属性包含进`Objects.equals / Objects.hash`。下面举几个例子：
+
+1. `Scope`。
+
+```java
+@Override
+public boolean equals(Object o) {
+    if (o == this)
+        return true;
+    if (!(o instanceof Scope)) {
+        return false;
+    }
+    Scope scope = (Scope) o;
+    return Objects.equals(localVariables, scope.localVariables) && Objects.equals(metaData, scope.metaData);
+}
+
+@Override
+public int hashCode() {
+    return Objects.hash(localVariables, metaData);
+}
+```
+
+2、`Addition`。
+
+```java
+@Override
+public boolean equals(Object o) {
+    if (o == this)
+        return true;
+    if (!(o instanceof Addition)) {
+        return false;
+    }
+    Addition addition = (Addition) o;
+    return Objects.equals(getType(), addition.getType())
+            && Objects.equals(getLeftExpression(), addition.getLeftExpression())
+            && Objects.equals(getRightExpression(), addition.getRightExpression());
+}
+
+@Override
+public int hashCode() {
+    return Objects.hash(getType(), getLeftExpression(), getRightExpression());
+}
+```
 
 ## Part10：1-支持block语句和if语句
 
@@ -1916,6 +1958,38 @@ public class IfStatementGenerator implements Opcodes {
 }
 ```
 
+JVM 中有一些指令来做分支判断：
+
+`if<eq,ne,lt,le,gt,ge>` - 操作数栈出栈，和 0 比较。
+`if_icmp_<eq,ne,lt,le,gt,ge>` - 从栈上出栈两个值，比较是否相等。
+`if[non]null` - 检查空值。
+
+为了简单，本节我们只使用`IFNE`指令。如果学过汇编，上面的代码还是比较容易理解的。
+
+```assembly
+IFNE trueLabel ; 如果栈顶值不等于0，就跳到true分支代码对应的标签
+; 生成false分支的代码，不跳转时就继续往下一句执行，也就是走false分支了
+GOTO endLabel ; false分支走完，不能再走true分支
+trueLabel:
+; 生成true分支的代码
+endLabel:
+; 后续代码
+```
+
+同理，我们也可以写下面的代码：
+
+```assembly
+IFEQ falseLabel
+; true分支代码
+GOTO endLabel
+falseLabel:
+; false分支代码
+endLabel:
+; 后续代码
+```
+
+[相关单测代码](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/HantIfTest.java)
+
 相关测试代码：`hant_examples\if`下的`.hant`文件：
 
 - `hant_examples\if\ambiguity.hant`：测试二义性。
@@ -2035,11 +2109,13 @@ else if 1 var x = 60
 print x ** 2
 ```
 
-## Part10：2-支持关系运算符+原作者项目括号优先级问题修复
+## Part10：2-支持关系运算符、一元运算符+原作者项目括号优先级问题修复
 
-TODO
+原作者项目Part10实际上包含了支持关系运算符和支持if语句两部分，为了将边界清晰地展示给大家，我把这两者拆分开来实现了。在不支持关系运算符的时候，你也已经可以直接在`if`语句上写表达式，只不过需要加`-noverify`参数才能运行。那么为什么需要支持关系运算符？我理解是为后续支持boolean类型做准备。
 
-参考[参考链接5](https://blog.csdn.net/weixin_41960890/article/details/105263228)重新设计表达式的语法规则：
+另外，我们已经发现原作者项目的文法规则确定的括号优先级不正确，导致`3 * 10 + 70`算出100，但`(3 * 10 + 70)`算出240。既然这一节要支持关系运算符和一元运算符，那么我们顺便把这个问题也解决了。
+
+首先参考[参考链接5](https://blog.csdn.net/weixin_41960890/article/details/105263228)重新设计表达式的语法规则：
 
 ```g4
 expression:
@@ -2072,9 +2148,245 @@ OR: '|';
 2. `UNARY`表达式的优先级目前仅次于括号表达式。
 2. `UNARY`和之前的词法规则`ADDITIVE`在一起会产生歧义，因此我们把词法规则`ADDITIVE`删除，并改成Token，这样获取运算符的方式就由`String op = ctx.ADDITIVE().getText();`变为`String op = ctx.ADDITIVE.getText();`。
 
+### 支持一元运算符
+
+新增`unary`文件夹和一元运算符相关的类。继承关系：`UnaryNegative, UnaryPositive, UnaryTilde -> Unary`。
+
+```java
+@Getter
+public abstract class Unary extends Expression {
+    private Expression expression;
+
+    public Unary(Type type, Expression expression) {
+        super(type);
+        this.expression = expression;
+    }
+}
+
+public class UnaryNegative extends Unary {
+    public UnaryNegative(Expression expression) {
+        super(expression.getType(), expression);
+    }
+
+    @Override
+    public void accept(ExpressionGenerator generator) {
+        generator.generate(this);
+    }
+}
+```
+
+`ExpressionVisitor`新增：
+
+```java
+@Override
+public Unary visitUNARY(HansAntlrParser.UNARYContext ctx) {
+    Expression expression = ctx.expression().accept(this);
+    String op = ctx.UNARY.getText();
+    if (op.equals("+")) {
+        return new UnaryPositive(expression);
+    }
+    if (op.equals("-")) {
+        return new UnaryNegative(expression);
+    }
+    return new UnaryTilde(expression);
+}
+```
+
+随便写段Java代码：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        int x = 10;
+        System.out.println(~-~~-+~-+x);
+    }
+}
+```
+
+很快就能确定一元运算符所使用的指令：`+`无额外指令，`-`生成`INEG`指令，`~`生成`ICONST_M1`和`IXOR`指令（异或-1）。
+
+`ExpressionGenerator`新增：
+
+```java
+public void generate(UnaryPositive expression) {
+    expression.getExpression().accept(this);
+}
+
+public void generate(UnaryNegative expression) {
+    expression.getExpression().accept(this);
+    mv.visitInsn(INEG);
+}
+
+public void generate(UnaryTilde expression) {
+    expression.getExpression().accept(this);
+    mv.visitInsn(ICONST_M1);
+    mv.visitInsn(IXOR);
+}
+```
+
+[相关`.hant`测试代码](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/expression_base.hant)
+
+### 原作者项目括号优先级问题修复
+
+相比于其他运算符比较特殊的一点是，我们不需要引入括号类，因此目前我没有引入括号类。但不引入括号类有一个缺点：拿到一棵表达式树，要生成它对应的**括号最少的**表达式字符串变得困难了（给每棵子树都添加括号是一个可行的字符串）。
+
+因为表达式树已经包含了运算优先级信息，所以我们不需要修改字节码生成部分，只需要修改visitor部分。
+
+```java
+@Override
+public Expression visitBRACKET(HansAntlrParser.BRACKETContext ctx) {
+    Expression expression = ctx.expression().accept(this);
+    return expression;
+}
+```
+
 [表达式优先级相关单测用例](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/HantOperatorPriorityTest.java)。
 
 [表达式优先级相关`.hant`测试代码](https://github.com/Hans774882968/hans-antlr-java/blob/495ecef88aaa3b2289210290a0fbb72e23a57bef/hant_examples/expression/expression_base.hant)。
+
+### 支持关系运算符
+
+首先引入`ConditionalExpression`类。`src\main\java\com\example\hans_antlr4\domain\expression\ConditionalExpression.java`：
+
+```java
+@Getter
+public class ConditionalExpression extends Expression {
+    private final CompareSign compareSign;
+    private final Expression leftExpression;
+    private final Expression rightExpression;
+    private final boolean isPrimitiveComparison;
+
+    public ConditionalExpression(Expression leftExpression, Expression rightExpression, CompareSign compareSign) {
+        super(BuiltInType.BOOLEAN);
+        this.compareSign = compareSign;
+        this.leftExpression = leftExpression;
+        this.rightExpression = rightExpression;
+        boolean leftExpressionIsPrimitive = leftExpression.getType().getTypeClass().isPrimitive();
+        boolean rightExpressionIsPrimitive = rightExpression.getType().getTypeClass().isPrimitive();
+        isPrimitiveComparison = leftExpressionIsPrimitive && rightExpressionIsPrimitive;
+        boolean isObjectsComparison = !leftExpressionIsPrimitive && !rightExpressionIsPrimitive;
+        boolean isMixedComparison = !isPrimitiveComparison && !isObjectsComparison;
+        if (isMixedComparison) {
+            throw new MixedComparisonNotAllowedException(leftExpression.getType(), rightExpression.getType()); // src\main\java\com\example\hans_antlr4\exception\MixedComparisonNotAllowedException.java
+        }
+    }
+
+    @Override
+    public void accept(ExpressionGenerator generator) {
+        generator.generate(this);
+    }
+}
+```
+
+1. 引入`CompareSign`枚举不是必须的，是一种Clean Code技巧。
+2. `isPrimitiveComparison`字段目前没有用到，在后续支持对象的比较时才会用到。
+
+`ExpressionVisitor`新增：
+
+```java
+public ConditionalExpression getConditionalExpression(
+        ExpressionContext leftExpressionContext,
+        ExpressionContext rightExpressionContext,
+        TerminalNode terminalNode) {
+    Expression leftExpression = leftExpressionContext.accept(this);
+    Expression rightExpression = rightExpressionContext != null
+            ? rightExpressionContext.accept(this)
+            : new Value(BuiltInType.INT, "0");
+    CompareSign cmpSign = terminalNode != null
+            ? CompareSign.fromString(terminalNode.getText())
+            : CompareSign.NOT_EQUAL;
+    return new ConditionalExpression(leftExpression, rightExpression, cmpSign);
+}
+
+@Override
+public ConditionalExpression visitRELATIONAL(HansAntlrParser.RELATIONALContext ctx) {
+    ExpressionContext leftExpressionContext = ctx.expression(0);
+    ExpressionContext rightExpressionContext = ctx.expression(1);
+    return getConditionalExpression(leftExpressionContext, rightExpressionContext, ctx.RELATIONAL());
+}
+
+@Override
+public ConditionalExpression visitEQUALITY(HansAntlrParser.EQUALITYContext ctx) {
+    ExpressionContext leftExpressionContext = ctx.expression(0);
+    ExpressionContext rightExpressionContext = ctx.expression(1);
+    return getConditionalExpression(leftExpressionContext, rightExpressionContext, ctx.EQUALITY());
+}
+```
+
+为了不让`ExpressionGenerator`代码量膨胀得太快，这次我拆分出了`src\main\java\com\example\hans_antlr4\bytecode_gen\expression\ConditionalExpressionGenerator.java`。
+
+```java
+@AllArgsConstructor
+public class ConditionalExpressionGenerator implements Opcodes {
+    private ExpressionGenerator parent;
+    private MethodVisitor mv;
+
+    public void generate(ConditionalExpression conditionalExpression) {
+        Expression leftExpression = conditionalExpression.getLeftExpression();
+        Expression rightExpression = conditionalExpression.getRightExpression();
+        CompareSign compareSign = conditionalExpression.getCompareSign();
+        if (conditionalExpression.isPrimitiveComparison()) {
+            generatePrimitivesComparison(leftExpression, rightExpression, compareSign);
+        } else {
+            throw new SupportGenerateObjectsComparisonLaterException(leftExpression, rightExpression, compareSign);
+        }
+        Label endLabel = new Label();
+        Label trueLabel = new Label();
+        mv.visitJumpInsn(compareSign.getOpcode(), trueLabel);
+        mv.visitInsn(ICONST_0);
+        mv.visitJumpInsn(GOTO, endLabel);
+        mv.visitLabel(trueLabel);
+        mv.visitInsn(ICONST_1);
+        mv.visitLabel(endLabel);
+    }
+
+    private void generatePrimitivesComparison(Expression leftExpression, Expression rightExpression,
+            CompareSign compareSign) {
+        leftExpression.accept(parent);
+        rightExpression.accept(parent);
+        mv.visitInsn(ISUB);
+    }
+}
+```
+
+这一节的核心代码，算是对上一节学到的`IFNE`等指令的复习。如果学过汇编，这段代码就很容易理解。以
+
+```hant
+var const1 = 55
+if const1 >= 44 {
+    print "55 >= 44"
+}
+```
+
+为例。这里`compareSign.getOpcode() = IFGE`。
+
+```assembly
+; 左侧的被减数入栈
+; 右侧的减数入栈
+ISUB ; 把减法结果保存到栈顶
+IFGE trueLabel ; 如果栈顶的减法结果大于等于0，则跳到true分支
+; 立即数0加入栈顶
+GOTO endLabel
+trueLabel:
+; 立即数1加入栈顶
+endLabel:
+; 后续代码
+```
+
+[相关单测代码](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/HantIfTest.java)
+
+相关`.hant`测试代码：
+
+1. [relational_exp.hant](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/if/relational_exp.hant)
+2. [equality_exp.hant](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/if/equality_exp.hant)
+
+## Part13-支持for循环
+
+TODO
+
+## Part19-支持赋值运算符
+
+TODO
 
 ## 参考资料
 

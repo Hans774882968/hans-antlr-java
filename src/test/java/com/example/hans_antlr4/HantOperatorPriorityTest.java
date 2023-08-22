@@ -130,7 +130,6 @@ public class HantOperatorPriorityTest {
         Assert.assertEquals(variableDeclaration, statement);
     }
 
-    // TODO: 把 Pow 改成 Addition 发现仍然相等，说明 equals 和 hashCode 重载要下放到子类
     @Test
     public void unaryAndBracketTest1() {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = ~(40 + 30) ** ~-3");
