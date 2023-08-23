@@ -8,12 +8,21 @@ package com.example.hans_antlr4.parsing;
 compilationUnit: statements EOF;
 statements: statement*;
 block: '{' statements '}';
-statement: block | variable | ifStatement | print;
+statement:
+	variable
+	| print
+	| block
+	| ifStatement
+	| forStatement;
 variable: VARIABLE Identifier EQUALS expression;
 ifStatement:
 	'if' ('(')? expression (')')? trueStatement = statement (
 		'else' falseStatement = statement
 	)?;
+
+forStatement: 'for' ('(')? rangedForConditions (')')? statement;
+rangedForConditions:
+	iterator = variableReference ':' startExpr = expression range = 'to' endExpr = expression;
 
 expression:
 	variableReference								# VarReference

@@ -12,12 +12,15 @@ import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
+import com.example.hans_antlr4.domain.statement.RangedForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.exception.SupportAssignmentLaterException;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
+import com.example.hans_antlr4.parsing.HansAntlrParser.RangedForConditionsContext;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -100,5 +103,28 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         IfStatement ifStatementResult = new IfStatement(condition, trueStatementAfterIf, falseStatementAfterIf);
         instructionsQueue.add(ifStatementResult);
         return ifStatementResult;
+    }
+
+    @Override
+    public RangedForStatement visitForStatement(HansAntlrParser.ForStatementContext ctx) {
+        Scope newScope = new Scope(scope);
+        final RangedForConditionsContext rangedForConditionsContext = ctx.rangedForConditions();
+        final ExpressionVisitor expressionVisitor = new ExpressionVisitor(newScope);
+        final String iteratorVarName = rangedForConditionsContext.variableReference().getText();
+        final Expression startExpr = rangedForConditionsContext.startExpr.accept(expressionVisitor);
+        final Expression endExpr = rangedForConditionsContext.endExpr.accept(expressionVisitor);
+        final StatementVisitor statementVisitor = new StatementVisitor(newScope);
+        // TODO: 实现赋值表达式后再修改这里
+        if (newScope.localVariableExists(iteratorVarName)) {
+            throw new SupportAssignmentLaterException();
+        }
+        newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
+        Statement iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);
+        Statement statement = ctx.statement().accept(statementVisitor);
+
+        RangedForStatement rangedForStatement = new RangedForStatement(
+                iteratorVariableStatement, iteratorVarName, startExpr, endExpr, statement, newScope);
+        instructionsQueue.add(rangedForStatement);
+        return rangedForStatement;
     }
 }

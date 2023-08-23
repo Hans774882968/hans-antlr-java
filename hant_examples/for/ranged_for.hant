@@ -1,0 +1,47 @@
+for i: 1 to 5 {
+    print i
+}
+
+print "----- var inc -----"
+var L = 12
+var R = L + 7
+for i: L to R {
+    if i % 2 != 0 {
+        print i * 2
+    } else {
+        print i * 3
+    }
+}
+
+print "----- dec -----"
+var L1 = 12
+var R1 = L1 + 7
+for i: -L1 to -R1 {
+    if i % 2 != 0 {
+        print -i * 2
+    } else {
+        print i * -3
+    }
+}
+
+print "----- L == R -----"
+for i: -L1 to -R1 + 7 {
+    if i % 2 != 0 {
+        print -i * 2
+    } else {
+        print i * -3
+    }
+}
+
+print "----- 多层循环 -----"
+for i: 1 to 3 {
+    if i % 2 == 0 {
+        for j: 3 to 1 {
+            print (i-1) * 3 + j
+        }
+    } else {
+        for j: 1 to 3 {
+            print (i-1) * 3 + j
+        }
+    }
+}

@@ -2380,11 +2380,314 @@ endLabel:
 1. [relational_exp.hant](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/if/relational_exp.hant)
 2. [equality_exp.hant](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/if/equality_exp.hant)
 
-## Part13-支持for循环
+## Part13-1-支持ranged for循环
+
+本节我们仿照[Creating JVM language [PART 13] - For Loops](https://jakubdziworski.github.io/enkel/2016/04/24/enkel_13_for_loops.html)实现ranged for循环：`for i: L to R body`。但由我的方案所生成的字节码会和原项目有一些差异。比如：原项目生成了两份方法体的字节码，但我的方案只会生成一份方法体的字节码。
+
+文法规则修改：
+
+```g4
+statement:
+	variable
+	| print
+	| block
+	| ifStatement
+	| forStatement;
+
+forStatement: 'for' ('(')? rangedForConditions (')')? statement;
+rangedForConditions:
+	iterator = variableReference ':' startExpr = expression range = 'to' endExpr = expression;
+```
+
+新增数据结构：`src\main\java\com\example\hans_antlr4\domain\statement\RangedForStatement.java`。
+
+```java
+@Getter
+public class RangedForStatement implements Statement {
+    private String iteratorVarName;
+    private Expression startExpression;
+    private Expression endExpression;
+    private Statement bodyStatement;
+    private Scope scope;
+    private Statement iteratorVariableStatement;
+
+    public RangedForStatement(
+            Statement iteratorVariableStatement,
+            String iteratorVarName,
+            Expression startExpression,
+            Expression endExpression,
+            Statement bodyStatement,
+            Scope scope) {
+        this.iteratorVarName = iteratorVarName;
+        this.startExpression = startExpression;
+        this.endExpression = endExpression;
+        this.bodyStatement = bodyStatement;
+        this.scope = scope;
+        this.iteratorVariableStatement = iteratorVariableStatement;
+    }
+
+    @Override
+    public void accept(StatementGenerator generator) {
+        generator.generate(this);
+    }
+
+    public Type getEndExpressionType() {
+        return endExpression.getType();
+    }
+}
+```
+
+`iteratorVariableStatement`是什么？我们生成for循环的字节码时，需要先判断迭代变量是否已经定义。如果未定义，则生成变量定义语句，否则生成赋值语句。因为本节还未实现赋值，所以我们先抛出了一个异常：`src\main\java\com\example\hans_antlr4\exception\SupportAssignmentLaterException.java`。
+
+```java
+package com.example.hans_antlr4.exception;
+
+public class SupportAssignmentLaterException extends RuntimeException {
+    public SupportAssignmentLaterException() {
+        super("We will support assignment expression later");
+    }
+}
+```
+
+`StatementVisitor`新增：
+
+```java
+    @Override
+public RangedForStatement visitForStatement(HansAntlrParser.ForStatementContext ctx) {
+    Scope newScope = new Scope(scope);
+    final RangedForConditionsContext rangedForConditionsContext = ctx.rangedForConditions();
+    final ExpressionVisitor expressionVisitor = new ExpressionVisitor(newScope);
+    final String iteratorVarName = rangedForConditionsContext.variableReference().getText();
+    final Expression startExpr = rangedForConditionsContext.startExpr.accept(expressionVisitor);
+    final Expression endExpr = rangedForConditionsContext.endExpr.accept(expressionVisitor);
+    final StatementVisitor statementVisitor = new StatementVisitor(newScope);
+    // 实现赋值表达式后再修改这里
+    if (newScope.localVariableExists(iteratorVarName)) {
+        throw new SupportAssignmentLaterException();
+    }
+    newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
+    Statement iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);
+    Statement statement = ctx.statement().accept(statementVisitor);
+
+    RangedForStatement rangedForStatement = new RangedForStatement(
+            iteratorVariableStatement, iteratorVarName, startExpr, endExpr, statement, newScope);
+    instructionsQueue.add(rangedForStatement);
+    return rangedForStatement;
+}
+```
+
+要注意，获取方法体的语句`ctx.statement().accept(statementVisitor)`要在`newScope.addLocalVariable`之后执行，否则拿不到变量定义。
+
+`Scope`新增的`localVariableExists`方法：
+
+```java
+public boolean localVariableExists(String varName) {
+    return localVariables.stream()
+            .anyMatch(variable -> variable.getVarName().equals(varName));
+}
+```
+
+JVM没有为 for 循环设计特殊的指令。一种实现方式就是使用控制流指令，也就是上一节接触到的`IFNE, IFGE`等指令。这就是考验你编写汇编代码能力的时候了！原作者项目的方案和我的方案理解难度没有差别，但原作者项目的方案生成了两份方法体的字节码，性能不太好，所以下面分享一下我设计的方案。
+
+首先，我们最好先找一个可靠的参照。简单写一段代码：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        int up = 10;
+        for (int i = 1; i <= up; i += 3) {
+            if (i % 2 == 0)
+                break;
+            System.out.println(i);
+            if (i % 2 == 0)
+                continue;
+        }
+    }
+}
+```
+
+并使用`javap`命令生成字节码：
+
+```
+0: getstatic     #16                 // Field java/lang/System.out:Ljava/io/PrintStream;
+3: ldc           #102                // String forStatement
+5: invokevirtual #35                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+8: bipush        10
+10: istore_0
+11: iconst_1
+12: istore_1
+13: goto          26
+16: getstatic     #16                 // Field java/lang/System.out:Ljava/io/PrintStream;
+19: iload_1
+20: invokevirtual #22                 // Method java/io/PrintStream.println:(I)V
+23: iinc          1, 3
+26: iload_1
+27: iload_0
+28: if_icmple     16
+31: return
+LineNumberTable:
+line 69: 0
+line 70: 8
+line 71: 11
+line 74: 16
+line 71: 23
+line 78: 31
+```
+
+简单总结一下组成部分：
+
+- 变量定义语句
+- `GOTO`语句，跳到条件判断区
+- 方法体
+- 循环后操作区
+- 条件判断区
+
+我们按这个框架来写代码即可。
+
+循环后操作区和条件判断区的代码是本功能的难点，接下来讨论这一块的实现。我设计的文法允许`startExpr, endExpr`都是任意表达式，因此是加1还是减1必须在运行时决定，所以我决定生成这样的字节码：
+
+```assembly
+; 判断 startExpr < endExpr 的表达式，若满足则栈顶为1
+IFEQ decOneLabel
+; IINC指令，变量加1
+GOTO conditionLabel
+
+decOneLabel:
+; IINC指令，变量减1
+
+conditionLabel:
+; 条件判断相关指令
+```
+
+同理，结束条件判断也需要运行时决定。如果`startExpr < endExpr`，则继续运行的条件为`itVar <= endExpr`，否则为`itVar >= endExpr`。这里就不写出汇编伪代码了，给新手读者留作练习。
+
+`src\main\java\com\example\hans_antlr4\bytecode_gen\statement\RangedForStatementGenerator.java`完整代码：
+
+```java
+@AllArgsConstructor
+@Getter
+public class RangedForStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(RangedForStatement rangedForStatement) {
+        final Scope newScope = rangedForStatement.getScope();
+        final String iteratorVarName = rangedForStatement.getIteratorVarName();
+        final int iteratorVarIndex = newScope.getLocalVariableIndex(iteratorVarName);
+        final Expression startExpression = rangedForStatement.getStartExpression();
+        final Expression endExpression = rangedForStatement.getEndExpression();
+        final Type endExprType = rangedForStatement.getEndExpressionType();
+        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, newScope);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope);
+
+        // 1. 生成变量定义语句
+        rangedForStatement.getIteratorVariableStatement().accept(statementGenerator);
+
+        // 2. 生成 GOTO 结束条件判断区的 label
+        Label conditionLabel = new Label();
+        mv.visitJumpInsn(GOTO, conditionLabel);
+
+        // 3. 方法体
+        Label bodyLabel = new Label();
+        mv.visitLabel(bodyLabel);
+        rangedForStatement.getBodyStatement().accept(statementGenerator);
+
+        // 4. 生成加1或减1的操作
+        ConditionalExpression startLessThenEndExpression = new ConditionalExpression(
+                startExpression, endExpression, CompareSign.LESS);
+        startLessThenEndExpression.accept(expressionGenerator);
+        Label decOneLabel = new Label();
+        mv.visitJumpInsn(IFEQ, decOneLabel);
+        mv.visitIincInsn(iteratorVarIndex, 1);
+        mv.visitJumpInsn(GOTO, conditionLabel);
+
+        mv.visitLabel(decOneLabel);
+        mv.visitIincInsn(iteratorVarIndex, -1);
+
+        // 5. 生成条件判断
+        mv.visitLabel(conditionLabel);
+        startLessThenEndExpression.accept(expressionGenerator);
+        // start < end 固定走加1， var 大于 end 则退出；
+        // 否则固定走减1， var 小于 end 则退出
+        Label iteratorLessThanEndLabel = new Label();
+        mv.visitJumpInsn(IFEQ, iteratorLessThanEndLabel);
+        ConditionalExpression iteratorGreaterThanEndCondition = new ConditionalExpression(
+                new VarReference(iteratorVarName, endExprType), endExpression, CompareSign.GREATER);
+        iteratorGreaterThanEndCondition.accept(expressionGenerator);
+        // 满足 var 大于 end 就退出，否则跳 body
+        Label endLoopLabel = new Label();
+        mv.visitJumpInsn(IFNE, endLoopLabel);
+        mv.visitJumpInsn(GOTO, bodyLabel);
+
+        // 同理
+        mv.visitLabel(iteratorLessThanEndLabel);
+        ConditionalExpression iteratorLessThanEndCondition = new ConditionalExpression(
+                new VarReference(iteratorVarName, endExprType), endExpression, CompareSign.LESS);
+        iteratorLessThanEndCondition.accept(expressionGenerator);
+        mv.visitJumpInsn(IFNE, endLoopLabel);
+        mv.visitJumpInsn(GOTO, bodyLabel);
+
+        mv.visitLabel(endLoopLabel);
+    }
+}
+```
+
+### 效果
+
+[相关`.hant`代码：`hant_examples/for/ranged_for.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/ranged_for.hant)
+
+以下代码：
+
+```hant
+var L = 12
+var R = L + 7
+for i: L to R {
+    if i % 2 != 0 {
+        print i * 2
+    } else {
+        print i * 3
+    }
+}
+```
+
+VSCode反编译效果如下：
+
+```java
+byte var65536 = 12;
+int var1 = var65536 + 7;
+int var2 = var65536;
+
+while(true) {
+    if (var65536 - var1 < 0) {
+        if (var2 - var1 > 0) {
+            break;
+        }
+    } else if (var2 - var1 < 0) {
+        break;
+    }
+
+    if (var2 % 2 - 0 == 0) {
+        System.out.println(var2 * 3);
+    } else {
+        System.out.println(var2 * 2);
+    }
+
+    if (var65536 - var1 < 0) {
+        ++var2;
+    } else {
+        --var2;
+    }
+}
+```
+
+## Part19-支持赋值运算符
 
 TODO
 
-## Part19-支持赋值运算符
+## Part13-2-支持标准for循环
+
+TODO
+
+## Part13-3-支持break和continue语句
 
 TODO
 

@@ -44,6 +44,11 @@ public class Scope {
         return -1;
     }
 
+    public boolean localVariableExists(String varName) {
+        return localVariables.stream()
+                .anyMatch(variable -> variable.getVarName().equals(varName));
+    }
+
     public String getClassName() {
         return metaData.getClassName();
     }
