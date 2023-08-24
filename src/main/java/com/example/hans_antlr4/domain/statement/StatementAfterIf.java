@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.scope.Scope;
 
 import lombok.AllArgsConstructor;
@@ -9,13 +10,18 @@ import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
-public class StatementAfterIf implements Statement {
+public class StatementAfterIf extends Statement {
     private final Scope newScope;
     private final Statement statement;
 
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
+        processor.processStatementTree(this, parent);
     }
 
     @Override

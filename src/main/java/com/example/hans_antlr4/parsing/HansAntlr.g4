@@ -11,10 +11,12 @@ block: '{' statements '}';
 statement:
 	variable
 	| print
+	| expressionStatement
 	| block
 	| ifStatement
 	| forStatement;
 variable: VARIABLE Identifier EQUALS expression;
+expressionStatement: expression;
 ifStatement:
 	'if' ('(')? expression (')')? trueStatement = statement (
 		'else' falseStatement = statement
@@ -37,7 +39,22 @@ expression:
 	| expression EQUALITY expression				# EQUALITY
 	| expression AND expression						# AND
 	| expression XOR expression						# XOR
-	| expression OR expression						# OR;
+	| expression OR expression						# OR
+	| <assoc = right> variableReference AssignmentOperator = (
+		'='
+		| '**='
+		| '*='
+		| '/='
+		| '%='
+		| '+='
+		| '-='
+		| '<<='
+		| '>>='
+		| '>>>='
+		| '&='
+		| '^='
+		| '|='
+	) expression # ASSIGNMENT;
 variableReference: Identifier;
 
 print: PRINT expression;

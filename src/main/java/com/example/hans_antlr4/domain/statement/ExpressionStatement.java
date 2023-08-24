@@ -5,12 +5,11 @@ import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import java.util.Objects;
+import lombok.Getter;
 
 @AllArgsConstructor
-@Data
-public class PrintStatement extends Statement {
+@Getter
+public class ExpressionStatement extends Statement {
     private Expression expression;
 
     @Override
@@ -21,21 +20,5 @@ public class PrintStatement extends Statement {
     @Override
     public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
         processor.processStatementTree(this, parent);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (!(o instanceof PrintStatement)) {
-            return false;
-        }
-        PrintStatement printStatement = (PrintStatement) o;
-        return Objects.equals(expression, printStatement.expression);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(expression);
     }
 }

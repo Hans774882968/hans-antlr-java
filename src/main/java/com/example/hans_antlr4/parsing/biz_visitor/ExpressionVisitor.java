@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Additive;
 import com.example.hans_antlr4.domain.expression.And;
+import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
@@ -25,6 +26,7 @@ import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
+import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
@@ -181,5 +183,14 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
         return new Or(leftExpression, rightExpression);
+    }
+
+    @Override
+    public AssignmentExpression visitASSIGNMENT(HansAntlrParser.ASSIGNMENTContext ctx) {
+        final String varName = ctx.variableReference().getText();
+        final String op = ctx.AssignmentOperator.getText();
+        AssignmentSign assignmentSign = AssignmentSign.fromString(op);
+        Expression expression = ctx.expression().accept(this);
+        return new AssignmentExpression(varName, assignmentSign, expression);
     }
 }

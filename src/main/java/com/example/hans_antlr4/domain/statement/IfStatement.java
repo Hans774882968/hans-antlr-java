@@ -3,13 +3,14 @@ package com.example.hans_antlr4.domain.statement;
 import java.util.Optional;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
 import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-public class IfStatement implements Statement {
+public class IfStatement extends Statement {
     private final Expression condition;
     private final StatementAfterIf trueStatement;
     private final Optional<StatementAfterIf> falseStatement;
@@ -29,6 +30,11 @@ public class IfStatement implements Statement {
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
+        processor.processStatementTree(this, parent);
     }
 
     public Optional<StatementAfterIf> getFalseStatement() {

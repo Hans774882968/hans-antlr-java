@@ -10,7 +10,7 @@ public abstract class Unary extends Expression {
     private Expression expression;
 
     public Unary(Type type, Expression expression) {
-        super(type);
+        super(type, null);
         this.expression = expression;
     }
 }

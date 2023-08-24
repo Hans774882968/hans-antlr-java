@@ -2683,6 +2683,60 @@ while(true) {
 
 TODO
 
+## 支持break和continue语句
+
+为了支持break和continue语句，需要知道它们所处的for循环。因此需要给现有的Statement树和Expression树附加信息。如果在visitor处附加信息，代码质量很快就会失控，所以我们需要引入一个新的中间层：data processor。
+
+### 引入中间层data processor，为支持break和continue语句做准备
+
+TODO
+
+这一节我们引入data processor，先为Statement树和Expression树的每个节点添加父节点。将`Statement`从接口改造为抽象类：
+
+```java
+@Getter
+@Setter
+public abstract class Statement {
+    private Statement parent;
+
+    public abstract void accept(StatementGenerator generator);
+
+    public abstract void processSubStatementTree(StatementTreeProcessor processor, Statement parent);
+}
+```
+
+改造`Expression`类：
+
+```java
+@AllArgsConstructor
+@Data
+public abstract class Expression {
+    private Type type;
+    private Expression parent;
+
+    public boolean isRootExpression() {
+        return parent == null;
+    }
+
+    public abstract void accept(ExpressionGenerator generator);
+
+    public abstract void processSubExpressionTree(ExpressionTreeProcessor processor, Expression parent);
+}
+```
+
+新增`src\main\java\com\example\hans_antlr4\data_processor\ProcessorEntry.java`：
+
+```java
+public class ProcessorEntry {
+    public static void process(CompilationUnit compilationUnit) {
+        StatementTreeProcessor processor = new StatementTreeProcessor();
+        for (Statement statement : compilationUnit.getInstructionsQueue()) {
+            statement.processSubStatementTree(processor, null);
+        }
+    }
+}
+```
+
 ## Part13-2-支持标准for循环
 
 TODO

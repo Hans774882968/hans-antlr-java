@@ -7,6 +7,7 @@ import org.objectweb.asm.Opcodes;
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
+import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
@@ -37,11 +38,13 @@ public class ExpressionGenerator implements Opcodes {
     private MethodVisitor mv;
     private Scope scope;
     private ConditionalExpressionGenerator conditionalExpressionGenerator;
+    private AssignmentExpressionGenerator assignmentExpressionGenerator;
 
     public ExpressionGenerator(MethodVisitor mv, Scope scope) {
         this.mv = mv;
         this.scope = scope;
         this.conditionalExpressionGenerator = new ConditionalExpressionGenerator(this, mv);
+        this.assignmentExpressionGenerator = new AssignmentExpressionGenerator(this, mv);
     }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
@@ -164,6 +167,10 @@ public class ExpressionGenerator implements Opcodes {
 
     public void generate(ConditionalExpression conditionalExpression) {
         conditionalExpressionGenerator.generate(conditionalExpression);
+    }
+
+    public void generate(AssignmentExpression assignmentExpression) {
+        assignmentExpressionGenerator.generate(assignmentExpression);
     }
 
     // 递归，直到走到 generate(VarReference varReference) or generate(Value value)

@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.Type;
@@ -8,7 +9,7 @@ import com.example.hans_antlr4.domain.type.Type;
 import lombok.Getter;
 
 @Getter
-public class RangedForStatement implements Statement {
+public class RangedForStatement extends Statement {
     private String iteratorVarName;
     private Expression startExpression;
     private Expression endExpression;
@@ -34,6 +35,11 @@ public class RangedForStatement implements Statement {
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
+        processor.processStatementTree(this, parent);
     }
 
     public Type getEndExpressionType() {

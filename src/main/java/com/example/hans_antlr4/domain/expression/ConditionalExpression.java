@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.expression;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
+import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.MixedComparisonNotAllowedException;
@@ -16,7 +17,7 @@ public class ConditionalExpression extends Expression {
     private final boolean isPrimitiveComparison;
 
     public ConditionalExpression(Expression leftExpression, Expression rightExpression, CompareSign compareSign) {
-        super(BuiltInType.BOOLEAN);
+        super(BuiltInType.BOOLEAN, null);
         this.compareSign = compareSign;
         this.leftExpression = leftExpression;
         this.rightExpression = rightExpression;
@@ -33,6 +34,11 @@ public class ConditionalExpression extends Expression {
     @Override
     public void accept(ExpressionGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubExpressionTree(ExpressionTreeProcessor processor, Expression parent) {
+        processor.processExpressionTree(this, parent);
     }
 
     @Override

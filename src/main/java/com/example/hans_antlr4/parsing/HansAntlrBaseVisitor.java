@@ -89,6 +89,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitExpressionStatement(HansAntlrParser.ExpressionStatementContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitIfStatement(HansAntlrParser.IfStatementContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -246,6 +259,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitAND(HansAntlrParser.ANDContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitASSIGNMENT(HansAntlrParser.ASSIGNMENTContext ctx) {
 		return visitChildren(ctx);
 	}
 

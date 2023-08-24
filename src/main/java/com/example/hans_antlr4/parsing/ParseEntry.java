@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
+import com.example.hans_antlr4.data_processor.ProcessorEntry;
 import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
 
 public class ParseEntry {
@@ -32,8 +33,16 @@ public class ParseEntry {
 
         ParseTree tree = parser.compilationUnit();
         CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
+
+        onParseEnd(compilationUnit);
+
         String treeString = tree.toStringTree(parser);
         System.out.println(treeString);
+
         return compilationUnit;
+    }
+
+    private static void onParseEnd(CompilationUnit compilationUnit) {
+        ProcessorEntry.process(compilationUnit);
     }
 }

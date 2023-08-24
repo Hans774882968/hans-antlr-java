@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.expression;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
+import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.type.Type;
 
 import lombok.Getter;
@@ -13,13 +14,18 @@ public class Value extends Expression {
     private String value;
 
     public Value(Type type, String value) {
-        super(type);
+        super(type, null);
         this.value = value;
     }
 
     @Override
     public void accept(ExpressionGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubExpressionTree(ExpressionTreeProcessor processor, Expression parent) {
+        processor.processExpressionTree(this, parent);
     }
 
     @Override

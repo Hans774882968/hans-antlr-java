@@ -1,13 +1,14 @@
 package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
 import lombok.Getter;
 import java.util.Objects;
 
 @Getter
-public class VariableDeclaration implements Statement {
+public class VariableDeclaration extends Statement {
     private String name;
     private Expression expression;
 
@@ -19,6 +20,11 @@ public class VariableDeclaration implements Statement {
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
+        processor.processStatementTree(this, parent);
     }
 
     @Override

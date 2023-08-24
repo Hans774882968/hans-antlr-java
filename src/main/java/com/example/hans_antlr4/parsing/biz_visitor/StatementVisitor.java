@@ -10,6 +10,7 @@ import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
+import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
@@ -69,6 +70,16 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final int line = varTerminalNode.getSymbol().getLine();
         log.info("OK: Define variable '{}' with type '{}' at line {}",
                 varTerminalNode.getText(), expression.getType(), line);
+    }
+
+    @Override
+    public ExpressionStatement visitExpressionStatement(HansAntlrParser.ExpressionStatementContext ctx) {
+        final ExpressionContext expressionContext = ctx.expression();
+        final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+        Expression expression = expressionContext.accept(expressionVisitor);
+        ExpressionStatement expressionStatement = new ExpressionStatement(expression);
+        instructionsQueue.add(expressionStatement);
+        return expressionStatement;
     }
 
     @Override

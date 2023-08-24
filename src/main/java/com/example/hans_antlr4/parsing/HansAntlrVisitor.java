@@ -59,6 +59,15 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitVariable(HansAntlrParser.VariableContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#expressionStatement}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpressionStatement(HansAntlrParser.ExpressionStatementContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#ifStatement}.
 	 * 
 	 * @param ctx
@@ -184,6 +193,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitAND(HansAntlrParser.ANDContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code ASSIGNMENT}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitASSIGNMENT(HansAntlrParser.ASSIGNMENTContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code POW}

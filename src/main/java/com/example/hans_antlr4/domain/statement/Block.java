@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.scope.Scope;
 
 import lombok.AllArgsConstructor;
@@ -12,13 +13,18 @@ import java.util.Objects;
 
 @AllArgsConstructor
 @Getter
-public class Block implements Statement {
+public class Block extends Statement {
     private final List<Statement> statements;
     private final Scope scope;
 
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
+    }
+
+    @Override
+    public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
+        processor.processStatementTree(this, parent);
     }
 
     public List<Statement> getStatements() {
