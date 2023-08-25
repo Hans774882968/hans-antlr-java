@@ -39,5 +39,12 @@ public class StatementProcessorTest {
         Assert.assertTrue(addL.getParent() == startExpr);
         Assert.assertTrue(addR.getParent() == startExpr);
         Assert.assertTrue(value2.getParent() == endExpr);
+
+        Assert.assertTrue(startExpr.getBelongStatement() == rangedForStatement);
+        Assert.assertTrue(endExpr.getBelongStatement() == rangedForStatement);
+        Assert.assertTrue(value1.getBelongStatement() == variableDeclaration);
+        Assert.assertTrue(addL.getBelongStatement() == rangedForStatement);
+        Assert.assertTrue(addR.getBelongStatement() == rangedForStatement);
+        Assert.assertTrue(value2.getBelongStatement() == rangedForStatement);
     }
 }

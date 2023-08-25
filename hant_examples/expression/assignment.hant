@@ -63,5 +63,27 @@ print "----- if -----"
         print x // 500 = 24 ** 2 - 76
         x += x * 2 + (x |= 499) + x * 2
         print x // 3009
+        x += x + (x = 123) + x + (x = 264) - 2 * x
+        print x // 先是 x += x + (x = 123) + x 变成 6264 再是 6000
     } else {}
+}
+
+print "----- var -----"
+{
+    var tmp1 = 3
+    var tmp2 = 5
+    var x = tmp1 = tmp2 **= tmp1
+    // 都是 125
+    print x
+    print tmp1
+    print tmp2
+
+    print x += tmp1 -= 120 // 130
+    print x // 130
+    print tmp1 // 5
+
+    x += 5 + (tmp1 = tmp2 -= 60)
+    print x // 130 + 65 + 5 = 200
+    print tmp1 // 65
+    print tmp2 // 65
 }

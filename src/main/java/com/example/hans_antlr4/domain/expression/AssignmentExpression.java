@@ -3,6 +3,8 @@ package com.example.hans_antlr4.domain.expression;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.statement.ExpressionStatement;
+import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.UnsupportedAssignmentTypeException;
 
@@ -16,7 +18,7 @@ public class AssignmentExpression extends Expression {
     private Expression expression;
 
     public AssignmentExpression(String varName, AssignmentSign sign, Expression expression) {
-        super(expression.getType(), null);
+        super(expression.getType(), null, null);
         this.varName = varName;
         this.sign = sign;
         this.expression = expression;
@@ -25,14 +27,25 @@ public class AssignmentExpression extends Expression {
         }
     }
 
+    public boolean notNecessaryToGenerateDupInstruction() {
+        if (!isRootExpression()) {
+            return false;
+        }
+        Statement statement = getBelongStatement();
+        return statement instanceof ExpressionStatement;
+    }
+
     @Override
     public void accept(ExpressionGenerator generator) {
         generator.generate(this);
     }
 
     @Override
-    public void processSubExpressionTree(ExpressionTreeProcessor processor, Expression parent) {
-        processor.processExpressionTree(this, parent);
+    public void processSubExpressionTree(
+            ExpressionTreeProcessor processor,
+            Expression parent,
+            Statement belongStatement) {
+        processor.processExpressionTree(this, parent, belongStatement);
     }
 
     @Override

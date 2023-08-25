@@ -2681,17 +2681,303 @@ while(true) {
 
 ## Part19-支持赋值运算符
 
-TODO
+修改文法：
 
-## 支持break和continue语句
+```g4
+statement:
+	variable
+	| print
+	| expressionStatement
+	| block
+	| ifStatement
+	| forStatement;
+expressionStatement: expression;
+expression:
+	variableReference								# VarReference
+	| value											# ValueExpr
+	| '(' expression ')'							# BRACKET
+	| UNARY = ('+' | '-' | '~') expression			# UNARY
+	| expression POW expression						# POW
+	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
+	| expression ADDITIVE = ('+' | '-') expression	# ADDITIVE
+	| expression SHIFT expression					# SHIFT
+	| expression RELATIONAL expression				# RELATIONAL
+	| expression EQUALITY expression				# EQUALITY
+	| expression AND expression						# AND
+	| expression XOR expression						# XOR
+	| expression OR expression						# OR
+	| <assoc = right> variableReference AssignmentOperator = (
+		'='
+		| '**='
+		| '*='
+		| '/='
+		| '%='
+		| '+='
+		| '-='
+		| '<<='
+		| '>>='
+		| '>>>='
+		| '&='
+		| '^='
+		| '|='
+	) expression # ASSIGNMENT;
+```
 
-为了支持break和continue语句，需要知道它们所处的for循环。因此需要给现有的Statement树和Expression树附加信息。如果在visitor处附加信息，代码质量很快就会失控，所以我们需要引入一个新的中间层：data processor。
+1. 新增`expressionStatement`。
+2. `expression`新增赋值的生成式。
 
-### 引入中间层data processor，为支持break和continue语句做准备
+为了支持`expressionStatement`，需要修改`StatementVisitor`。
 
-TODO
+```java
+@Override
+public ExpressionStatement visitExpressionStatement(HansAntlrParser.ExpressionStatementContext ctx) {
+    final ExpressionContext expressionContext = ctx.expression();
+    final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+    Expression expression = expressionContext.accept(expressionVisitor);
+    ExpressionStatement expressionStatement = new ExpressionStatement(expression);
+    instructionsQueue.add(expressionStatement);
+    return expressionStatement;
+}
+```
 
-这一节我们引入data processor，先为Statement树和Expression树的每个节点添加父节点。将`Statement`从接口改造为抽象类：
+为了支持赋值运算符，需要修改`ExpressionVisitor`。
+
+```java
+@Override
+public AssignmentExpression visitASSIGNMENT(HansAntlrParser.ASSIGNMENTContext ctx) {
+    final String varName = ctx.variableReference().getText();
+    final String op = ctx.AssignmentOperator.getText();
+    AssignmentSign assignmentSign = AssignmentSign.fromString(op);
+    Expression expression = ctx.expression().accept(this);
+    return new AssignmentExpression(varName, assignmentSign, expression);
+}
+```
+
+这里[`AssignmentExpression`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/domain/expression/AssignmentExpression.java)和[`AssignmentSign`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/domain/global/AssignmentSign.java)的设计仿照了`ConditionalExpression`和`CompareSign`。
+
+`ExpressionStatementGenerator`的支持比较简单，在此省略。接下来看本节的难点：`AssignmentExpressionGenerator`。
+
+首先我们需要观察赋值运算符对应的字节码，再考虑模仿。约定`x, y, z, w`分别占据局部变量表0到3。
+
+（1）只有简单赋值运算符的情况：`z = x = y = 3 * (x + y + z);`。
+
+```assembly
+15: iload_0
+16: iload_1
+17: iadd
+18: iload_2
+19: iadd
+20: imul
+21: dup
+22: istore_1
+23: dup
+24: istore_0
+25: istore_2
+```
+
+（2）只有非简单赋值运算符：`x += y -= z *= w /= x %= 5;`。
+
+```assembly
+108: iload_0
+109: iload_1
+110: iload_2
+111: iload_3
+112: iload_0
+113: iconst_5
+114: irem
+115: dup
+116: istore_0
+117: idiv
+118: dup
+119: istore_3
+120: imul
+121: dup
+122: istore_2
+123: isub
+124: dup
+125: istore_1
+126: iadd
+127: istore_0
+```
+
+（3）简单赋值运算符和其他赋值运算符混合：`x = y -= z += x = y += z = w;`。
+
+```assembly
+169: iload_1
+170: iload_2
+171: iload_1
+172: iload_3
+173: dup
+174: istore_2
+175: iadd
+176: dup
+177: istore_1
+178: dup
+179: istore_0
+180: iadd
+181: dup
+182: istore_2
+183: isub
+184: dup
+185: istore_1
+186: istore_0
+```
+
+我们总结出以下规律：
+
+1. 只有简单赋值运算符时开头没有额外的`iload`，直接开始从右边修改到左边。其他赋值运算符因为都是二元运算符，所以开头需要有额外的`iload`，预先把操作数放到栈里。比如（2）中额外的`iload`是`iload_0, iload_1, iload_2, iload_3, iload_0`，对应`x, y, z, w, x`。（3）中额外的`iload`是`iload_1, iload_2, iload_1`，对应`y, z, y`。
+2. 最左侧的赋值运算符在`istore`之前没有`dup`，其他的都有。这是因为`istore`会弹出栈顶，后续的指令又需要用一次栈顶的值。因此最左侧的赋值运算符一定没有`dup`吗？不一定。我们需要判断的是最左侧的赋值运算符的后续指令是否需要本次的操作数。
+
+综上：
+
+1. 我们需要**将连续赋值语句作为一个整体考虑**，即需要向子树走若干层，直到遇到的节点不是`AssignmentExpression`。
+2. 实验表明，总是为最左侧的赋值运算符在`istore`之前生成`dup`指令是可以正常运行的。因此规律2转变为以下问题：如何尽量减少不必要的`dup`指令？这个问题在下一节《引入中间层data processor》处理。
+
+最后说一下特殊的赋值运算符：`**=`如何实现。参照其他非简单赋值运算符，如`+=`的字节码可知，我们只需要关注：
+
+1. 修改局部变量表的哪个位置。
+2. 栈顶。
+
+因此我们基本上只需要把之前实现`**`运算符的核心代码搬过来。如下所示：
+
+```java
+if (sign == AssignmentSign.POW) {
+    mv.visitInsn(I2D);
+    ClassType owner = new ClassType("java.lang.Math");
+    String fieldDescriptor = owner.getInternalName(); // "java/lang/Math"
+    String descriptor = "(DD)D";
+    mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
+    mv.visitInsn(D2I);
+}
+```
+
+`AssignmentExpressionGenerator`完整代码：
+
+```java
+@AllArgsConstructor
+public class AssignmentExpressionGenerator implements Opcodes {
+    private ExpressionGenerator parent;
+    private MethodVisitor mv;
+
+    public void generate(AssignmentExpression assignmentExpression) {
+        Expression currentExpression = assignmentExpression;
+        List<Integer> variableIndexes = new ArrayList<>();
+        List<AssignmentSign> signs = new ArrayList<>();
+        while (currentExpression instanceof AssignmentExpression) {
+            AssignmentExpression currentAssignmentExpression = (AssignmentExpression) currentExpression;
+            int index = parent.getScope().getLocalVariableIndex(currentAssignmentExpression.getVarName());
+            variableIndexes.add(index);
+            signs.add(currentAssignmentExpression.getSign());
+            currentExpression = currentAssignmentExpression.getExpression();
+        }
+
+        for (int i = 0; i < variableIndexes.size(); i++) {
+            AssignmentSign sign = signs.get(i);
+            int variableIndex = variableIndexes.get(i);
+            if (sign != AssignmentSign.ASSIGN) {
+                mv.visitVarInsn(ILOAD, variableIndex);
+                if (sign == AssignmentSign.POW) {
+                    mv.visitInsn(I2D);
+                }
+            }
+        }
+        currentExpression.accept(parent);
+
+        for (int i = variableIndexes.size() - 1; i >= 0; i--) {
+            int variableIndex = variableIndexes.get(i);
+            AssignmentSign sign = signs.get(i);
+
+            if (sign == AssignmentSign.POW) {
+                mv.visitInsn(I2D);
+                ClassType owner = new ClassType("java.lang.Math");
+                String fieldDescriptor = owner.getInternalName(); // "java/lang/Math"
+                String descriptor = "(DD)D";
+                mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
+                mv.visitInsn(D2I);
+            }
+            if (sign == AssignmentSign.MUL) {
+                mv.visitInsn(IMUL);
+            }
+            if (sign == AssignmentSign.DIV) {
+                mv.visitInsn(IDIV);
+            }
+            if (sign == AssignmentSign.MOD) {
+                mv.visitInsn(IREM);
+            }
+            if (sign == AssignmentSign.ADD) {
+                mv.visitInsn(IADD);
+            }
+            if (sign == AssignmentSign.MINUS) {
+                mv.visitInsn(ISUB);
+            }
+            if (sign == AssignmentSign.SHL) {
+                mv.visitInsn(ISHL);
+            }
+            if (sign == AssignmentSign.SHR) {
+                mv.visitInsn(ISHR);
+            }
+            if (sign == AssignmentSign.UNSIGNED_SHR) {
+                mv.visitInsn(IUSHR);
+            }
+            if (sign == AssignmentSign.AND) {
+                mv.visitInsn(IAND);
+            }
+            if (sign == AssignmentSign.XOR) {
+                mv.visitInsn(IXOR);
+            }
+            if (sign == AssignmentSign.OR) {
+                mv.visitInsn(IOR);
+            }
+
+            mv.visitInsn(DUP);
+            mv.visitVarInsn(ISTORE, variableIndex);
+        }
+    }
+}
+```
+
+[相关`.hant`测试代码](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/assignment.hant)。
+
+`hant`语句`x = y -= z += x = y += z = w`生成的字节码：
+
+```
+132: iload_1
+133: iload_2
+134: iload_1
+135: iload_3
+136: dup
+137: istore_2
+138: iadd
+139: dup
+140: istore_1
+141: dup
+142: istore_0
+143: iadd
+144: dup
+145: istore_2
+146: isub
+147: dup
+148: istore_1
+149: istore_0
+```
+
+## 引入中间层data processor
+
+`bytecode_gen`文件夹下的各个类需要依据`Statement`树和`Expression`树的信息生成字节码，这些类会发现需要在这两种树上读取越来越多的附加信息。如果直接在visitor处附加信息，就会提高耦合度，代码质量很快就会失控。所以这一节我们需要引入data processor。具体来说，data processor的作用有：
+
+1. 为赋值运算符尽量减少不必要的`dup`指令。
+2. 为支持break和continue语句做准备。
+
+新增的`data_processor`文件夹：
+
+```
+SRC\MAIN\JAVA\COM\EXAMPLE\HANS_ANTLR4\DATA_PROCESSOR
+    ExpressionTreeProcessor.java
+    ProcessorEntry.java
+    StatementTreeProcessor.java
+```
+
+先为Statement树和Expression树的每个节点添加指向父节点的指针。将`Statement`从接口改造为抽象类：
 
 ```java
 @Getter
@@ -2724,7 +3010,18 @@ public abstract class Expression {
 }
 ```
 
-新增`src\main\java\com\example\hans_antlr4\data_processor\ProcessorEntry.java`：
+这里新增的`processSubStatementTree`和`processSubExpressionTree`方法是模仿了它们上面的`accept`方法的设计，允许`Statement`和`Expression`对象调用方法，根据入参`this`去选择恰当的方法来触发副作用，避免直接在某个方法里写大量的`instanceof`。
+
+做以上修改后，`domain`文件夹大多数类都需要更改了，以`domain/expression/Addition.java`为例：
+
+```java
+@Override
+public void processSubExpressionTree(ExpressionTreeProcessor processor, Expression parent) {
+    processor.processExpressionTree(this, parent);
+}
+```
+
+我们需要考虑语句树和表达式树的遍历如何启动。为了启动语句树的遍历，我们可以新增一个专门的入口`src\main\java\com\example\hans_antlr4\data_processor\ProcessorEntry.java`：
 
 ```java
 public class ProcessorEntry {
@@ -2737,11 +3034,147 @@ public class ProcessorEntry {
 }
 ```
 
-## Part13-2-支持标准for循环
+并在`ParseEntry`中调用`ProcessorEntry`：
+
+```java
+public class ParseEntry {
+    private static CompilationUnit parse(CharStream charStream) {
+        // ...
+        onParseEnd(compilationUnit);
+        // ...
+    }
+
+    private static void onParseEnd(CompilationUnit compilationUnit) {
+        ProcessorEntry.process(compilationUnit);
+    }
+}
+```
+
+为了启动表达式树的遍历，我考虑在遍历语句树的过程中启动。以表达式语句为例：
+
+```java
+public void processStatementTree(ExpressionStatement expressionStatement, Statement parent) {
+    if (expressionStatement == null) {
+        return;
+    }
+    expressionStatement.setParent(parent);
+    Expression expression = expressionStatement.getExpression();
+    expression.processSubExpressionTree(expressionTreeProcessor, null);
+}
+```
+
+因为目前只需要实现对`Statement`树和`Expression`树的副作用，所以我们仅添加了两个分别用于dfs`Statement`树和`Expression`树的类：[`data_processor/ExpressionTreeProcessor.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/data_processor/ExpressionTreeProcessor.java)和[data_processor/ExpressionTreeProcessor.java](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/data_processor/ExpressionTreeProcessor.java)。
+
+比如`ExpressionTreeProcessor`需要实现若干`processExpressionTree`方法，其第一个参数是`Expression`的某个子类。语句树和表达式树各举一个例子：
+
+```java
+public void processStatementTree(IfStatement ifStatement, Statement parent) {
+    if (ifStatement == null) {
+        return;
+    }
+    ifStatement.setParent(parent);
+    ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null);
+    ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement);
+    Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
+    if (falseStatement.isPresent()) {
+        falseStatement.get().processSubStatementTree(this, ifStatement);
+    }
+}
+
+public void processExpressionTree(ArithmeticExpression arithmeticExpression, Expression parent) {
+    if (arithmeticExpression == null) {
+        return;
+    }
+    arithmeticExpression.setParent(parent);
+    // 递归
+    arithmeticExpression.getLeftExpression().processSubExpressionTree(this, arithmeticExpression);
+    arithmeticExpression.getRightExpression().processSubExpressionTree(this, arithmeticExpression);
+}
+```
+
+### 为赋值运算符尽量减少不必要的`dup`指令
+
+我们需要给`Expression`附加一个信息：它所属的语句。因此我们需要改造`Expression`类：
+
+```java
+@AllArgsConstructor
+@Data
+public abstract class Expression {
+    private Type type;
+    private Expression parent;
+    private Statement belongStatement;
+
+    public boolean isRootExpression() {
+        return parent == null;
+    }
+
+    public abstract void accept(ExpressionGenerator generator);
+
+    public abstract void processSubExpressionTree(
+            ExpressionTreeProcessor processor,
+            Expression parent,
+            Statement belongStatement);
+}
+```
+
+接下来修改`src\main\java\com\example\hans_antlr4\domain\expression`下的类，以及修改`src\main\java\com\example\hans_antlr4\data_processor`下遍历语句树和表达式树的逻辑的难度都不大。语句树和表达式树各举一个例子：
+
+```java
+public void processStatementTree(IfStatement ifStatement, Statement parent) {
+    if (ifStatement == null) {
+        return;
+    }
+    ifStatement.setParent(parent);
+    ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null, ifStatement);
+    ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement);
+    Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
+    if (falseStatement.isPresent()) {
+        falseStatement.get().processSubStatementTree(this, ifStatement);
+    }
+}
+
+public void processExpressionTree(
+        ArithmeticExpression arithmeticExpression,
+        Expression parent,
+        Statement belongStatement) {
+    if (arithmeticExpression == null) {
+        return;
+    }
+    arithmeticExpression.setParent(parent);
+    arithmeticExpression.setBelongStatement(belongStatement);
+    arithmeticExpression.getLeftExpression().processSubExpressionTree(this, arithmeticExpression, belongStatement);
+    arithmeticExpression.getRightExpression().processSubExpressionTree(this, arithmeticExpression, belongStatement);
+}
+```
+
+最后为`AssignmentExpressionGenerator`生成`dup`指令的语句添加一个if语句：
+
+```java
+// 这里的变量`i`表示子孙 AssignmentExpression ， i = 0 表示回到了 assignmentExpression
+if (i > 0 || (i == 0 && !assignmentExpression.notNecessaryToGenerateDupInstruction())) {
+    mv.visitInsn(DUP);
+}
+```
+
+我们把所有能够断定不需要`dup`指令的情况封装在`AssignmentExpression.notNecessaryToGenerateDupInstruction`中，其他情况都生成`dup`指令。上述方法的实现：
+
+```java
+public boolean notNecessaryToGenerateDupInstruction() {
+    if (!isRootExpression()) {
+        return false;
+    }
+    Statement statement = getBelongStatement();
+    return statement instanceof ExpressionStatement;
+}
+```
+
+## 支持break和continue语句
 
 TODO
 
-## Part13-3-支持break和continue语句
+为了支持break和continue语句，需要知道它们所处的for循环。因此需要给现有的Statement树和Expression树附加信息。于是我们需要继续给data processor增加逻辑。
+
+## Part13-2-支持标准for循环
 
 TODO
 

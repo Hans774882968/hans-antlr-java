@@ -2,6 +2,7 @@ package com.example.hans_antlr4.domain.expression;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
+import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.Type;
 
 import lombok.Getter;
@@ -14,7 +15,7 @@ public class VarReference extends Expression {
     private String varName;
 
     public VarReference(String varName, Type type) {
-        super(type, null);
+        super(type, null, null);
         this.varName = varName;
     }
 
@@ -24,8 +25,11 @@ public class VarReference extends Expression {
     }
 
     @Override
-    public void processSubExpressionTree(ExpressionTreeProcessor processor, Expression parent) {
-        processor.processExpressionTree(this, parent);
+    public void processSubExpressionTree(
+            ExpressionTreeProcessor processor,
+            Expression parent,
+            Statement belongStatement) {
+        processor.processExpressionTree(this, parent, belongStatement);
     }
 
     @Override

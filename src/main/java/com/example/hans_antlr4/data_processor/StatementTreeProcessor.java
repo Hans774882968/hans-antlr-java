@@ -34,7 +34,7 @@ public class StatementTreeProcessor {
         }
         expressionStatement.setParent(parent);
         Expression expression = expressionStatement.getExpression();
-        expression.processSubExpressionTree(expressionTreeProcessor, null);
+        expression.processSubExpressionTree(expressionTreeProcessor, null, expressionStatement);
     }
 
     public void processStatementTree(IfStatement ifStatement, Statement parent) {
@@ -42,7 +42,7 @@ public class StatementTreeProcessor {
             return;
         }
         ifStatement.setParent(parent);
-        ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null);
+        ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null, ifStatement);
         ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement);
         Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
         if (falseStatement.isPresent()) {
@@ -55,7 +55,7 @@ public class StatementTreeProcessor {
             return;
         }
         printStatement.setParent(parent);
-        printStatement.getExpression().processSubExpressionTree(expressionTreeProcessor, null);
+        printStatement.getExpression().processSubExpressionTree(expressionTreeProcessor, null, printStatement);
     }
 
     public void processStatementTree(RangedForStatement rangedForStatement, Statement parent) {
@@ -64,8 +64,10 @@ public class StatementTreeProcessor {
         }
         rangedForStatement.setParent(parent);
         rangedForStatement.getIteratorVariableStatement().processSubStatementTree(this, rangedForStatement);
-        rangedForStatement.getStartExpression().processSubExpressionTree(expressionTreeProcessor, null);
-        rangedForStatement.getEndExpression().processSubExpressionTree(expressionTreeProcessor, null);
+        rangedForStatement.getStartExpression().processSubExpressionTree(expressionTreeProcessor, null,
+                rangedForStatement);
+        rangedForStatement.getEndExpression().processSubExpressionTree(expressionTreeProcessor, null,
+                rangedForStatement);
         Statement body = rangedForStatement.getBodyStatement();
         if (body != null) {
             body.processSubStatementTree(this, rangedForStatement);
@@ -85,6 +87,7 @@ public class StatementTreeProcessor {
             return;
         }
         variableDeclaration.setParent(parent);
-        variableDeclaration.getExpression().processSubExpressionTree(expressionTreeProcessor, null);
+        variableDeclaration.getExpression().processSubExpressionTree(expressionTreeProcessor, null,
+                variableDeclaration);
     }
 }

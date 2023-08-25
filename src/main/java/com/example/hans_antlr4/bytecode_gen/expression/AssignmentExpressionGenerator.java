@@ -88,7 +88,9 @@ public class AssignmentExpressionGenerator implements Opcodes {
                 mv.visitInsn(IOR);
             }
 
-            mv.visitInsn(DUP);
+            if (i > 0 || (i == 0 && !assignmentExpression.notNecessaryToGenerateDupInstruction())) {
+                mv.visitInsn(DUP);
+            }
             mv.visitVarInsn(ISTORE, variableIndex);
         }
     }

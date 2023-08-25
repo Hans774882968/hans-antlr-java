@@ -12,7 +12,7 @@ public abstract class ArithmeticExpression extends Expression {
     private Expression rightExpression;
 
     public ArithmeticExpression(Type type, Expression leftExpression, Expression rightExpression) {
-        super(type, null);
+        super(type, null, null);
         this.leftExpression = leftExpression;
         this.rightExpression = rightExpression;
         if (type != BuiltInType.INT) {
