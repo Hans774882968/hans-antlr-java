@@ -26,7 +26,7 @@ public class CheckOutsideLoopBreakContinueProcessor {
         if (breakStatement == null) {
             return;
         }
-        if (breakStatement.getNearestForStatement() == null) {
+        if (breakStatement.getNearestLoopStatement() == null) {
             throw new BreakStatementOutsideLoopException(breakStatement.getSourceLine());
         }
     }
@@ -35,7 +35,7 @@ public class CheckOutsideLoopBreakContinueProcessor {
         if (continueStatement == null) {
             return;
         }
-        if (continueStatement.getNearestForStatement() == null) {
+        if (continueStatement.getNearestLoopStatement() == null) {
             throw new ContinueStatementOutsideLoopException(continueStatement.getSourceLine());
         }
     }

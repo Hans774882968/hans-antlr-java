@@ -17,7 +17,7 @@ public abstract class Statement {
     public abstract void processSubStatementTree(
             StatementTreeProcessor processor,
             Statement parent,
-            RangedForStatement nearestForStatement);
+            Loop nearestLoopStatement);
 
     public abstract void checkOutsideLoopBreakContinue(
             CheckOutsideLoopBreakContinueProcessor processor);

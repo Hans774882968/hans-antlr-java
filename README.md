@@ -2487,7 +2487,25 @@ public boolean localVariableExists(String varName) {
 }
 ```
 
-JVM没有为 for 循环设计特殊的指令。一种实现方式就是使用控制流指令，也就是上一节接触到的`IFNE, IFGE`等指令。这就是考验你编写汇编代码能力的时候了！原作者项目的方案和我的方案理解难度没有差别，但原作者项目的方案生成了两份方法体的字节码，性能不太好，所以下面分享一下我设计的方案。
+20230827更新：支持`AssignmentExpression`后上述`visitForStatement`方法改动如下：
+
+```java
+@Override
+public RangedForStatement visitForStatement(HansAntlrParser.ForStatementContext ctx) {
+    // 省略 TODO 之前的内容
+    Statement iteratorVariableStatement = null;
+    if (newScope.localVariableExists(iteratorVarName)) {
+        iteratorVariableStatement = new ExpressionStatement(
+                new AssignmentExpression(iteratorVarName, AssignmentSign.ASSIGN, startExpr));
+    } else {
+        newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
+        iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);
+    }
+    // 省略 Statement statement = ctx.statement().accept(statementVisitor); 等内容
+}
+```
+
+JVM 没有为 for 循环设计特殊的指令。一种实现方式就是使用控制流指令，也就是上一节接触到的`IFNE, IFGE`等指令。这就是考验你编写汇编代码能力的时候了！原作者项目的方案和我的方案理解难度没有差别，但原作者项目的方案生成了两份方法体的字节码，性能不太好，所以下面分享一下我设计的方案。
 
 首先，我们最好先找一个可靠的参照。简单写一段代码：
 
@@ -2632,6 +2650,8 @@ public class RangedForStatementGenerator implements Opcodes {
 ```
 
 ### 效果
+
+[相关单测代码](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/HantLoopTest.java)
 
 [相关`.hant`代码：`hant_examples/for/ranged_for.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/ranged_for.hant)
 

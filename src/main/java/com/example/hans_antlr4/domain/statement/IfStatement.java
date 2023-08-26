@@ -41,8 +41,8 @@ public class IfStatement extends Statement {
     public void processSubStatementTree(
             StatementTreeProcessor processor,
             Statement parent,
-            RangedForStatement nearestForStatement) {
-        processor.processStatementTree(this, parent, nearestForStatement);
+            Loop nearestLoopStatement) {
+        processor.processStatementTree(this, parent, nearestLoopStatement);
     }
 
     @Override

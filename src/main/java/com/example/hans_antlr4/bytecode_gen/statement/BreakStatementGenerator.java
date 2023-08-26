@@ -13,9 +13,9 @@ public class BreakStatementGenerator implements Opcodes {
     private MethodVisitor mv;
 
     public void generate(Break breakStatement) {
-        if (breakStatement.getNearestForStatement() == null) {
+        if (breakStatement.getNearestLoopStatement() == null) {
             throw new BreakStatementOutsideLoopException(breakStatement.getSourceLine());
         }
-        mv.visitJumpInsn(GOTO, breakStatement.getNearestForStatement().getEndLoopLabel());
+        mv.visitJumpInsn(GOTO, breakStatement.getNearestLoopStatement().getEndLoopLabel());
     }
 }

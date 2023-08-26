@@ -8,6 +8,7 @@ import com.example.hans_antlr4.domain.statement.Break;
 import com.example.hans_antlr4.domain.statement.Continue;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
+import com.example.hans_antlr4.domain.statement.Loop;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
@@ -22,18 +23,18 @@ public class StatementTreeProcessor {
         this.expressionTreeProcessor = new ExpressionTreeProcessor();
     }
 
-    public void processStatementTree(Block block, Statement parent, RangedForStatement nearestForStatement) {
+    public void processStatementTree(Block block, Statement parent, Loop nearestLoopStatement) {
         if (block == null) {
             return;
         }
         block.setParent(parent);
-        block.getStatements().forEach(stmt -> stmt.processSubStatementTree(this, block, nearestForStatement));
+        block.getStatements().forEach(stmt -> stmt.processSubStatementTree(this, block, nearestLoopStatement));
     }
 
     public void processStatementTree(
             ExpressionStatement expressionStatement,
             Statement parent,
-            RangedForStatement nearestForStatement) {
+            Loop nearestLoopStatement) {
         if (expressionStatement == null) {
             return;
         }
@@ -42,22 +43,26 @@ public class StatementTreeProcessor {
         expression.processSubExpressionTree(expressionTreeProcessor, null, expressionStatement);
     }
 
-    public void processStatementTree(IfStatement ifStatement, Statement parent,
-            RangedForStatement nearestForStatement) {
+    public void processStatementTree(
+            IfStatement ifStatement,
+            Statement parent,
+            Loop nearestLoopStatement) {
         if (ifStatement == null) {
             return;
         }
         ifStatement.setParent(parent);
         ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null, ifStatement);
-        ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement, nearestForStatement);
+        ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement, nearestLoopStatement);
         Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
         if (falseStatement.isPresent()) {
-            falseStatement.get().processSubStatementTree(this, ifStatement, nearestForStatement);
+            falseStatement.get().processSubStatementTree(this, ifStatement, nearestLoopStatement);
         }
     }
 
-    public void processStatementTree(PrintStatement printStatement, Statement parent,
-            RangedForStatement nearestForStatement) {
+    public void processStatementTree(
+            PrintStatement printStatement,
+            Statement parent,
+            Loop nearestLoopStatement) {
         if (printStatement == null) {
             return;
         }
@@ -68,7 +73,7 @@ public class StatementTreeProcessor {
     public void processStatementTree(
             RangedForStatement rangedForStatement,
             Statement parent,
-            RangedForStatement nearestForStatement) {
+            Loop nearestLoopStatement) {
         if (rangedForStatement == null) {
             return;
         }
@@ -88,18 +93,18 @@ public class StatementTreeProcessor {
     public void processStatementTree(
             StatementAfterIf statementAfterIf,
             Statement parent,
-            RangedForStatement nearestForStatement) {
+            Loop nearestLoopStatement) {
         if (statementAfterIf == null) {
             return;
         }
         statementAfterIf.setParent(parent);
-        statementAfterIf.getStatement().processSubStatementTree(this, statementAfterIf, nearestForStatement);
+        statementAfterIf.getStatement().processSubStatementTree(this, statementAfterIf, nearestLoopStatement);
     }
 
     public void processStatementTree(
             VariableDeclaration variableDeclaration,
             Statement parent,
-            RangedForStatement nearestForStatement) {
+            Loop nearestLoopStatement) {
         if (variableDeclaration == null) {
             return;
         }
@@ -108,20 +113,20 @@ public class StatementTreeProcessor {
                 expressionTreeProcessor, null, variableDeclaration);
     }
 
-    public void processStatementTree(Break breakStatement, Statement parent, RangedForStatement nearestForStatement) {
+    public void processStatementTree(Break breakStatement, Statement parent, Loop nearestLoopStatement) {
         if (breakStatement == null) {
             return;
         }
         breakStatement.setParent(parent);
-        breakStatement.setNearestForStatement(nearestForStatement);
+        breakStatement.setNearestLoopStatement(nearestLoopStatement);
     }
 
     public void processStatementTree(Continue continueStatement, Statement parent,
-            RangedForStatement nearestForStatement) {
+            Loop nearestLoopStatement) {
         if (continueStatement == null) {
             return;
         }
         continueStatement.setParent(parent);
-        continueStatement.setNearestForStatement(nearestForStatement);
+        continueStatement.setNearestLoopStatement(nearestLoopStatement);
     }
 }

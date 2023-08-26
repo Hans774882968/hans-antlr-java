@@ -45,3 +45,31 @@ for i: 1 to 3 {
         }
     }
 }
+
+print "----- 已定义的变量作为循环变量 -----"
+{
+    var i = 114510
+    for i: 114512 to 114514 print i
+    print i
+
+    for i: 1 to 3 {
+        var j = 5
+        for j: 5 to 1 {
+            var v = (i - 1) * 5 + (6 - j)
+            if v % 5 != 0 continue
+            print v
+        }
+        if i == 1 print j
+        // 整个过程输出 5 0 10 15
+    }
+
+    print "多层循环场景下的已定义变量："
+    for j: 1 to 3 {
+        for i: j + 1 to j + 4 {
+            var v = (j - 1) * 4 + (i - j)
+            if v % 6 != 0 continue
+            print v // 6 12
+        }
+    }
+    print i // 8
+}

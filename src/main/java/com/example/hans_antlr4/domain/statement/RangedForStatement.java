@@ -1,7 +1,5 @@
 package com.example.hans_antlr4.domain.statement;
 
-import org.objectweb.asm.Label;
-
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProcessor;
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
@@ -15,15 +13,11 @@ import java.util.Objects;
 
 @Getter
 @Setter
-public class RangedForStatement extends Statement {
+public class RangedForStatement extends Loop {
     private String iteratorVarName;
     private Expression startExpression;
     private Expression endExpression;
-    private Statement bodyStatement;
-    private Scope scope;
     private Statement iteratorVariableStatement;
-    private Label operationLabel;
-    private Label endLoopLabel;
 
     public RangedForStatement(
             Statement iteratorVariableStatement,
@@ -32,14 +26,11 @@ public class RangedForStatement extends Statement {
             Expression endExpression,
             Statement bodyStatement,
             Scope scope) {
+        super(bodyStatement, scope);
         this.iteratorVarName = iteratorVarName;
         this.startExpression = startExpression;
         this.endExpression = endExpression;
-        this.bodyStatement = bodyStatement;
-        this.scope = scope;
         this.iteratorVariableStatement = iteratorVariableStatement;
-        this.operationLabel = new Label();
-        this.endLoopLabel = new Label();
     }
 
     public Type getEndExpressionType() {
@@ -55,8 +46,8 @@ public class RangedForStatement extends Statement {
     public void processSubStatementTree(
             StatementTreeProcessor processor,
             Statement parent,
-            RangedForStatement nearestForStatement) {
-        processor.processStatementTree(this, parent, nearestForStatement);
+            Loop nearestLoopStatement) {
+        processor.processStatementTree(this, parent, nearestLoopStatement);
     }
 
     @Override
@@ -76,16 +67,16 @@ public class RangedForStatement extends Statement {
         return Objects.equals(iteratorVarName, rangedForStatement.iteratorVarName)
                 && Objects.equals(startExpression, rangedForStatement.startExpression)
                 && Objects.equals(endExpression, rangedForStatement.endExpression)
-                && Objects.equals(bodyStatement, rangedForStatement.bodyStatement)
-                && Objects.equals(scope, rangedForStatement.scope)
+                && Objects.equals(getBodyStatement(), rangedForStatement.getBodyStatement())
+                && Objects.equals(getScope(), rangedForStatement.getScope())
                 && Objects.equals(iteratorVariableStatement, rangedForStatement.iteratorVariableStatement)
-                && Objects.equals(operationLabel, rangedForStatement.operationLabel)
-                && Objects.equals(endLoopLabel, rangedForStatement.endLoopLabel);
+                && Objects.equals(getOperationLabel(), rangedForStatement.getOperationLabel())
+                && Objects.equals(getEndLoopLabel(), rangedForStatement.getEndLoopLabel());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(iteratorVarName, startExpression, endExpression, bodyStatement, scope,
-                iteratorVariableStatement, operationLabel, endLoopLabel);
+        return Objects.hash(iteratorVarName, startExpression, endExpression, getBodyStatement(), getScope(),
+                iteratorVariableStatement, getOperationLabel(), getEndLoopLabel());
     }
 }

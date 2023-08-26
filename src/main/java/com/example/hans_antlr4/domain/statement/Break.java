@@ -12,7 +12,7 @@ import java.util.Objects;
 @Setter
 public class Break extends Statement {
     private int sourceLine;
-    private RangedForStatement nearestForStatement;
+    private Loop nearestLoopStatement;
 
     public Break(int sourceLine) {
         this.sourceLine = sourceLine;
@@ -27,8 +27,8 @@ public class Break extends Statement {
     public void processSubStatementTree(
             StatementTreeProcessor processor,
             Statement parent,
-            RangedForStatement nearestForStatement) {
-        processor.processStatementTree(this, parent, nearestForStatement);
+            Loop nearestLoopStatement) {
+        processor.processStatementTree(this, parent, nearestLoopStatement);
     }
 
     @Override
@@ -45,11 +45,11 @@ public class Break extends Statement {
             return false;
         }
         Break breakStmt = (Break) o;
-        return Objects.equals(nearestForStatement, breakStmt.nearestForStatement);
+        return Objects.equals(nearestLoopStatement, breakStmt.nearestLoopStatement);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nearestForStatement);
+        return Objects.hash(nearestLoopStatement);
     }
 }

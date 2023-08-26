@@ -13,9 +13,9 @@ public class ContinueStatementGenerator implements Opcodes {
     private MethodVisitor mv;
 
     public void generate(Continue continueStatement) {
-        if (continueStatement.getNearestForStatement() == null) {
+        if (continueStatement.getNearestLoopStatement() == null) {
             throw new ContinueStatementOutsideLoopException(continueStatement.getSourceLine());
         }
-        mv.visitJumpInsn(GOTO, continueStatement.getNearestForStatement().getOperationLabel());
+        mv.visitJumpInsn(GOTO, continueStatement.getNearestLoopStatement().getOperationLabel());
     }
 }

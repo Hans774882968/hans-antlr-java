@@ -6,7 +6,9 @@ import java.util.Queue;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
@@ -19,7 +21,6 @@ import com.example.hans_antlr4.domain.statement.RangedForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
-import com.example.hans_antlr4.exception.SupportAssignmentLaterException;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -127,12 +128,16 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final Expression startExpr = rangedForConditionsContext.startExpr.accept(expressionVisitor);
         final Expression endExpr = rangedForConditionsContext.endExpr.accept(expressionVisitor);
         final StatementVisitor statementVisitor = new StatementVisitor(newScope);
-        // TODO: 实现赋值表达式后再修改这里
+
+        Statement iteratorVariableStatement = null;
         if (newScope.localVariableExists(iteratorVarName)) {
-            throw new SupportAssignmentLaterException();
+            iteratorVariableStatement = new ExpressionStatement(
+                    new AssignmentExpression(iteratorVarName, AssignmentSign.ASSIGN, startExpr));
+        } else {
+            newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
+            iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);
         }
-        newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
-        Statement iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);
+
         Statement statement = ctx.statement().accept(statementVisitor);
 
         RangedForStatement rangedForStatement = new RangedForStatement(

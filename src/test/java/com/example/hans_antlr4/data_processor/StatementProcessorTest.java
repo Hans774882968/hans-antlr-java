@@ -52,7 +52,7 @@ public class StatementProcessorTest {
         Assert.assertTrue(addR.getBelongStatement() == rangedForStatement);
         Assert.assertTrue(value2.getBelongStatement() == rangedForStatement);
 
-        Assert.assertTrue(breakStatement.getNearestForStatement() == rangedForStatement);
-        Assert.assertTrue(breakStatement.getNearestForStatement() != mockRangedForStatement);
+        Assert.assertTrue(breakStatement.getNearestLoopStatement() == rangedForStatement);
+        Assert.assertTrue(breakStatement.getNearestLoopStatement() != mockRangedForStatement);
     }
 }
