@@ -10,6 +10,8 @@ import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
+import com.example.hans_antlr4.domain.statement.Break;
+import com.example.hans_antlr4.domain.statement.Continue;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
@@ -137,5 +139,15 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
                 iteratorVariableStatement, iteratorVarName, startExpr, endExpr, statement, newScope);
         instructionsQueue.add(rangedForStatement);
         return rangedForStatement;
+    }
+
+    @Override
+    public Break visitBreakStatement(HansAntlrParser.BreakStatementContext ctx) {
+        return new Break();
+    }
+
+    @Override
+    public Continue visitContinueStatement(HansAntlrParser.ContinueStatementContext ctx) {
+        return new Continue();
     }
 }

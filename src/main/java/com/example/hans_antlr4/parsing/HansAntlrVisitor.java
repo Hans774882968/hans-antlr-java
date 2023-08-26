@@ -95,6 +95,24 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitRangedForConditions(HansAntlrParser.RangedForConditionsContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#breakStatement}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitBreakStatement(HansAntlrParser.BreakStatementContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#continueStatement}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitContinueStatement(HansAntlrParser.ContinueStatementContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code RELATIONAL}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 

@@ -13,5 +13,8 @@ public abstract class Statement {
 
     public abstract void accept(StatementGenerator generator);
 
-    public abstract void processSubStatementTree(StatementTreeProcessor processor, Statement parent);
+    public abstract void processSubStatementTree(
+            StatementTreeProcessor processor,
+            Statement parent,
+            RangedForStatement nearestForStatement);
 }

@@ -3174,6 +3174,90 @@ TODO
 
 为了支持break和continue语句，需要知道它们所处的for循环。因此需要给现有的Statement树和Expression树附加信息。于是我们需要继续给data processor增加逻辑。
 
+### 效果
+
+[相关`.hant`测试代码](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/break_continue.hant)。
+
+以下`.hant`代码：
+
+```hant
+for i : 1 to 10 {
+    print i
+    if i % 5 == 0 {
+        break
+        print i
+    }
+}
+```
+
+的字节码反编译结果：
+
+```java
+int var65535 = 1;
+
+while(true) {
+    if (1 - 10 < 0) {
+        if (var65535 - 10 > 0) {
+            break;
+        }
+    } else if (var65535 - 10 < 0) {
+        break;
+    }
+    System.out.println(var65535);
+    if (var65535 % 5 - 0 == 0) {
+        break;
+    }
+    if (1 - 10 < 0) {
+        ++var65535;
+    } else {
+        --var65535;
+    }
+}
+```
+
+以下`.hant`代码：
+
+```hant
+for t: 1 to 7 {
+    if t % 2 == 0 {
+        var v = t << 1
+        v <<= 4 >> 1
+        print v - 6 * t
+        continue
+    }
+    print t
+}
+```
+
+的字节码反编译结果：
+
+```java
+var65535 = 1;
+int var1;
+while(true) {
+    if (1 - 7 < 0) {
+        if (var65535 - 7 > 0) {
+            break;
+        }
+    } else if (var65535 - 7 < 0) {
+        break;
+    }
+    // 不会显式出现 continue
+    if (var65535 % 2 - 0 != 0) {
+        System.out.println(var65535);
+    } else {
+        var1 = var65535 << 1;
+        var1 <<= 4 >> 1;
+        System.out.println(var1 - 6 * var65535);
+    }
+    if (1 - 7 < 0) {
+        ++var65535;
+    } else {
+        --var65535;
+    }
+}
+```
+
 ## Part13-2-支持标准for循环
 
 TODO

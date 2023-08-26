@@ -4,6 +4,8 @@ import org.objectweb.asm.MethodVisitor;
 
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
+import com.example.hans_antlr4.domain.statement.Break;
+import com.example.hans_antlr4.domain.statement.Continue;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
@@ -48,5 +50,15 @@ public class StatementGenerator {
     public void generate(RangedForStatement rangedForStatement) {
         RangedForStatementGenerator rangedForStatementGenerator = new RangedForStatementGenerator(mv);
         rangedForStatementGenerator.generate(rangedForStatement);
+    }
+
+    public void generate(Break breakStatement) {
+        BreakStatementGenerator breakStatementGenerator = new BreakStatementGenerator(mv);
+        breakStatementGenerator.generate(breakStatement);
+    }
+
+    public void generate(Continue continueStatement) {
+        ContinueStatementGenerator continueStatementGenerator = new ContinueStatementGenerator(mv);
+        continueStatementGenerator.generate(continueStatement);
     }
 }

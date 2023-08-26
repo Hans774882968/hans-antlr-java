@@ -14,7 +14,9 @@ statement:
 	| expressionStatement
 	| block
 	| ifStatement
-	| forStatement;
+	| forStatement
+	| breakStatement
+	| continueStatement;
 variable: VARIABLE Identifier EQUALS expression;
 expressionStatement: expression;
 ifStatement:
@@ -25,6 +27,8 @@ ifStatement:
 forStatement: 'for' ('(')? rangedForConditions (')')? statement;
 rangedForConditions:
 	iterator = variableReference ':' startExpr = expression range = 'to' endExpr = expression;
+breakStatement: 'break';
+continueStatement: 'continue';
 
 expression:
 	variableReference								# VarReference

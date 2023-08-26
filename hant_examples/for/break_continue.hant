@@ -1,0 +1,73 @@
+for i : 1 to 10 {
+    print i
+    if i % 5 == 0 {
+        break
+        print 2 * i
+    }
+}
+
+print "----- continue 1 -----"
+for i: 1 to 10 {
+    if i % 2 == 0 {
+        continue
+        print 2 * i
+    }
+    print i
+}
+
+print "----- continue 2 -----"
+for t: 1 to 7 {
+    if t % 2 == 0 {
+        var v = t << 1
+        v <<= 4 >> 1
+        print v - 6 * t
+        continue
+    }
+    print t
+}
+
+print "----- 多层循环 continue -----"
+for i: 1 to 5 {
+    for j: 2 to 7 {
+        var v = (i - 1) * 6 + (j - 1)
+        if v % 9 != 0 {
+            continue
+            print 20 * i
+        }
+        print v // 9 18 27
+    }
+}
+
+print "----- 多层循环 break -----"
+for i: 1 to 998244353 {
+    for j: 3 to 998244353 {
+        var v = (i - 1) * 6 + (j - 2)
+        if j >= 9 {
+            break
+            print 2 * v
+        }
+        if v % 10 > 1 {
+            continue
+            print 3 * v
+        }
+        print v // 1 10 11 20 21 30
+    }
+    if i >= 5 {
+        break
+    }
+}
+
+print "----- 找因数 -----"
+var n = 7 ** 10
+for i : 1 to n {
+    if i > n / i {
+        break
+    }
+    if n % i > 0 {
+        continue
+    }
+    print i
+    if i != n / i {
+        print n / i
+    } 
+}

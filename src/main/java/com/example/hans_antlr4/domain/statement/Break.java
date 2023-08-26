@@ -2,15 +2,14 @@ package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
-import com.example.hans_antlr4.domain.expression.Expression;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
 
-@AllArgsConstructor
 @Getter
-public class ExpressionStatement extends Statement {
-    private Expression expression;
+@Setter
+public class Break extends Statement {
+    private RangedForStatement nearestForStatement;
 
     @Override
     public void accept(StatementGenerator generator) {

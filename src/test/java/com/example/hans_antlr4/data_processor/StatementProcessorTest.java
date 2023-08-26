@@ -11,6 +11,7 @@ import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.statement.Block;
+import com.example.hans_antlr4.domain.statement.Break;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
@@ -25,11 +26,14 @@ public class StatementProcessorTest {
         Addition startExpr = new Addition(addL, addR);
         Value value2 = new Value(BuiltInType.INT, "2");
         UnaryTilde endExpr = new UnaryTilde(value2);
+        Break breakStatement = new Break();
         RangedForStatement rangedForStatement = new RangedForStatement(variableDeclaration, "x", startExpr, endExpr,
-                null, null);
+                breakStatement, null);
         Block block = new Block(new ArrayList<>(Arrays.asList(rangedForStatement)), null);
 
-        block.processSubStatementTree(new StatementTreeProcessor(), null);
+        RangedForStatement mockRangedForStatement = new RangedForStatement(null, null, null, null, null, null);
+
+        block.processSubStatementTree(new StatementTreeProcessor(), null, mockRangedForStatement);
         Assert.assertTrue(block.getParent() == null);
         Assert.assertTrue(rangedForStatement.getParent() == block);
         Assert.assertTrue(variableDeclaration.getParent() == rangedForStatement);
@@ -46,5 +50,8 @@ public class StatementProcessorTest {
         Assert.assertTrue(addL.getBelongStatement() == rangedForStatement);
         Assert.assertTrue(addR.getBelongStatement() == rangedForStatement);
         Assert.assertTrue(value2.getBelongStatement() == rangedForStatement);
+
+        Assert.assertTrue(breakStatement.getNearestForStatement() == rangedForStatement);
+        Assert.assertTrue(breakStatement.getNearestForStatement() != mockRangedForStatement);
     }
 }

@@ -33,8 +33,11 @@ public class IfStatement extends Statement {
     }
 
     @Override
-    public void processSubStatementTree(StatementTreeProcessor processor, Statement parent) {
-        processor.processStatementTree(this, parent);
+    public void processSubStatementTree(
+            StatementTreeProcessor processor,
+            Statement parent,
+            RangedForStatement nearestForStatement) {
+        processor.processStatementTree(this, parent, nearestForStatement);
     }
 
     public Optional<StatementAfterIf> getFalseStatement() {

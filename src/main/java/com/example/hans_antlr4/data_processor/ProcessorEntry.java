@@ -7,7 +7,7 @@ public class ProcessorEntry {
     public static void process(CompilationUnit compilationUnit) {
         StatementTreeProcessor processor = new StatementTreeProcessor();
         for (Statement statement : compilationUnit.getInstructionsQueue()) {
-            statement.processSubStatementTree(processor, null);
+            statement.processSubStatementTree(processor, null, null);
         }
     }
 }

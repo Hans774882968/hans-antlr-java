@@ -44,6 +44,7 @@ public class RangedForStatementGenerator implements Opcodes {
         rangedForStatement.getBodyStatement().accept(statementGenerator);
 
         // 4. 生成加1或减1的操作
+        mv.visitLabel(rangedForStatement.getOperationLabel());
         ConditionalExpression startLessThenEndExpression = new ConditionalExpression(
                 startExpression, endExpression, CompareSign.LESS);
         startLessThenEndExpression.accept(expressionGenerator);
@@ -66,8 +67,7 @@ public class RangedForStatementGenerator implements Opcodes {
                 new VarReference(iteratorVarName, endExprType), endExpression, CompareSign.GREATER);
         iteratorGreaterThanEndCondition.accept(expressionGenerator);
         // 满足 var 大于 end 就退出，否则跳 body
-        Label endLoopLabel = new Label();
-        mv.visitJumpInsn(IFNE, endLoopLabel);
+        mv.visitJumpInsn(IFNE, rangedForStatement.getEndLoopLabel());
         mv.visitJumpInsn(GOTO, bodyLabel);
 
         // 同理
@@ -75,9 +75,9 @@ public class RangedForStatementGenerator implements Opcodes {
         ConditionalExpression iteratorLessThanEndCondition = new ConditionalExpression(
                 new VarReference(iteratorVarName, endExprType), endExpression, CompareSign.LESS);
         iteratorLessThanEndCondition.accept(expressionGenerator);
-        mv.visitJumpInsn(IFNE, endLoopLabel);
+        mv.visitJumpInsn(IFNE, rangedForStatement.getEndLoopLabel());
         mv.visitJumpInsn(GOTO, bodyLabel);
 
-        mv.visitLabel(endLoopLabel);
+        mv.visitLabel(rangedForStatement.getEndLoopLabel());
     }
 }
