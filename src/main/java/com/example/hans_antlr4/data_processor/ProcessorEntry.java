@@ -9,5 +9,10 @@ public class ProcessorEntry {
         for (Statement statement : compilationUnit.getInstructionsQueue()) {
             statement.processSubStatementTree(processor, null, null);
         }
+
+        CheckOutsideLoopBreakContinueProcessor checkProcessor = new CheckOutsideLoopBreakContinueProcessor();
+        for (Statement statement : compilationUnit.getInstructionsQueue()) {
+            statement.checkOutsideLoopBreakContinue(checkProcessor);
+        }
     }
 }

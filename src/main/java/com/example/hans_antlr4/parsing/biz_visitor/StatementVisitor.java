@@ -143,11 +143,13 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
     @Override
     public Break visitBreakStatement(HansAntlrParser.BreakStatementContext ctx) {
-        return new Break();
+        int sourceLine = ctx.getStart().getLine();
+        return new Break(sourceLine);
     }
 
     @Override
     public Continue visitContinueStatement(HansAntlrParser.ContinueStatementContext ctx) {
-        return new Continue();
+        int sourceLine = ctx.getStart().getLine();
+        return new Continue(sourceLine);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProcessor;
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
@@ -24,6 +25,12 @@ public class PrintStatement extends Statement {
             Statement parent,
             RangedForStatement nearestForStatement) {
         processor.processStatementTree(this, parent, nearestForStatement);
+    }
+
+    @Override
+    public void checkOutsideLoopBreakContinue(
+            CheckOutsideLoopBreakContinueProcessor processor) {
+        processor.check(this);
     }
 
     @Override

@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
+import static org.mockito.Matchers.anyInt;
 
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Value;
@@ -26,7 +27,7 @@ public class StatementProcessorTest {
         Addition startExpr = new Addition(addL, addR);
         Value value2 = new Value(BuiltInType.INT, "2");
         UnaryTilde endExpr = new UnaryTilde(value2);
-        Break breakStatement = new Break();
+        Break breakStatement = new Break(anyInt());
         RangedForStatement rangedForStatement = new RangedForStatement(variableDeclaration, "x", startExpr, endExpr,
                 breakStatement, null);
         Block block = new Block(new ArrayList<>(Arrays.asList(rangedForStatement)), null);

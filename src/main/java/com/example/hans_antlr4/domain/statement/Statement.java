@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.statement;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProcessor;
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 
 import lombok.Getter;
@@ -17,4 +18,7 @@ public abstract class Statement {
             StatementTreeProcessor processor,
             Statement parent,
             RangedForStatement nearestForStatement);
+
+    public abstract void checkOutsideLoopBreakContinue(
+            CheckOutsideLoopBreakContinueProcessor processor);
 }

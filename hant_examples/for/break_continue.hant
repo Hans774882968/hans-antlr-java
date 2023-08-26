@@ -58,7 +58,8 @@ for i: 1 to 998244353 {
 }
 
 print "----- 找因数 -----"
-var n = 7 ** 10
+var n = 7 ** 10 // 7 ** 10 = 282475249
+var dNum = 0
 for i : 1 to n {
     if i > n / i {
         break
@@ -66,8 +67,11 @@ for i : 1 to n {
     if n % i > 0 {
         continue
     }
+    dNum += 1
     print i
     if i != n / i {
+        dNum += 1
         print n / i
     } 
 }
+print dNum // 11

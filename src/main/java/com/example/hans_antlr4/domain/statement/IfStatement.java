@@ -3,6 +3,7 @@ package com.example.hans_antlr4.domain.statement;
 import java.util.Optional;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
+import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProcessor;
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
@@ -27,6 +28,10 @@ public class IfStatement extends Statement {
         this.falseStatement = Optional.empty();
     }
 
+    public Optional<StatementAfterIf> getFalseStatement() {
+        return falseStatement;
+    }
+
     @Override
     public void accept(StatementGenerator generator) {
         generator.generate(this);
@@ -40,8 +45,10 @@ public class IfStatement extends Statement {
         processor.processStatementTree(this, parent, nearestForStatement);
     }
 
-    public Optional<StatementAfterIf> getFalseStatement() {
-        return falseStatement;
+    @Override
+    public void checkOutsideLoopBreakContinue(
+            CheckOutsideLoopBreakContinueProcessor processor) {
+        processor.check(this);
     }
 
     @Override

@@ -3170,9 +3170,160 @@ public boolean notNecessaryToGenerateDupInstruction() {
 
 ## 支持break和continue语句
 
-TODO
+为了支持break和continue语句，需要知道它们所处的for循环。因此需要给现有的Statement树和Expression树附加信息，并且需要继续给data processor增加逻辑。
 
-为了支持break和continue语句，需要知道它们所处的for循环。因此需要给现有的Statement树和Expression树附加信息。于是我们需要继续给data processor增加逻辑。
+```java
+@Getter
+@Setter
+public class Break extends Statement {
+    private RangedForStatement nearestForStatement;
+}
+
+@Getter
+@Setter
+public class Continue extends Statement {
+    private RangedForStatement nearestForStatement;
+}
+```
+
+data processor新增逻辑：除了`RangedForStatement`的`processStatementTree`以外，其他函数都只需要透传`nearestForStatement`参数。修改后的`processStatementTree`如下：
+
+```java
+public void processStatementTree(
+        RangedForStatement rangedForStatement,
+        Statement parent,
+        RangedForStatement nearestForStatement) {
+    if (rangedForStatement == null) {
+        return;
+    }
+    rangedForStatement.setParent(parent);
+    rangedForStatement.getIteratorVariableStatement().processSubStatementTree(
+            this, rangedForStatement, rangedForStatement);
+    rangedForStatement.getStartExpression().processSubExpressionTree(
+            expressionTreeProcessor, null, rangedForStatement);
+    rangedForStatement.getEndExpression().processSubExpressionTree(
+            expressionTreeProcessor, null, rangedForStatement);
+    Statement body = rangedForStatement.getBodyStatement();
+    if (body != null) {
+        body.processSubStatementTree(this, rangedForStatement, rangedForStatement);
+    }
+}
+```
+
+接下来考虑字节码生成部分。我们先写一段Java代码获取字节码：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        System.out.println("forStatement");
+        int up = 10;
+        for (int i = 1; i <= up; i += 3) {
+            if (i % 2 == 0)
+                break;
+            System.out.println(i);
+            if (i % 2 == 0)
+                continue;
+        }
+    }
+}
+```
+
+字节码如下：
+
+```
+0: getstatic     #16                 // Field java/lang/System.out:Ljava/io/PrintStream;
+3: ldc           #102                // String forStatement
+5: invokevirtual #35                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+8: bipush        10
+10: istore_0
+11: iconst_1
+12: istore_1
+13: goto          51
+16: iload_1
+17: iconst_2
+18: irem
+19: ifne          25
+22: goto          56
+25: getstatic     #16                 // Field java/lang/System.out:Ljava/io/PrintStream;
+28: iload_1
+29: invokevirtual #22                 // Method java/io/PrintStream.println:(I)V
+32: iload_1
+33: iconst_2
+34: irem
+35: ifne          41
+38: goto          48
+41: getstatic     #16                 // Field java/lang/System.out:Ljava/io/PrintStream;
+44: iload_1
+45: invokevirtual #22                 // Method java/io/PrintStream.println:(I)V
+48: iinc          1, 3
+51: iload_1
+52: iload_0
+53: if_icmple     16
+56: return
+```
+
+可知`break`和`continue`都只需要用`GOTO`指令实现。因此我们需要将`RangedForStatementGenerator`中定义的对应`Label`对象移动到`RangedForStatement`下。改动点如下：
+
+```java
+// 4. 生成加1或减1的操作
+mv.visitLabel(rangedForStatement.getOperationLabel());
+// 满足 var 大于 end 就退出，否则跳 body
+mv.visitJumpInsn(IFNE, rangedForStatement.getEndLoopLabel());
+// ...
+mv.visitJumpInsn(IFNE, rangedForStatement.getEndLoopLabel());
+// ...
+mv.visitLabel(rangedForStatement.getEndLoopLabel());
+```
+
+`RangedForStatement`的改动：
+
+```java
+@Getter
+@Setter
+public class RangedForStatement extends Statement {
+    // 其他属性省略
+    private Label operationLabel;
+    private Label endLoopLabel;
+
+    public RangedForStatement() {
+        // 其他属性省略
+        this.operationLabel = new Label();
+        this.endLoopLabel = new Label();
+    }
+}
+```
+
+最后新增`BreakStatementGenerator`和`ContinueStatementGenerator`即可：
+
+```java
+public void generate(Break breakStatement) {
+    BreakStatementGenerator breakStatementGenerator = new BreakStatementGenerator(mv);
+    breakStatementGenerator.generate(breakStatement);
+}
+
+public void generate(Continue continueStatement) {
+    ContinueStatementGenerator continueStatementGenerator = new ContinueStatementGenerator(mv);
+    continueStatementGenerator.generate(continueStatement);
+}
+
+@AllArgsConstructor
+public class BreakStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(Break breakStatement) {
+        mv.visitJumpInsn(GOTO, breakStatement.getNearestForStatement().getEndLoopLabel());
+    }
+}
+
+@AllArgsConstructor
+public class ContinueStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(Continue continueStatement) {
+        mv.visitJumpInsn(GOTO, continueStatement.getNearestForStatement().getOperationLabel());
+    }
+}
+```
 
 ### 效果
 
@@ -3257,6 +3408,72 @@ while(true) {
     }
 }
 ```
+
+### 编译期检测循环外的break和continue语句
+
+如果只想具备检测功能，改动`BreakStatementGenerator`和`ContinueStatementGenerator`即可：
+
+```java
+@AllArgsConstructor
+public class BreakStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(Break breakStatement) {
+        if (breakStatement.getNearestForStatement() == null) {
+            throw new BreakStatementOutsideLoopException(breakStatement.getSourceLine());
+        }
+        mv.visitJumpInsn(GOTO, breakStatement.getNearestForStatement().getEndLoopLabel());
+    }
+}
+
+@AllArgsConstructor
+public class ContinueStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(Continue continueStatement) {
+        if (continueStatement.getNearestForStatement() == null) {
+            throw new ContinueStatementOutsideLoopException(continueStatement.getSourceLine());
+        }
+        mv.visitJumpInsn(GOTO, continueStatement.getNearestForStatement().getOperationLabel());
+    }
+}
+```
+
+相应新增的自定义异常：
+
+```java
+package com.example.hans_antlr4.exception;
+
+public class BreakStatementOutsideLoopException extends RuntimeException {
+    public BreakStatementOutsideLoopException(int sourceLine) {
+        super("Unexpected break statement outside loop at line " + sourceLine);
+    }
+}
+
+package com.example.hans_antlr4.exception;
+
+public class ContinueStatementOutsideLoopException extends RuntimeException {
+    public ContinueStatementOutsideLoopException(int sourceLine) {
+        super("Unexpected continue statement outside loop at line " + sourceLine);
+    }
+}
+```
+
+但我们还可以将这个检测过程提前到data processor层，这样bytecode generator层的检测就是可有可无的了。[新增的processor](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/data_processor/CheckOutsideLoopBreakContinueProcessor.java)。
+
+为此我们还需要给`Statement`抽象类新增方法：
+
+```java
+public abstract class Statement {
+    public abstract void checkOutsideLoopBreakContinue(
+            CheckOutsideLoopBreakContinueProcessor processor);
+}
+```
+
+相关测试代码：
+
+- [`hant_examples/for/outside_loop_break.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/outside_loop_break.hant)
+- [`hant_examples/for/outside_loop_continue.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/outside_loop_continue.hant)
 
 ## Part13-2-支持标准for循环
 
