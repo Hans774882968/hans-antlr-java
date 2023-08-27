@@ -1,7 +1,5 @@
 package com.example.hans_antlr4.data_processor;
 
-import java.util.Optional;
-
 import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.Break;
 import com.example.hans_antlr4.domain.statement.Continue;
@@ -9,6 +7,7 @@ import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
+import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.exception.BreakStatementOutsideLoopException;
@@ -49,10 +48,9 @@ public class CheckOutsideLoopBreakContinueProcessor {
             return;
         }
         ifStatement.getTrueStatement().checkOutsideLoopBreakContinue(this);
-        Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
-        if (falseStatement.isPresent()) {
-            falseStatement.get().checkOutsideLoopBreakContinue(this);
-        }
+        ifStatement.getFalseStatement().ifPresent(falseStatement -> {
+            falseStatement.checkOutsideLoopBreakContinue(this);
+        });
     }
 
     public void check(PrintStatement printStatement) {
@@ -76,5 +74,18 @@ public class CheckOutsideLoopBreakContinueProcessor {
 
     public void check(VariableDeclaration variableDeclaration) {
 
+    }
+
+    public void check(StandardForStatement standardForStatement) {
+        if (standardForStatement == null) {
+            return;
+        }
+        standardForStatement.getStandardForInit().ifPresent(forInit -> {
+            forInit.checkOutsideLoopBreakContinue(this);
+        });
+        standardForStatement.getBodyStatement().checkOutsideLoopBreakContinue(this);
+        standardForStatement.getStandardForUpdate().ifPresent(forUpdate -> {
+            forUpdate.checkOutsideLoopBreakContinue(this);
+        });
     }
 }

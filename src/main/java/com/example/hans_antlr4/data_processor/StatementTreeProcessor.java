@@ -1,7 +1,5 @@
 package com.example.hans_antlr4.data_processor;
 
-import java.util.Optional;
-
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.Break;
@@ -11,6 +9,7 @@ import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.Loop;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
+import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
@@ -53,10 +52,9 @@ public class StatementTreeProcessor {
         ifStatement.setParent(parent);
         ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null, ifStatement);
         ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement, nearestLoopStatement);
-        Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
-        if (falseStatement.isPresent()) {
-            falseStatement.get().processSubStatementTree(this, ifStatement, nearestLoopStatement);
-        }
+        ifStatement.getFalseStatement().ifPresent(falseStatement -> {
+            falseStatement.processSubStatementTree(this, ifStatement, nearestLoopStatement);
+        });
     }
 
     public void processStatementTree(
@@ -121,12 +119,35 @@ public class StatementTreeProcessor {
         breakStatement.setNearestLoopStatement(nearestLoopStatement);
     }
 
-    public void processStatementTree(Continue continueStatement, Statement parent,
+    public void processStatementTree(
+            Continue continueStatement,
+            Statement parent,
             Loop nearestLoopStatement) {
         if (continueStatement == null) {
             return;
         }
         continueStatement.setParent(parent);
         continueStatement.setNearestLoopStatement(nearestLoopStatement);
+    }
+
+    public void processStatementTree(
+            StandardForStatement standardForStatement,
+            Statement parent,
+            Loop nearestLoopStatement) {
+        if (standardForStatement == null) {
+            return;
+        }
+        standardForStatement.setParent(parent);
+        standardForStatement.getStandardForInit().ifPresent(forInit -> {
+            forInit.processSubStatementTree(this, standardForStatement, standardForStatement);
+        });
+        standardForStatement.getBodyStatement().processSubStatementTree(
+                this, standardForStatement, standardForStatement);
+        standardForStatement.getShouldEndLoopExpression().ifPresent(shouldEndLoopExpression -> {
+            shouldEndLoopExpression.processSubExpressionTree(expressionTreeProcessor, null, standardForStatement);
+        });
+        standardForStatement.getStandardForUpdate().ifPresent(forUpdate -> {
+            forUpdate.processSubStatementTree(this, standardForStatement, standardForStatement);
+        });
     }
 }

@@ -1942,11 +1942,10 @@ public class IfStatementGenerator implements Opcodes {
         Label endLabel = new Label();
         mv.visitJumpInsn(IFNE, trueLabel);
 
-        Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
-        if (falseStatement.isPresent()) {
-            StatementGenerator statementGenerator = new StatementGenerator(mv, falseStatement.get().getNewScope());
-            falseStatement.get().accept(statementGenerator);
-        }
+        ifStatement.getFalseStatement().ifPresent(falseStatement -> {
+            StatementGenerator statementGenerator = new StatementGenerator(mv, falseStatement.getNewScope());
+            falseStatement.accept(statementGenerator);
+        });
 
         mv.visitJumpInsn(GOTO, endLabel);
         mv.visitLabel(trueLabel);
@@ -3030,7 +3029,9 @@ public abstract class Expression {
 }
 ```
 
-这里新增的`processSubStatementTree`和`processSubExpressionTree`方法是模仿了它们上面的`accept`方法的设计，允许`Statement`和`Expression`对象调用方法，根据入参`this`去选择恰当的方法来触发副作用，避免直接在某个方法里写大量的`instanceof`。
+这里新增的`processSubStatementTree`和`processSubExpressionTree`方法是模仿了它们上面的`accept`方法的设计，允许`Statement`和`Expression`对象调用方法，根据入参`this`去选择恰当的方法来触发副作用，避免直接在某个方法里写大量的`instanceof`。也许你会说，直接写`instanceof`的码量更少。但这种做法会在后续引入新的语句类型时引入因为漏改代码导致已有功能出错的风险；而在每种`Statement`中都重载`processSubStatementTree`方法看似工作量大，但可以起到提醒开发者去兼容已有功能的作用，降低了质量风险。
+
+在此**强制规定**：所有需要通过`instanceof`将`Statement`对象转为子类对象的功能，都需要采用类似于`accept`方法的设计。
 
 做以上修改后，`domain`文件夹大多数类都需要更改了，以`domain/expression/Addition.java`为例：
 
@@ -3095,10 +3096,9 @@ public void processStatementTree(IfStatement ifStatement, Statement parent) {
     ifStatement.setParent(parent);
     ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null);
     ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement);
-    Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
-    if (falseStatement.isPresent()) {
-        falseStatement.get().processSubStatementTree(this, ifStatement);
-    }
+    ifStatement.getFalseStatement().ifPresent(falseStatement -> {
+        falseStatement.processSubStatementTree(this, ifStatement);
+    });
 }
 
 public void processExpressionTree(ArithmeticExpression arithmeticExpression, Expression parent) {
@@ -3147,10 +3147,9 @@ public void processStatementTree(IfStatement ifStatement, Statement parent) {
     ifStatement.setParent(parent);
     ifStatement.getCondition().processSubExpressionTree(expressionTreeProcessor, null, ifStatement);
     ifStatement.getTrueStatement().processSubStatementTree(this, ifStatement);
-    Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
-    if (falseStatement.isPresent()) {
-        falseStatement.get().processSubStatementTree(this, ifStatement);
-    }
+    ifStatement.getFalseStatement().ifPresent(falseStatement -> {
+        falseStatement.processSubStatementTree(this, ifStatement);
+    });
 }
 
 public void processExpressionTree(
@@ -3497,7 +3496,201 @@ public abstract class Statement {
 
 ## Part13-2-支持标准for循环
 
-TODO
+因为我们是通过参考标准for循环的Java字节码来实现《Part13-1-支持ranged for循环》，所以这一节难度不大。
+
+文法：
+
+```g4
+statement:
+	variable
+	| print
+	| expressionStatement
+	| block
+	| ifStatement
+	| rangedForStatement
+	| standardForStatement
+	| breakStatement
+	| continueStatement;
+standardForStatement:
+	'for' ('(')? standardForInit? ';' expression? ';' expressionStatement? (
+		')'
+	)? statement;
+standardForInit: variable | expressionStatement;
+```
+
+新增的`StandardForStatement`：
+
+```java
+@Getter
+@Setter
+public class StandardForStatement extends Loop {
+    private Optional<Statement> standardForInit;
+    private Optional<Expression> shouldEndLoopExpression;
+    private Optional<Statement> standardForUpdate;
+
+    public StandardForStatement(
+            Statement standardForInit,
+            Expression shouldEndLoopExpression,
+            Statement standardForUpdate,
+            Statement bodyStatement,
+            Scope scope) {
+        super(bodyStatement, scope);
+        this.standardForInit = Optional.ofNullable(standardForInit);
+        this.shouldEndLoopExpression = Optional.ofNullable(shouldEndLoopExpression);
+        this.standardForUpdate = Optional.ofNullable(standardForUpdate);
+    }
+    // 其他方法省略
+}
+```
+
+每新增一种`Statement`，就要修改对应的`StatementTreeProcessor`和`CheckOutsideLoopBreakContinueProcessor`。
+
+`StatementTreeProcessor`新增的`processStatementTree`方法：
+
+```java
+public void processStatementTree(
+        StandardForStatement standardForStatement,
+        Statement parent,
+        Loop nearestLoopStatement) {
+    if (standardForStatement == null) {
+        return;
+    }
+    standardForStatement.setParent(parent);
+    standardForStatement.getStandardForInit().ifPresent(forInit -> {
+        forInit.processSubStatementTree(this, standardForStatement, standardForStatement);
+    });
+    standardForStatement.getBodyStatement().processSubStatementTree(
+            this, standardForStatement, standardForStatement);
+    standardForStatement.getShouldEndLoopExpression().ifPresent(shouldEndLoopExpression -> {
+        shouldEndLoopExpression.processSubExpressionTree(expressionTreeProcessor, null, standardForStatement);
+    });
+    standardForStatement.getStandardForUpdate().ifPresent(forUpdate -> {
+        forUpdate.processSubStatementTree(this, standardForStatement, standardForStatement);
+    });
+}
+```
+
+`StandardForStatement`和`RangedForStatement`是`Loop`的子类，`nearestLoopStatement`要传自身下去，其他`Statement`都不是`Loop`的子类，直接透传即可。
+
+Visitor的改动：
+
+```java
+@Override
+public StandardForStatement visitStandardForStatement(HansAntlrParser.StandardForStatementContext ctx) {
+    Scope newScope = new Scope(scope);
+    final ExpressionVisitor expressionVisitor = new ExpressionVisitor(newScope);
+    final StatementVisitor statementVisitor = new StatementVisitor(newScope);
+
+    Statement forInit = ctx.standardForInit() != null
+            ? ctx.standardForInit().accept(statementVisitor)
+            : null;
+    Expression shouldEndLoopExpression = ctx.expression() != null
+            ? ctx.expression().accept(expressionVisitor)
+            : null;
+    Statement statement = ctx.statement().accept(statementVisitor);
+    Statement forUpdate = ctx.expressionStatement() != null
+            ? ctx.expressionStatement().accept(statementVisitor)
+            : null;
+
+    StandardForStatement standardForStatement = new StandardForStatement(
+            forInit, shouldEndLoopExpression, forUpdate, statement, newScope);
+    instructionsQueue.add(standardForStatement);
+    return standardForStatement;
+}
+```
+
+`bytecode_gen`部分实现上的注意点：
+
+1. 观察生成的字节码可知，如果`expression`部分为空字符串，那么不应该生成`GOTO`语句。同理，条件判断区的代码也需要用`if`判断包裹。
+2. 实现完毕后记得测`break`和`continue`。
+
+```java
+@AllArgsConstructor
+public class StandardForStatementGenerator implements Opcodes {
+    private MethodVisitor mv;
+
+    public void generate(StandardForStatement standardForStatement) {
+        final Scope newScope = standardForStatement.getScope();
+        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, newScope);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope);
+        Optional<Expression> nullableShouldEndLoopExpression = standardForStatement.getShouldEndLoopExpression();
+
+        // 1. 生成 forInit
+        standardForStatement.getStandardForInit().ifPresent(forInit -> {
+            forInit.accept(statementGenerator);
+        });
+
+        // 2. 生成 GOTO 结束条件判断区的 label
+        Label conditionLabel = new Label();
+        if (nullableShouldEndLoopExpression.isPresent()) {
+            mv.visitJumpInsn(GOTO, conditionLabel);
+        }
+
+        // 3. 方法体
+        Label bodyLabel = new Label();
+        mv.visitLabel(bodyLabel);
+        standardForStatement.getBodyStatement().accept(statementGenerator);
+
+        // 4. 生成 forUpdate
+        mv.visitLabel(standardForStatement.getOperationLabel());
+        standardForStatement.getStandardForUpdate().ifPresent(forUpdate -> {
+            forUpdate.accept(statementGenerator);
+        });
+
+        // 5. 生成条件判断
+        if (nullableShouldEndLoopExpression.isPresent()) {
+            mv.visitLabel(conditionLabel);
+            standardForStatement.getShouldEndLoopExpression().ifPresent(shouldEndLoopExpression -> {
+                shouldEndLoopExpression.accept(expressionGenerator);
+            });
+            mv.visitJumpInsn(IFEQ, standardForStatement.getEndLoopLabel());
+        }
+
+        mv.visitJumpInsn(GOTO, bodyLabel);
+
+        mv.visitLabel(standardForStatement.getEndLoopLabel());
+    }
+}
+```
+
+### 效果：来实现一个求广义水仙花数的脚本吧！
+
+[相关`.hant`测试代码：`hant_examples\for\for.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/for.hant)。
+
+```hant
+for var i = 0; i < 10; i += 1 {
+    if i % 2 == 0 continue
+    print i
+}
+```
+
+的反编译结果：
+
+```java
+int var65535;
+for(var65535 = 0; var65535 - 10 < 0; ++var65535) {
+    if (var65535 % 2 - 0 != 0) {
+        System.out.println(var65535);
+    }
+}
+```
+
+至此，我的`hant`语言可以实现求广义水仙花数的脚本了：
+
+```hant
+var ans = 0
+for i: 10 to 100000 {
+    var dNum = 0
+    for var x = i;; x /= 10 {
+        if x == 0 break
+        dNum += 1
+    }
+    var tmpSum = 0
+    for var v = 1; v <= i; v *= 10 tmpSum += (i / v % 10) ** dNum
+    if tmpSum == i {ans += 1 print i} // 153 370 371 407 1634 8208 9474 54748 92727 93084
+}
+print ans // 10
+```
 
 ## 参考资料
 

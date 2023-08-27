@@ -1,7 +1,5 @@
 package com.example.hans_antlr4.bytecode_gen.statement;
 
-import java.util.Optional;
-
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.MethodVisitor;
@@ -28,11 +26,10 @@ public class IfStatementGenerator implements Opcodes {
         Label endLabel = new Label();
         mv.visitJumpInsn(IFNE, trueLabel);
 
-        Optional<StatementAfterIf> falseStatement = ifStatement.getFalseStatement();
-        if (falseStatement.isPresent()) {
-            StatementGenerator statementGenerator = new StatementGenerator(mv, falseStatement.get().getNewScope());
-            falseStatement.get().accept(statementGenerator);
-        }
+        ifStatement.getFalseStatement().ifPresent(falseStatement -> {
+            StatementGenerator statementGenerator = new StatementGenerator(mv, falseStatement.getNewScope());
+            falseStatement.accept(statementGenerator);
+        });
 
         mv.visitJumpInsn(GOTO, endLabel);
         mv.visitLabel(trueLabel);

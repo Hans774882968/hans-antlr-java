@@ -10,6 +10,7 @@ import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
+import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 
@@ -60,5 +61,10 @@ public class StatementGenerator {
     public void generate(Continue continueStatement) {
         ContinueStatementGenerator continueStatementGenerator = new ContinueStatementGenerator(mv);
         continueStatementGenerator.generate(continueStatement);
+    }
+
+    public void generate(StandardForStatement standardForStatement) {
+        StandardForStatementGenerator standardForStatementGenerator = new StandardForStatementGenerator(mv);
+        standardForStatementGenerator.generate(standardForStatement);
     }
 }

@@ -77,13 +77,13 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitIfStatement(HansAntlrParser.IfStatementContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link HansAntlrParser#forStatement}.
+	 * Visit a parse tree produced by {@link HansAntlrParser#rangedForStatement}.
 	 * 
 	 * @param ctx
 	 *            the parse tree
 	 * @return the visitor result
 	 */
-	T visitForStatement(HansAntlrParser.ForStatementContext ctx);
+	T visitRangedForStatement(HansAntlrParser.RangedForStatementContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#rangedForConditions}.
@@ -93,6 +93,24 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitRangedForConditions(HansAntlrParser.RangedForConditionsContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#standardForStatement}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitStandardForStatement(HansAntlrParser.StandardForStatementContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#standardForInit}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitStandardForInit(HansAntlrParser.StandardForInitContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#breakStatement}.
