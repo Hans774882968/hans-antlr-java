@@ -1,6 +1,5 @@
 package com.example.hans_antlr4.bytecode_gen.expression;
 
-import org.apache.commons.lang3.StringUtils;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -30,6 +29,8 @@ import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.exception.UnsupportedTypeForTildeExpressionException;
+import com.example.hans_antlr4.utils.TypeResolver;
 
 import lombok.Data;
 
@@ -53,19 +54,14 @@ public class ExpressionGenerator implements Opcodes {
         int index = scope.getLocalVariableIndex(varName);
         LocalVariable localVariable = scope.getLocalVariable(varName);
         Type type = localVariable.getType();
-        if (type == BuiltInType.INT) {
-            mv.visitVarInsn(ILOAD, index);
-        }
-        if (type == BuiltInType.STRING) {
-            mv.visitVarInsn(ALOAD, index);
-        }
+        mv.visitVarInsn(type.getLoadVariableOpcode(), index);
     }
 
     public void generate(Value value) {
         Type type = value.getType();
         String stringValue = value.getValue();
         if (type == BuiltInType.INT) {
-            int intValue = Integer.parseInt(stringValue);
+            int intValue = (int) TypeResolver.getValueFromString(stringValue, type);
             if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
                 mv.visitIntInsn(BIPUSH, intValue);
             } else if (Short.MIN_VALUE <= intValue && intValue <= Short.MAX_VALUE) {
@@ -73,11 +69,8 @@ public class ExpressionGenerator implements Opcodes {
             } else {
                 mv.visitLdcInsn(intValue);
             }
-        }
-        if (type == BuiltInType.STRING) {
-            stringValue = StringUtils.removeStart(stringValue, "\"");
-            stringValue = StringUtils.removeEnd(stringValue, "\"");
-            mv.visitLdcInsn(stringValue);
+        } else {
+            mv.visitLdcInsn(TypeResolver.getValueFromString(stringValue, type));
         }
     }
 
@@ -87,82 +80,89 @@ public class ExpressionGenerator implements Opcodes {
 
     public void generate(UnaryNegative expression) {
         expression.getExpression().accept(this);
-        mv.visitInsn(INEG);
+        mv.visitInsn(expression.getType().getUnaryNegativeOpcode());
     }
 
     public void generate(UnaryTilde expression) {
         expression.getExpression().accept(this);
-        mv.visitInsn(ICONST_M1);
-        mv.visitInsn(IXOR);
+        Type type = expression.getType();
+        if (type == BuiltInType.INT) {
+            mv.visitInsn(ICONST_M1);
+        } else if (type == BuiltInType.LONG) {
+            mv.visitLdcInsn(-1L);
+        } else {
+            throw new UnsupportedTypeForTildeExpressionException(type);
+        }
+        mv.visitInsn(type.getXorOpcode());
     }
 
     public void generate(Addition expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IADD);
+        mv.visitInsn(expression.getType().getAddOpcode());
     }
 
     public void generate(Subtraction expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(ISUB);
+        mv.visitInsn(expression.getType().getSubtractOpcode());
     }
 
     public void generate(Multiplication expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IMUL);
+        mv.visitInsn(expression.getType().getMultiplyOpcode());
     }
 
     public void generate(Division expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IDIV);
+        mv.visitInsn(expression.getType().getDivideOpcode());
     }
 
     public void generate(Pow expression) {
         Expression leftExpression = expression.getLeftExpression();
         Expression rightExpression = expression.getRightExpression();
         leftExpression.accept(this);
-        mv.visitInsn(I2D);
+        mv.visitInsn(leftExpression.getType().getToDoubleOpcode());
         rightExpression.accept(this);
-        mv.visitInsn(I2D);
+        mv.visitInsn(rightExpression.getType().getToDoubleOpcode());
         ClassType owner = new ClassType("java.lang.Math");
         String fieldDescriptor = owner.getInternalName(); // "java/lang/Math"
         String descriptor = "(DD)D";
         mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
-        mv.visitInsn(D2I);
+        mv.visitInsn(leftExpression.getType().getDoubleToThisTypeOpcode());
     }
 
     public void generate(Mod expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IREM);
+        mv.visitInsn(expression.getType().getModOpcode());
     }
 
     public void generate(Shl expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(ISHL);
+        mv.visitInsn(expression.getType().getShlOpcode());
     }
 
     public void generate(Shr expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(ISHR);
+        mv.visitInsn(expression.getType().getShrOpcode());
     }
 
     public void generate(UnsignedShr expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IUSHR);
+        mv.visitInsn(expression.getType().getUnsignedShrOpcode());
     }
 
     public void generate(And expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IAND);
+        mv.visitInsn(expression.getType().getAndOpcode());
     }
 
     public void generate(Xor expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IXOR);
+        mv.visitInsn(expression.getType().getXorOpcode());
     }
 
     public void generate(Or expression) {
         evaluateArithmeticComponents(expression);
-        mv.visitInsn(IOR);
+        mv.visitInsn(expression.getType().getOrOpcode());
     }
 
     public void generate(ConditionalExpression conditionalExpression) {

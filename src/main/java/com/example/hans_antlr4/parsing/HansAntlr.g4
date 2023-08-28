@@ -69,7 +69,7 @@ expression:
 variableReference: Identifier;
 
 print: PRINT expression;
-value: op = NUMBER | op = STRING;
+value: NUMBER | STRING | BOOL;
 
 // hant TOKENS
 POW: '**';
@@ -85,7 +85,9 @@ OR: '|';
 VARIABLE: 'var';
 PRINT: 'print';
 EQUALS: '=';
-NUMBER: [0-9]+;
+NUMBER: [0-9.]+ | HexIntegerLiteral;
+HexIntegerLiteral: '0' [xX] HexDigit+;
+BOOL: 'true' | 'false';
 // must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式
 STRING: '"' .*? '"';
 

@@ -131,8 +131,9 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
         Statement iteratorVariableStatement = null;
         if (newScope.localVariableExists(iteratorVarName)) {
+            LocalVariable iteratorVar = newScope.getLocalVariable(iteratorVarName);
             iteratorVariableStatement = new ExpressionStatement(
-                    new AssignmentExpression(iteratorVarName, AssignmentSign.ASSIGN, startExpr));
+                    new AssignmentExpression(iteratorVar, AssignmentSign.ASSIGN, startExpr));
         } else {
             newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
             iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);

@@ -11,6 +11,7 @@ import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 
@@ -55,7 +56,8 @@ public class ExpressionProcessorTest {
         VarReference subtractionL = new VarReference("x", BuiltInType.INT);
         Value subtractionR = new Value(BuiltInType.INT, "2");
         Subtraction subtraction = new Subtraction(subtractionL, subtractionR);
-        AssignmentExpression assignmentAdd = new AssignmentExpression("x", AssignmentSign.ADD, subtraction);
+        AssignmentExpression assignmentAdd = new AssignmentExpression(
+                new LocalVariable("x", BuiltInType.INT), AssignmentSign.ADD, subtraction);
         UnaryTilde unaryTilde = new UnaryTilde(assignmentAdd);
         Addition addition = new Addition(pow, unaryTilde);
         PrintStatement mockStatement = new PrintStatement(addition);

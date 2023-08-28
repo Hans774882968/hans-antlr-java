@@ -8,7 +8,7 @@ import com.example.hans_antlr4.domain.statement.Statement;
 
 public class Shl extends Shift {
     public Shl(Expression leftExpression, Expression rightExpression) {
-        super(leftExpression.getType(), leftExpression, rightExpression);
+        super(leftExpression, rightExpression);
     }
 
     @Override

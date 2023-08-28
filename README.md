@@ -2006,7 +2006,26 @@ Exception Details:
     Expected stackmap frame at this location.
 ```
 
-TODO: 原因未知。
+### 带分支指令的字节码需要加`-noverify`才能运行的解决方案
+
+根据[参考链接6](https://stackoverflow.com/questions/25109942/what-is-a-stack-map-frame)，给`ClassWriter`设置`ClassWriter.COMPUTE_FRAMES`即可。即`ClassWriter cw = new ClassWriter(0);`变为`ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);`。
+
+当然，如果你的项目对性能有极其严苛的要求，也可以牺牲脑力，手工计算frame后调用`mv.visitFrame()`。
+
+`StackMapTable`示例：
+
+```
+StackMapTable: number_of_entries = 5
+    frame_type = 255 /* full_frame */
+        offset_delta = 34
+        locals = [ float, int ]
+        stack = []
+    frame_type = 9 /* same */
+    frame_type = 10 /* same */
+    frame_type = 64 /* same_locals_1_stack_item */
+        stack = [ int ]
+    frame_type = 5 /* same */
+```
 
 ### 原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复
 
@@ -3653,7 +3672,7 @@ public class StandardForStatementGenerator implements Opcodes {
 }
 ```
 
-### 效果：来实现一个求广义水仙花数的脚本吧！
+### 效果：来实现一段求广义水仙花数的脚本吧！
 
 [相关`.hant`测试代码：`hant_examples\for\for.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/for.hant)。
 
@@ -3675,7 +3694,7 @@ for(var65535 = 0; var65535 - 10 < 0; ++var65535) {
 }
 ```
 
-至此，我的`hant`语言可以实现求广义水仙花数的脚本了：
+至此，`hant`语言可以实现求广义水仙花数的脚本了：
 
 ```hant
 var ans = 0
@@ -3691,6 +3710,10 @@ for i: 10 to 100000 {
 }
 print ans // 10
 ```
+
+## Part15：1-支持float、double、boolean
+
+TODO
 
 ## 参考资料
 

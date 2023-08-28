@@ -7,7 +7,6 @@ import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
-import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
 
 import lombok.Getter;
@@ -31,10 +30,6 @@ public class VariableDeclarationStatementGenerator implements Opcodes {
 
         Type type = expression.getType();
         expression.accept(expressionGenerator);
-        if (type == BuiltInType.INT) {
-            mv.visitVarInsn(ISTORE, index);
-        } else {
-            mv.visitVarInsn(ASTORE, index);
-        }
+        mv.visitVarInsn(type.getStoreVariableOpcode(), index);
     }
 }

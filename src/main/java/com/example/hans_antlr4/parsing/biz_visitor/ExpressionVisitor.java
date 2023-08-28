@@ -32,6 +32,8 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.domain.type.TypeChecker;
+import com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -191,6 +193,13 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         final String op = ctx.AssignmentOperator.getText();
         AssignmentSign assignmentSign = AssignmentSign.fromString(op);
         Expression expression = ctx.expression().accept(this);
-        return new AssignmentExpression(varName, assignmentSign, expression);
+        LocalVariable localVariable = scope.getLocalVariable(varName);
+        Type lhsType = localVariable.getType();
+        Type rhsType = expression.getType();
+        if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(lhsType, rhsType)) {
+            int sourceLine = ctx.AssignmentOperator.getLine();
+            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sourceLine);
+        }
+        return new AssignmentExpression(localVariable, assignmentSign, expression);
     }
 }

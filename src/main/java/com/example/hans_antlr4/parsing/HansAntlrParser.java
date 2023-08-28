@@ -24,7 +24,8 @@ public class HansAntlrParser extends Parser {
 			T__17 = 18, T__18 = 19, T__19 = 20, T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24,
 			T__24 = 25, T__25 = 26, T__26 = 27, POW = 28, MULTIPLICATIVE = 29, SHIFT = 30, RELATIONAL = 31,
 			EQUALITY = 32, AND = 33, XOR = 34, OR = 35, VARIABLE = 36, PRINT = 37, EQUALS = 38,
-			NUMBER = 39, STRING = 40, Identifier = 41, WS = 42, COMMENT = 43, LINE_COMMENT = 44;
+			NUMBER = 39, HexIntegerLiteral = 40, BOOL = 41, STRING = 42, Identifier = 43, WS = 44,
+			COMMENT = 45, LINE_COMMENT = 46;
 	public static final int RULE_compilationUnit = 0, RULE_statements = 1, RULE_block = 2, RULE_statement = 3,
 			RULE_variable = 4, RULE_expressionStatement = 5, RULE_ifStatement = 6,
 			RULE_rangedForStatement = 7, RULE_rangedForConditions = 8, RULE_standardForStatement = 9,
@@ -60,7 +61,8 @@ public class HansAntlrParser extends Parser {
 				null, null, null, null, null, null, null, null, null, null, null, null,
 				null, null, null, null, "POW", "MULTIPLICATIVE", "SHIFT", "RELATIONAL",
 				"EQUALITY", "AND", "XOR", "OR", "VARIABLE", "PRINT", "EQUALS", "NUMBER",
-				"STRING", "Identifier", "WS", "COMMENT", "LINE_COMMENT"
+				"HexIntegerLiteral", "BOOL", "STRING", "Identifier", "WS", "COMMENT",
+				"LINE_COMMENT"
 		};
 	}
 
@@ -210,7 +212,7 @@ public class HansAntlrParser extends Parser {
 				setState(40);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4054449191066L) != 0)) {
+				while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 16149077096602L) != 0)) {
 					{
 						{
 							setState(37);
@@ -793,7 +795,7 @@ public class HansAntlrParser extends Parser {
 				setState(99);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3917010231312L) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 16011638136848L) != 0)) {
 					{
 						setState(98);
 						standardForInit();
@@ -805,7 +807,7 @@ public class HansAntlrParser extends Parser {
 				setState(103);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3848290754576L) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 15942918660112L) != 0)) {
 					{
 						setState(102);
 						expression(0);
@@ -892,6 +894,7 @@ public class HansAntlrParser extends Parser {
 				case T__13:
 				case T__14:
 				case NUMBER:
+				case BOOL:
 				case STRING:
 				case Identifier:
 					enterOuterAlt(_localctx, 2); {
@@ -1691,14 +1694,16 @@ public class HansAntlrParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ValueContext extends ParserRuleContext {
-		public Token op;
-
 		public TerminalNode NUMBER() {
 			return getToken(HansAntlrParser.NUMBER, 0);
 		}
 
 		public TerminalNode STRING() {
 			return getToken(HansAntlrParser.STRING, 0);
+		}
+
+		public TerminalNode BOOL() {
+			return getToken(HansAntlrParser.BOOL, 0);
 		}
 
 		public ValueContext(ParserRuleContext parent, int invokingState) {
@@ -1722,24 +1727,20 @@ public class HansAntlrParser extends Parser {
 	public final ValueContext value() throws RecognitionException {
 		ValueContext _localctx = new ValueContext(_ctx, getState());
 		enterRule(_localctx, 32, RULE_value);
+		int _la;
 		try {
-			setState(176);
-			_errHandler.sync(this);
-			switch (_input.LA(1)) {
-				case NUMBER:
-					enterOuterAlt(_localctx, 1); {
-					setState(174);
-					((ValueContext) _localctx).op = match(NUMBER);
+			enterOuterAlt(_localctx, 1);
+			{
+				setState(174);
+				_la = _input.LA(1);
+				if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 7146825580544L) != 0))) {
+					_errHandler.recoverInline(this);
+				} else {
+					if (_input.LA(1) == Token.EOF)
+						matchedEOF = true;
+					_errHandler.reportMatch(this);
+					consume();
 				}
-					break;
-				case STRING:
-					enterOuterAlt(_localctx, 2); {
-					setState(175);
-					((ValueContext) _localctx).op = match(STRING);
-				}
-					break;
-				default:
-					throw new NoViableAltException(this);
 			}
 		} catch (RecognitionException re) {
 			_localctx.exception = re;
@@ -1783,7 +1784,7 @@ public class HansAntlrParser extends Parser {
 		return true;
 	}
 
-	public static final String _serializedATN = "\u0004\u0001,\u00b3\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"
+	public static final String _serializedATN = "\u0004\u0001.\u00b1\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"
 			+
 			"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002" +
 			"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002" +
@@ -1808,17 +1809,17 @@ public class HansAntlrParser extends Parser {
 			"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001" +
 			"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0005\r\u00a5\b\r\n\r\f\r\u00a8\t\r" +
 			"\u0001\u000e\u0001\u000e\u0001\u000f\u0001\u000f\u0001\u000f\u0001\u0010" +
-			"\u0001\u0010\u0003\u0010\u00b1\b\u0010\u0001\u0010\u0000\u0001\u001a\u0011" +
-			"\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a" +
-			"\u001c\u001e \u0000\u0003\u0001\u0000\r\u000f\u0002\u0000\u0010\u001b" +
-			"&&\u0001\u0000\r\u000e\u00c3\u0000\"\u0001\u0000\u0000\u0000\u0002(\u0001" +
-			"\u0000\u0000\u0000\u0004+\u0001\u0000\u0000\u0000\u00068\u0001\u0000\u0000" +
-			"\u0000\b:\u0001\u0000\u0000\u0000\n?\u0001\u0000\u0000\u0000\fA\u0001" +
-			"\u0000\u0000\u0000\u000eN\u0001\u0000\u0000\u0000\u0010X\u0001\u0000\u0000" +
-			"\u0000\u0012^\u0001\u0000\u0000\u0000\u0014t\u0001\u0000\u0000\u0000\u0016" +
-			"v\u0001\u0000\u0000\u0000\u0018x\u0001\u0000\u0000\u0000\u001a\u0087\u0001" +
+			"\u0001\u0010\u0001\u0010\u0000\u0001\u001a\u0011\u0000\u0002\u0004\u0006" +
+			"\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u001a\u001c\u001e \u0000\u0004" +
+			"\u0001\u0000\r\u000f\u0002\u0000\u0010\u001b&&\u0001\u0000\r\u000e\u0002" +
+			"\u0000\'\')*\u00c0\u0000\"\u0001\u0000\u0000\u0000\u0002(\u0001\u0000" +
+			"\u0000\u0000\u0004+\u0001\u0000\u0000\u0000\u00068\u0001\u0000\u0000\u0000" +
+			"\b:\u0001\u0000\u0000\u0000\n?\u0001\u0000\u0000\u0000\fA\u0001\u0000" +
+			"\u0000\u0000\u000eN\u0001\u0000\u0000\u0000\u0010X\u0001\u0000\u0000\u0000" +
+			"\u0012^\u0001\u0000\u0000\u0000\u0014t\u0001\u0000\u0000\u0000\u0016v" +
+			"\u0001\u0000\u0000\u0000\u0018x\u0001\u0000\u0000\u0000\u001a\u0087\u0001" +
 			"\u0000\u0000\u0000\u001c\u00a9\u0001\u0000\u0000\u0000\u001e\u00ab\u0001" +
-			"\u0000\u0000\u0000 \u00b0\u0001\u0000\u0000\u0000\"#\u0003\u0002\u0001" +
+			"\u0000\u0000\u0000 \u00ae\u0001\u0000\u0000\u0000\"#\u0003\u0002\u0001" +
 			"\u0000#$\u0005\u0000\u0000\u0001$\u0001\u0001\u0000\u0000\u0000%\'\u0003" +
 			"\u0006\u0003\u0000&%\u0001\u0000\u0000\u0000\'*\u0001\u0000\u0000\u0000" +
 			"(&\u0001\u0000\u0000\u0000()\u0001\u0000\u0000\u0000)\u0003\u0001\u0000" +
@@ -1831,7 +1832,7 @@ public class HansAntlrParser extends Parser {
 			"\u0000\u000082\u0001\u0000\u0000\u000083\u0001\u0000\u0000\u000084\u0001" +
 			"\u0000\u0000\u000085\u0001\u0000\u0000\u000086\u0001\u0000\u0000\u0000" +
 			"87\u0001\u0000\u0000\u00009\u0007\u0001\u0000\u0000\u0000:;\u0005$\u0000" +
-			"\u0000;<\u0005)\u0000\u0000<=\u0005&\u0000\u0000=>\u0003\u001a\r\u0000" +
+			"\u0000;<\u0005+\u0000\u0000<=\u0005&\u0000\u0000=>\u0003\u001a\r\u0000" +
 			">\t\u0001\u0000\u0000\u0000?@\u0003\u001a\r\u0000@\u000b\u0001\u0000\u0000" +
 			"\u0000AC\u0005\u0003\u0000\u0000BD\u0005\u0004\u0000\u0000CB\u0001\u0000" +
 			"\u0000\u0000CD\u0001\u0000\u0000\u0000DE\u0001\u0000\u0000\u0000EG\u0003" +
@@ -1885,12 +1886,10 @@ public class HansAntlrParser extends Parser {
 			"\u0000\u00a4\u00a1\u0001\u0000\u0000\u0000\u00a5\u00a8\u0001\u0000\u0000" +
 			"\u0000\u00a6\u00a4\u0001\u0000\u0000\u0000\u00a6\u00a7\u0001\u0000\u0000" +
 			"\u0000\u00a7\u001b\u0001\u0000\u0000\u0000\u00a8\u00a6\u0001\u0000\u0000" +
-			"\u0000\u00a9\u00aa\u0005)\u0000\u0000\u00aa\u001d\u0001\u0000\u0000\u0000" +
+			"\u0000\u00a9\u00aa\u0005+\u0000\u0000\u00aa\u001d\u0001\u0000\u0000\u0000" +
 			"\u00ab\u00ac\u0005%\u0000\u0000\u00ac\u00ad\u0003\u001a\r\u0000\u00ad" +
-			"\u001f\u0001\u0000\u0000\u0000\u00ae\u00b1\u0005\'\u0000\u0000\u00af\u00b1" +
-			"\u0005(\u0000\u0000\u00b0\u00ae\u0001\u0000\u0000\u0000\u00b0\u00af\u0001" +
-			"\u0000\u0000\u0000\u00b1!\u0001\u0000\u0000\u0000\u0011(8CGLPT`cgknt\u0087" +
-			"\u00a4\u00a6\u00b0";
+			"\u001f\u0001\u0000\u0000\u0000\u00ae\u00af\u0007\u0003\u0000\u0000\u00af" +
+			"!\u0001\u0000\u0000\u0000\u0010(8CGLPT`cgknt\u0087\u00a4\u00a6";
 	public static final ATN _ATN = new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
 		_decisionToDFA = new DFA[_ATN.getNumberOfDecisions()];

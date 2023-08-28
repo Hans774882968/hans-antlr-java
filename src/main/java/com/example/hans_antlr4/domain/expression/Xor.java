@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public class Xor extends ArithmeticExpression {
     public Xor(Expression leftExpression, Expression rightExpression) {
-        super(leftExpression.getType(), leftExpression, rightExpression);
+        super(leftExpression, rightExpression);
     }
 
     @Override

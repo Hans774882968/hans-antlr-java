@@ -20,7 +20,7 @@ public class CompilationUnit implements Opcodes {
     private Queue<Statement> instructionsQueue;
 
     public byte[] generateBytecode(String name) {
-        ClassWriter cw = new ClassWriter(0);
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         MethodVisitor mv;
         // version, access, name, signature, base class, interfaces
         cw.visit(52, ACC_PUBLIC + ACC_SUPER, name, null, "java/lang/Object", null);

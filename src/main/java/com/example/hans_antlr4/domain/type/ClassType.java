@@ -2,6 +2,8 @@ package com.example.hans_antlr4.domain.type;
 
 import java.util.Objects;
 
+import org.objectweb.asm.Opcodes;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -27,6 +29,91 @@ public class ClassType implements Type {
     @Override
     public String getInternalName() {
         return name.replace(".", "/");
+    }
+
+    @Override
+    public int getLoadVariableOpcode() {
+        return Opcodes.ALOAD;
+    }
+
+    @Override
+    public int getStoreVariableOpcode() {
+        return Opcodes.ASTORE;
+    }
+
+    @Override
+    public int getReturnOpcode() {
+        return Opcodes.ARETURN;
+    }
+
+    @Override
+    public int getToDoubleOpcode() {
+        throw new RuntimeException("To double instruction not supported for custom objects");
+    }
+
+    @Override
+    public int getDoubleToThisTypeOpcode() {
+        throw new RuntimeException("Double to this type instruction not supported for custom objects");
+    }
+
+    @Override
+    public int getUnaryNegativeOpcode() {
+        throw new RuntimeException("Unary negative operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getMultiplyOpcode() {
+        throw new RuntimeException("Multiplication operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getDivideOpcode() {
+        throw new RuntimeException("Division operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getModOpcode() {
+        throw new RuntimeException("Mod operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getAddOpcode() {
+        throw new RuntimeException("Addition operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getSubtractOpcode() {
+        throw new RuntimeException("Subtraction operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getShlOpcode() {
+        throw new RuntimeException("Shl operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getShrOpcode() {
+        throw new RuntimeException("Shr operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getUnsignedShrOpcode() {
+        throw new RuntimeException("Unsigned shr operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getAndOpcode() {
+        throw new RuntimeException("And operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getXorOpcode() {
+        throw new RuntimeException("Xor operation not (yet ;) ) supported for custom objects");
+    }
+
+    @Override
+    public int getOrOpcode() {
+        throw new RuntimeException("Or operation not (yet ;) ) supported for custom objects");
     }
 
     @Override

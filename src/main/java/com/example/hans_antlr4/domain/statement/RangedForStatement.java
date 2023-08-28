@@ -5,7 +5,9 @@ import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProce
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.Scope;
+import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.exception.UnsupportedRangedLoopTypesException;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +33,12 @@ public class RangedForStatement extends Loop {
         this.startExpression = startExpression;
         this.endExpression = endExpression;
         this.iteratorVariableStatement = iteratorVariableStatement;
+        Type startExpressionType = startExpression.getType();
+        Type endExpressionType = endExpression.getType();
+        boolean typesAreIntegers = startExpressionType == BuiltInType.INT && endExpressionType == BuiltInType.INT;
+        if (!typesAreIntegers) {
+            throw new UnsupportedRangedLoopTypesException(startExpressionType, endExpressionType);
+        }
     }
 
     public Type getEndExpressionType() {
