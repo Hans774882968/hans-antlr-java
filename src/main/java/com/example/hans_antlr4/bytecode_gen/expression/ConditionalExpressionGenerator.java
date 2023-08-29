@@ -7,6 +7,9 @@ import org.objectweb.asm.MethodVisitor;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.CompareSign;
+import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.SupportGenerateObjectsComparisonLaterException;
 
 import lombok.AllArgsConstructor;
@@ -26,19 +29,46 @@ public class ConditionalExpressionGenerator implements Opcodes {
             throw new SupportGenerateObjectsComparisonLaterException(leftExpression, rightExpression, compareSign);
         }
         Label endLabel = new Label();
-        Label trueLabel = new Label();
-        mv.visitJumpInsn(compareSign.getOpcode(), trueLabel);
-        mv.visitInsn(ICONST_0);
-        mv.visitJumpInsn(GOTO, endLabel);
-        mv.visitLabel(trueLabel);
+        Label falseLabel = new Label();
+        mv.visitJumpInsn(compareSign.getOppositeCompareSign().getOpcode(), falseLabel);
         mv.visitInsn(ICONST_1);
+        mv.visitJumpInsn(GOTO, endLabel);
+        mv.visitLabel(falseLabel);
+        mv.visitInsn(ICONST_0);
         mv.visitLabel(endLabel);
     }
 
-    private void generatePrimitivesComparison(Expression leftExpression, Expression rightExpression,
+    private void generatePrimitivesComparison(
+            Expression leftExpression,
+            Expression rightExpression,
             CompareSign compareSign) {
         leftExpression.accept(parent);
         rightExpression.accept(parent);
-        mv.visitInsn(ISUB);
+        // TODO: 支持隐式类型转换后删除这段检测
+        Type lhsType = leftExpression.getType();
+        Type rhsType = rightExpression.getType();
+        if (lhsType != rhsType) {
+            throw new ConditionalExprLhsAndRhsTypeIncompatibleException(lhsType, rhsType);
+        }
+        if (lhsType == BuiltInType.INT) {
+            mv.visitInsn(ISUB);
+        }
+        if (lhsType == BuiltInType.LONG) {
+            mv.visitInsn(LCMP);
+        }
+        if (lhsType == BuiltInType.FLOAT) {
+            if (compareSign == CompareSign.LESS || compareSign == CompareSign.LESS_OR_EQUAL) {
+                mv.visitInsn(FCMPG);
+            } else {
+                mv.visitInsn(FCMPL);
+            }
+        }
+        if (lhsType == BuiltInType.DOUBLE) {
+            if (compareSign == CompareSign.LESS || compareSign == CompareSign.LESS_OR_EQUAL) {
+                mv.visitInsn(DCMPG);
+            } else {
+                mv.visitInsn(DCMPL);
+            }
+        }
     }
 }

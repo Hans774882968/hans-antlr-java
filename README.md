@@ -3806,6 +3806,137 @@ public class TestLookAtBytecode {
 1. 某种类型的变量只能被小于等于它等级的类型的变量赋值。
 2. 对于其他赋值运算符，right hand side可以是任意等级类型。
 
+关系运算符的隐式类型转换：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        long xl = 3;
+        float xf = 2.3f;
+        float yf = 2.5f;
+        double xd = 2.3;
+        double yd = 2.5;
+        boolean xx1 = xl == yd * xf;
+        boolean xx2 = xl != yd * xf;
+        boolean xx3 = xl < yd * xf;
+        boolean xx4 = xl > yd * xf;
+        boolean xx5 = xl <= yd * xf;
+        boolean xx6 = xl >= yd * xf;
+        if (xx1 || xx2 || xx3 || xx4 || xx5 || xx6) {
+        }
+    }
+}
+```
+
+所得字节码：
+
+`xx1~xx6`：
+
+```
+157: lload         4
+159: l2d
+160: dload_2
+161: fload         8
+163: f2d
+164: dmul
+165: dcmpl
+166: ifne          173
+169: iconst_1
+170: goto          174
+173: iconst_0
+174: istore        10
+176: lload         4
+178: l2d
+179: dload_2
+180: fload         8
+182: f2d
+183: dmul
+184: dcmpl
+185: ifeq          192
+188: iconst_1
+189: goto          193
+192: iconst_0
+193: istore        11
+195: lload         4
+197: l2d
+198: dload_2
+199: fload         8
+201: f2d
+202: dmul
+203: dcmpg
+204: ifge          211
+207: iconst_1
+208: goto          212
+211: iconst_0
+212: istore        12
+214: lload         4
+216: l2d
+217: dload_2
+218: fload         8
+220: f2d
+221: dmul
+222: dcmpl
+223: ifle          230
+226: iconst_1
+227: goto          231
+230: iconst_0
+231: istore        13
+233: lload         4
+235: l2d
+236: dload_2
+237: fload         8
+239: f2d
+240: dmul
+241: dcmpg
+242: ifgt          249
+245: iconst_1
+246: goto          250
+249: iconst_0
+250: istore        14
+252: lload         4
+254: l2d
+255: dload_2
+256: fload         8
+258: f2d
+259: dmul
+260: dcmpl
+261: iflt          268
+264: iconst_1
+265: goto          269
+268: iconst_0
+269: istore        15
+```
+
+最后的`if`语句：
+
+```
+271: iload         10
+273: ifne          296
+276: iload         11
+278: ifne          296
+281: iload         12
+283: ifne          296
+286: iload         13
+288: ifne          296
+291: iload         14
+293: ifne          296
+```
+
+结论：
+
+1. 对于不同数值类型的表达式，会将低优先级的表达式运算结果转化为高等级的类型，即上面的`l2d`指令。
+2. 对于每种运算符，生成的都是：
+
+```
+260: dcmpxx
+261: ifxx          268
+264: iconst_1
+265: goto          269
+268: iconst_0
+```
+
+这种格式。其中`dcmpxx`对于小于和小于等于是`dcmpg`，对于其他是`dcmpl`；`ifxx`是当前运算符的相反运算符。`float`类型结论完全类似。`long`类型生成的所有`cmp`指令都是`lcmp`。
+
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html

@@ -24,7 +24,66 @@ var x = (55 >= 44) - 3
 print x
 */
 
-/* TODO: 支持 boolean 类型后才能打印
-var x = 55 >= 44
-print x
-*/
+print "----- int -----"
+{
+    var x1 = 44 == 44
+    print x1 // true
+    var x2 = 55 != 44
+    print x2 // true
+    var x3 = 44 < 55
+    print x3 // true
+    var x4 = 55 > 44
+    print x4 // true
+    var x5 = 44 <= 44
+    print x5 // true
+    var x6 = 55 >= 44
+    print x6 // true
+}
+
+print "----- long -----"
+{
+    var x1 = 44l == 0x2dl
+    print x1 // false
+    var x2 = 44l != 0x2cl
+    print x2 // false
+    var x3 = 55 < 44
+    print x3 // false
+    var x4 = 44 > 55
+    print x4 // false
+    var x5 = 45 <= 44
+    print x5 // false
+    var x6 = 44 >= 55
+    print x6 // false
+}
+
+print "----- float -----"
+{
+    var x1 = 44.5f == 44.5f
+    print x1 // true
+    var x2 = 44f != 45f
+    print x2 // true
+    var x3 = 3.5f < 4.4f
+    print x3 // true
+    var x4 = 6.4f > 5.5f
+    print x4 // true
+    var x5 = 4.5f <= 5.4f
+    print x5 // true
+    var x6 = 4.4f >= 2.5f
+    print x6 // true
+}
+
+print "----- double -----"
+{
+    var x1 = 4.4 == 4.5
+    print x1 // false
+    var x2 = 44.5 != 44.5
+    print x2 // false
+    var x3 = 5.5 < 4.4
+    print x3 // false
+    var x4 = 4.4 > 5.5
+    print x4 // false
+    var x5 = 4.5 <= 4.4
+    print x5 // false
+    var x6 = 4.4 >= 5.5
+    print x6 // false
+}

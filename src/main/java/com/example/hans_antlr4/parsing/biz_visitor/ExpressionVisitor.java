@@ -34,6 +34,7 @@ import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.domain.type.TypeChecker;
 import com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException;
+import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -146,6 +147,12 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         CompareSign cmpSign = terminalNode != null
                 ? CompareSign.fromString(terminalNode.getText())
                 : CompareSign.NOT_EQUAL;
+        Type lhsType = leftExpression.getType();
+        Type rhsType = rightExpression.getType();
+        if (!TypeChecker.conditionalLhsTypeAndRhsAreCompatible(lhsType, rhsType)) {
+            int sourceLine = leftExpressionContext.getStart().getLine();
+            throw new ConditionalExprLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sourceLine);
+        }
         return new ConditionalExpression(leftExpression, rightExpression, cmpSign);
     }
 

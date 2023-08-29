@@ -19,4 +19,11 @@ public class TypeChecker {
         }
         return lhsType == rhsType;
     }
+
+    public static boolean conditionalLhsTypeAndRhsAreCompatible(Type lhsType, Type rhsType) {
+        if (isNumericTypes(lhsType) && isNumericTypes(rhsType)) {
+            return true;
+        }
+        return lhsType == rhsType;
+    }
 }

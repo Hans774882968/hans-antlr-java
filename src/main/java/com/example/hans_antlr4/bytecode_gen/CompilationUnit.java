@@ -35,8 +35,7 @@ public class CompilationUnit implements Opcodes {
             }
             mv.visitInsn(RETURN); // add return instruction
 
-            final int maxStack = 100; // TODO: do that properly
-            mv.visitMaxs(maxStack, -1); // set max stack and max local variables
+            mv.visitMaxs(-1, -1); // set max stack and max local variables
             mv.visitEnd();
         }
         cw.visitEnd();

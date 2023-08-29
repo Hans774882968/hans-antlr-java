@@ -21,4 +21,24 @@ public enum CompareSign implements Opcodes {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Sign not implemented"));
     }
+
+    public CompareSign getOppositeCompareSign() {
+        return CompareSign.getOppositeCompareSign(this);
+    }
+
+    public static CompareSign getOppositeCompareSign(CompareSign compareSign) {
+        if (compareSign == CompareSign.EQUAL)
+            return CompareSign.NOT_EQUAL;
+        if (compareSign == CompareSign.NOT_EQUAL)
+            return CompareSign.EQUAL;
+        if (compareSign == CompareSign.LESS)
+            return CompareSign.GREATER_OR_EQUAL;
+        if (compareSign == CompareSign.GREATER)
+            return CompareSign.LESS_OR_EQUAL;
+        if (compareSign == CompareSign.LESS_OR_EQUAL)
+            return CompareSign.GREATER;
+        if (compareSign == CompareSign.GREATER_OR_EQUAL)
+            return CompareSign.LESS;
+        throw new RuntimeException("Sign has no opposite compare sign");
+    }
 }

@@ -94,14 +94,12 @@ print "整除分块："
     var mx = 0l
     var n = 100000l
     var mod = 998244353l
-    /* TODO: 这个循环导致报错 Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 0 out of bounds for length 0
     for var L = 1l; L <= n; {
         var R = n / (n / L)
         ans = (ans + (R - L + 1l) * L % mod) % mod
         if mx < (R - L + 1l) * L mx = (R - L + 1l) * L
         L = R + 1l
     }
-    print mx // 
-    print ans // 
-    */
+    print mx // 2500050000
+    print ans // 556021808
 }
