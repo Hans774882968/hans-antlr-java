@@ -36,10 +36,11 @@ public class Scope {
     public int getLocalVariableIndex(String varName) {
         LocalVariable localVariable = getLocalVariable(varName);
         // 这里必须使用 == 比较对象地址，所以不能使用 indexOf
-        for (int i = 0; i < localVariables.size(); i++) {
+        for (int i = 0, currentLocalVarIndex = 0; i < localVariables.size(); i++) {
             if (localVariables.get(i) == localVariable) {
-                return i;
+                return currentLocalVarIndex;
             }
+            currentLocalVarIndex += localVariables.get(i).getType().slotUsage();
         }
         return -1;
     }

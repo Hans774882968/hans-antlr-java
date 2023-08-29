@@ -3672,7 +3672,7 @@ public class StandardForStatementGenerator implements Opcodes {
 }
 ```
 
-### 效果：来实现一段求广义水仙花数的脚本吧！
+### 效果：来实现一些简单的算法吧！
 
 [相关`.hant`测试代码：`hant_examples\for\for.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/for.hant)。
 
@@ -3694,6 +3694,8 @@ for(var65535 = 0; var65535 - 10 < 0; ++var65535) {
 }
 ```
 
+#### 求广义水仙花数
+
 至此，`hant`语言可以实现求广义水仙花数的脚本了：
 
 ```hant
@@ -3711,9 +3713,98 @@ for i: 10 to 100000 {
 print ans // 10
 ```
 
+#### 整除分块
+
+```hant
+var ans = 0
+var mx = 0
+var n = 50000
+var mod = 998244353
+for var L = 1; L <= n; {
+    var R = n / (n / L)
+    ans = (ans + (R - L + 1) * L % mod) % mod
+    if mx < (R - L + 1) * L mx = (R - L + 1) * L
+    L = R + 1
+}
+print mx // 625025000 = 25000 * 25001
+print ans // 887711275
+```
+
 ## Part15：1-支持float、double、boolean
 
 TODO
+
+> 在局部变量表里，32位以内的类型只占用一个slot（包括`returnAddress`类型），64位的类型(long和double)占用两个slot。
+
+为了支持double类型，我们需要改造一下`Scope.getLocalVariableIndex`，在遍历过程中对使用的slot总数进行累加。
+
+```java
+public int getLocalVariableIndex(String varName) {
+    LocalVariable localVariable = getLocalVariable(varName);
+    // 这里必须使用 == 比较对象地址，所以不能使用 indexOf
+    for (int i = 0, currentLocalVarIndex = 0; i < localVariables.size(); i++) {
+        if (localVariables.get(i) == localVariable) {
+            return currentLocalVarIndex;
+        }
+        currentLocalVarIndex += localVariables.get(i).getType().slotUsage();
+    }
+    return -1;
+}
+```
+
+相应新增的`BuiltinType.slotUsage`：
+
+```java
+@Override
+public int slotUsage() {
+    if (this == BuiltInType.LONG || this == BuiltInType.DOUBLE) {
+        return 2;
+    }
+    return 1;
+}
+```
+
+## Part15：2-支持隐式类型转换
+
+TODO
+
+我们已经知道，数值类型的隐式类型转换有优先级：`int < long < float < double`。写一段代码来探究其性质：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        double d1 = 2.5, d2 = 3.5;
+        float f1 = 4.5f, f2 = 1.5f;
+        long l1 = 5, l2 = 6;
+        int i1 = 3, i2 = 4;
+        // int v1 = l1 * i2; // Type mismatch: cannot convert from long to int
+        double v1 = l1 * l2;
+        long v2 = l1 * i2;
+        // long v3 = f1 * l2; // Type mismatch: cannot convert from float to long
+        float v3 = l1 * l2;
+        System.out.println(v1);
+        System.out.println(v2);
+        System.out.println(v3);
+        int v4 = 0;
+        v4 += f2;
+        long v5 = 0;
+        v5 += d1;
+        System.out.println(v4);
+        System.out.println(v5);
+        int v6 = 0;
+        v6 += i1 * d2;
+        System.out.println(v6);
+        double v7 = 0;
+        v7 += f1 * i2;
+        System.out.println(v7);
+    }
+}
+```
+
+结论：
+
+1. 某种类型的变量只能被小于等于它等级的类型的变量赋值。
+2. 对于其他赋值运算符，right hand side可以是任意等级类型。
 
 ## 参考资料
 

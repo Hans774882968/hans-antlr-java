@@ -85,8 +85,15 @@ OR: '|';
 VARIABLE: 'var';
 PRINT: 'print';
 EQUALS: '=';
-NUMBER: [0-9.]+ | HexIntegerLiteral;
-HexIntegerLiteral: '0' [xX] HexDigit+;
+NUMBER:
+	IntegerOrDecimalLiteral
+	| HexIntegerLiteral
+	| OctalIntegerLiteral
+	| BinaryIntegerLiteral;
+IntegerOrDecimalLiteral: [0-9.]+ [lLfFdD]?;
+HexIntegerLiteral: '0' [xX] HexDigit+ [lL]?;
+OctalIntegerLiteral: '0' [oO] [0-7]+ [lL]?;
+BinaryIntegerLiteral: '0' [bB] [01]+ [lL]?;
 BOOL: 'true' | 'false';
 // must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式
 STRING: '"' .*? '"';

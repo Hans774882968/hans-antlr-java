@@ -37,6 +37,7 @@ import com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleExce
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
+import com.example.hans_antlr4.utils.HantNumber;
 import com.example.hans_antlr4.utils.TypeResolver;
 
 import lombok.AllArgsConstructor;
@@ -56,7 +57,9 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
     public Expression visitValue(HansAntlrParser.ValueContext ctx) {
         String value = ctx.getText();
         Type type = TypeResolver.getFromValue(value);
-        return new Value(type, value);
+        // 约定：getValueFromString 调用时已经没有 typeSuffix
+        String pureNumber = HantNumber.getStringWithoutTypeSuffix(value);
+        return new Value(type, pureNumber);
     }
 
     @Override

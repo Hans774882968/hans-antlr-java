@@ -32,6 +32,11 @@ public class ClassType implements Type {
     }
 
     @Override
+    public int slotUsage() {
+        return 1;
+    }
+
+    @Override
     public int getLoadVariableOpcode() {
         return Opcodes.ALOAD;
     }

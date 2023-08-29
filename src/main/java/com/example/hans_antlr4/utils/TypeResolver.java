@@ -2,29 +2,47 @@ package com.example.hans_antlr4.utils;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.exception.InvalidHantNumberException;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
-import com.google.common.primitives.Ints;
 
 public class TypeResolver {
     public static Type getFromValue(String value) {
-        if (StringUtils.isEmpty(value))
+        if (StringUtils.isEmpty(value)) {
             return BuiltInType.VOID;
-        // TODO: 支持8进制 0o 和2进制 0b
-        if (NumberUtils.isCreatable(value)) {
-            if (Ints.tryParse(value) != null ||
-                    (value.startsWith("0x") && Ints.tryParse(value.substring(2), 16) != null) ||
-                    (value.startsWith("0o") && Ints.tryParse(value.substring(2), 8) != null) ||
-                    (value.startsWith("0b") && Ints.tryParse(value.substring(2), 2) != null)) {
+        }
+        if (HantNumber.mayBeValidHantNumber(value)) {
+            String typeSuffix = HantNumber.getTypeSuffix(value);
+            String pureNumber = typeSuffix == null ? value : value.substring(0, value.length() - 1);
+            if (typeSuffix != null) {
+                if (typeSuffix.toLowerCase().equals("d")) {
+                    if (Doubles.tryParse(pureNumber) != null) {
+                        return BuiltInType.DOUBLE;
+                    }
+                    throw new InvalidHantNumberException(BuiltInType.DOUBLE, value);
+                }
+                if (typeSuffix.toLowerCase().equals("f")) {
+                    if (Floats.tryParse(pureNumber) != null) {
+                        return BuiltInType.FLOAT;
+                    }
+                    throw new InvalidHantNumberException(BuiltInType.FLOAT, value);
+                }
+                if (typeSuffix.toLowerCase().equals("l")) {
+                    if (HantNumber.isValidHantLong(pureNumber)) {
+                        return BuiltInType.LONG;
+                    }
+                    throw new InvalidHantNumberException(BuiltInType.LONG, value);
+                }
+            }
+            if (HantNumber.isValidHantInteger(pureNumber)) {
                 return BuiltInType.INT;
-            } else if (Floats.tryParse(value) != null) {
-                return BuiltInType.FLOAT;
-            } else if (Doubles.tryParse(value) != null) {
+            } else if (Doubles.tryParse(pureNumber) != null) {
                 return BuiltInType.DOUBLE;
+            } else if (Floats.tryParse(pureNumber) != null) {
+                return BuiltInType.FLOAT;
             }
         }
         if (BooleanUtils.toBoolean(value)) {
@@ -33,24 +51,53 @@ public class TypeResolver {
         return BuiltInType.STRING;
     }
 
+    private static Integer getIntValueFromString(String stringValue) {
+        if (HantNumber.mayBeHex(stringValue)) {
+            return Integer.valueOf(stringValue.substring(2), 16);
+        }
+        if (HantNumber.mayBeOctal(stringValue)) {
+            return Integer.valueOf(stringValue.substring(2), 8);
+        }
+        if (HantNumber.mayBeBinary(stringValue)) {
+            return Integer.valueOf(stringValue.substring(2), 2);
+        }
+        return Integer.valueOf(stringValue);
+    }
+
+    private static Long getLongValueFromString(String stringValue) {
+        if (HantNumber.mayBeHex(stringValue)) {
+            return Long.valueOf(stringValue.substring(2), 16);
+        }
+        if (HantNumber.mayBeOctal(stringValue)) {
+            return Long.valueOf(stringValue.substring(2), 8);
+        }
+        if (HantNumber.mayBeBinary(stringValue)) {
+            return Long.valueOf(stringValue.substring(2), 2);
+        }
+        return Long.valueOf(stringValue);
+    }
+
+    // 约定：getValueFromString 调用时 stringValue 已经没有 typeSuffix
     public static Object getValueFromString(String stringValue, Type type) {
         if (type == BuiltInType.INT) {
-            if (stringValue.startsWith("0x")) {
-                return Integer.valueOf(stringValue.substring(2), 16);
-            }
-            if (stringValue.startsWith("0o")) {
-                return Integer.valueOf(stringValue.substring(2), 8);
-            }
-            if (stringValue.startsWith("0b")) {
-                return Integer.valueOf(stringValue.substring(2), 2);
-            }
-            return Integer.valueOf(stringValue);
+            return getIntValueFromString(stringValue);
+        }
+        if (type == BuiltInType.LONG) {
+            return getLongValueFromString(stringValue);
         }
         if (type == BuiltInType.FLOAT) {
-            return Float.valueOf(stringValue);
+            try {
+                return Float.valueOf(stringValue);
+            } catch (NumberFormatException e) {
+                return Float.valueOf(getIntValueFromString(stringValue));
+            }
         }
         if (type == BuiltInType.DOUBLE) {
-            return Double.valueOf(stringValue);
+            try {
+                return Double.valueOf(stringValue);
+            } catch (NumberFormatException e) {
+                return Double.valueOf(getLongValueFromString(stringValue));
+            }
         }
         if (type == BuiltInType.BOOLEAN) {
             return Boolean.valueOf(stringValue);

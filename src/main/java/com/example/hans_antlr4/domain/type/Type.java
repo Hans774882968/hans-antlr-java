@@ -9,6 +9,8 @@ public interface Type {
 
     String getInternalName();
 
+    int slotUsage();
+
     int getLoadVariableOpcode();
 
     int getStoreVariableOpcode();

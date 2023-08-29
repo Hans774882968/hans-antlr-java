@@ -61,6 +61,14 @@ public enum BuiltInType implements Type {
     }
 
     @Override
+    public int slotUsage() {
+        if (this == BuiltInType.LONG || this == BuiltInType.DOUBLE) {
+            return 2;
+        }
+        return 1;
+    }
+
+    @Override
     public int getLoadVariableOpcode() {
         return opcodes.getLoad();
     }
