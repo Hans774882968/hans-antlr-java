@@ -206,7 +206,7 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         LocalVariable localVariable = scope.getLocalVariable(varName);
         Type lhsType = localVariable.getType();
         Type rhsType = expression.getType();
-        if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(lhsType, rhsType)) {
+        if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(assignmentSign, lhsType, rhsType)) {
             int sourceLine = ctx.AssignmentOperator.getLine();
             throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sourceLine);
         }

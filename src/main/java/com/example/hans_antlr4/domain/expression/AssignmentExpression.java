@@ -6,10 +6,7 @@ import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
-import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
-import com.example.hans_antlr4.domain.type.TypeChecker;
-import com.example.hans_antlr4.exception.UnsupportedAssignmentTypeException;
 
 import lombok.Getter;
 import java.util.Objects;
@@ -25,16 +22,6 @@ public class AssignmentExpression extends Expression {
         this.variable = variable;
         this.sign = sign;
         this.expression = expression;
-        Type rhsType = expression.getType();
-        if (sign != AssignmentSign.ASSIGN) {
-            if (sign == AssignmentSign.ADD) {
-                if (!TypeChecker.isNumericTypes(rhsType) && rhsType != BuiltInType.STRING) {
-                    throw new UnsupportedAssignmentTypeException(rhsType);
-                }
-            } else if (!TypeChecker.isNumericTypes(rhsType)) {
-                throw new UnsupportedAssignmentTypeException(rhsType);
-            }
-        }
     }
 
     public boolean notNecessaryToGenerateDupInstruction() {

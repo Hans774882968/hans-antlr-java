@@ -38,7 +38,7 @@ public class StringAppendGenerator implements Opcodes {
         Type lhsType = assignmentExpression.getVariable().getType();
         Type rhsType = assignmentExpression.getRhsType();
         String descriptor = "(" + lhsType.getDescriptor() + rhsType.getDescriptor() + ")Ljava/lang/String;";
-        mv.visitInvokeDynamicInsn("makeConcatWithConstants", descriptor, handle);
+        mv.visitInvokeDynamicInsn("makeConcatWithConstants", descriptor, handle, new Object[] { "\u0001\u0001" });
     }
 
     public void generate(Addition addition) {

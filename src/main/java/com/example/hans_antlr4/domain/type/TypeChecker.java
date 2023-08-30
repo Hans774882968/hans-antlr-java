@@ -1,5 +1,7 @@
 package com.example.hans_antlr4.domain.type;
 
+import com.example.hans_antlr4.domain.global.AssignmentSign;
+
 public class TypeChecker {
     public static boolean isDecimalTypes(Type type) {
         return type == BuiltInType.FLOAT || type == BuiltInType.DOUBLE;
@@ -13,7 +15,19 @@ public class TypeChecker {
         return isDecimalTypes(type) || isIntegerTypes(type);
     }
 
-    public static boolean assignmentLhsTypeAndRhsAreCompatible(Type lhsType, Type rhsType) {
+    public static boolean assignmentLhsTypeAndRhsAreCompatible(
+            AssignmentSign assignmentSign,
+            Type lhsType,
+            Type rhsType) {
+        if (assignmentSign == AssignmentSign.ADD) {
+            if (isNumericTypes(lhsType)) {
+                return isNumericTypes(rhsType);
+            }
+            if (lhsType == BuiltInType.STRING) {
+                return true;
+            }
+            return lhsType == rhsType;
+        }
         if (isNumericTypes(lhsType) && isNumericTypes(rhsType)) {
             return true;
         }

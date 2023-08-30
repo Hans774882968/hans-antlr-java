@@ -79,12 +79,26 @@ print "----- String Addition -----"
     x0 = "x"
     x0 = fName + "(" + x0 + ", " + (1919d + 0.810) + ")"
     print x0 // f(x, 1919.81)
-
-    /*
     x0 = "x"
+    x0 = fName + "(" + x0 + ", " + (0x12345678900l + 1L) + ")"
+    print x0 // f(x, 1250999896321)
+}
+
+print "----- String += -----"
+{
+    var x0 = ""
+    x0 = "x"
+    x0 += 0.1
     x0 += "y"
-    print x0
-    */
+    x0 += 1 + 23
+    x0 += 3.14f
+    x0 += true
+    x0 += 0x12345678901l
+    print x0 // x0.1y243.14true1250999896321
+    var y = "y = "
+    x0 += y += x0 = "f" + (x0 = "(x)")
+    print x0 // x0.1y243.14true1250999896321y = f(x)
+    print y // y = f(x)
 }
 
 print "----- 综合 -----"
