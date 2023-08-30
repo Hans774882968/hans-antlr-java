@@ -1,0 +1,63 @@
+package com.example.hans_antlr4.bytecode_gen.expression;
+
+import java.lang.invoke.CallSite;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+
+import org.objectweb.asm.Handle;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+
+import com.example.hans_antlr4.domain.expression.Addition;
+import com.example.hans_antlr4.domain.expression.AssignmentExpression;
+import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.type.Type;
+
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
+public class StringAppendGenerator implements Opcodes {
+    private ExpressionGenerator parent;
+    private MethodVisitor mv;
+
+    public void generate(AssignmentExpression assignmentExpression) {
+        // TODO: 阅读生成的ASM代码，修复这段逻辑以支持 str += any
+        if (assignmentExpression.getSign() != AssignmentSign.ADD) {
+            throw new RuntimeException(
+                    "String append operation not supported for operator " + assignmentExpression.getSign());
+        }
+        Handle handle = new Handle(
+                H_INVOKESTATIC,
+                org.objectweb.asm.Type.getInternalName(java.lang.invoke.StringConcatFactory.class),
+                "makeConcatWithConstants",
+                MethodType.methodType(
+                        CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class,
+                        String.class, Object[].class).toMethodDescriptorString(),
+                false);
+        Type lhsType = assignmentExpression.getVariable().getType();
+        Type rhsType = assignmentExpression.getRhsType();
+        String descriptor = "(" + lhsType.getDescriptor() + rhsType.getDescriptor() + ")Ljava/lang/String;";
+        mv.visitInvokeDynamicInsn("makeConcatWithConstants", descriptor, handle);
+    }
+
+    public void generate(Addition addition) {
+        mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+
+        Expression leftExpression = addition.getLeftExpression();
+        leftExpression.accept(parent);
+        String leftExprDescriptor = leftExpression.getType().getDescriptor();
+        String descriptor = "(" + leftExprDescriptor + ")Ljava/lang/StringBuilder;";
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", descriptor, false);
+
+        Expression rightExpression = addition.getRightExpression();
+        rightExpression.accept(parent);
+        String rightExprDescriptor = rightExpression.getType().getDescriptor();
+        descriptor = "(" + rightExprDescriptor + ")Ljava/lang/StringBuilder;";
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", descriptor, false);
+
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+    }
+}

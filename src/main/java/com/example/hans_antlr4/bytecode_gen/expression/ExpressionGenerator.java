@@ -40,12 +40,14 @@ public class ExpressionGenerator implements Opcodes {
     private Scope scope;
     private ConditionalExpressionGenerator conditionalExpressionGenerator;
     private AssignmentExpressionGenerator assignmentExpressionGenerator;
+    private StringAppendGenerator stringAppendGenerator;
 
     public ExpressionGenerator(MethodVisitor mv, Scope scope) {
         this.mv = mv;
         this.scope = scope;
         this.conditionalExpressionGenerator = new ConditionalExpressionGenerator(this, mv);
         this.assignmentExpressionGenerator = new AssignmentExpressionGenerator(this, mv);
+        this.stringAppendGenerator = new StringAppendGenerator(this, mv);
     }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
@@ -97,6 +99,10 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(Addition expression) {
+        if (expression.getType() == BuiltInType.STRING) {
+            stringAppendGenerator.generate(expression);
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getAddOpcode());
     }

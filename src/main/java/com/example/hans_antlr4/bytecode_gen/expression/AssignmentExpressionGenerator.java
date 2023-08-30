@@ -9,6 +9,7 @@ import org.objectweb.asm.Opcodes;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 
@@ -73,7 +74,11 @@ public class AssignmentExpressionGenerator implements Opcodes {
                 mv.visitInsn(rhsType.getModOpcode());
             }
             if (sign == AssignmentSign.ADD) {
-                mv.visitInsn(rhsType.getAddOpcode());
+                if (lhsType == BuiltInType.STRING) {
+                    new StringAppendGenerator(parent, mv).generate(currentAssignmentExpression);
+                } else {
+                    mv.visitInsn(rhsType.getAddOpcode());
+                }
             }
             if (sign == AssignmentSign.MINUS) {
                 mv.visitInsn(rhsType.getSubtractOpcode());

@@ -61,6 +61,32 @@ print x23 // 0
 var x24 = 20&-20
 print x24 // 4
 
+print "----- String Addition -----"
+{
+    var x0 = "x"
+    var fName = "f"
+    x0 = fName + "(" + x0 + ", " + true + ")"
+    print x0 // f(x, true)
+    x0 = "x"
+    x0 = fName + "(" + x0 + ", " + 1 + 23 + ")"
+    print x0 // f(x, 123)
+    x0 = "x"
+    x0 = fName + "(" + x0 + ", " + (1 + 23) + ")"
+    print x0 // f(x, 24)
+    x0 = "x"
+    x0 = fName + "(" + x0 + ", " + (114f + 0.514f) + ")"
+    print x0 // f(x, 114.514)
+    x0 = "x"
+    x0 = fName + "(" + x0 + ", " + (1919d + 0.810) + ")"
+    print x0 // f(x, 1919.81)
+
+    /*
+    x0 = "x"
+    x0 += "y"
+    print x0
+    */
+}
+
 print "----- 综合 -----"
 var x25 = ~(40 + 30) * ~(20 + 10)
 print x25 // 2201
