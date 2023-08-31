@@ -40,6 +40,13 @@ public class AssignmentExpression extends Expression {
         return getType();
     }
 
+    public Type getMaxPriorityNumericType() {
+        if (getLhsType().getPriority().compareTo(getRhsType().getPriority()) >= 0) {
+            return getLhsType();
+        }
+        return getRhsType();
+    }
+
     @Override
     public void accept(ExpressionGenerator generator) {
         generator.generate(this);

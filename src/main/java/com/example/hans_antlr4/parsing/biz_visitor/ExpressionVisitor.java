@@ -35,6 +35,7 @@ import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.domain.type.TypeChecker;
 import com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
+import com.example.hans_antlr4.exception.IllegalShiftTypeException;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -127,6 +128,12 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
         String op = ctx.SHIFT().getText();
+        Type leftType = leftExpression.getType();
+        Type rightType = rightExpression.getType();
+        if (!TypeChecker.isLegalShiftType(leftType, rightType)) {
+            int sourceLine = ctx.getStart().getLine();
+            throw new IllegalShiftTypeException(leftType, rightType, sourceLine);
+        }
         if (op.equals("<<")) {
             return new Shl(leftExpression, rightExpression);
         }

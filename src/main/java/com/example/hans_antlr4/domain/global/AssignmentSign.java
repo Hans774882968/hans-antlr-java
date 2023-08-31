@@ -19,4 +19,12 @@ public enum AssignmentSign {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Assignment Sign " + sign + " not implemented"));
     }
+
+    public static boolean isShiftSign(AssignmentSign assignmentSign) {
+        return assignmentSign == SHL || assignmentSign == SHR || assignmentSign == UNSIGNED_SHR;
+    }
+
+    public boolean isShiftSign() {
+        return isShiftSign(this);
+    }
 }

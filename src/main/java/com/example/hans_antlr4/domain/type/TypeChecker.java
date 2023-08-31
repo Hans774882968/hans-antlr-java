@@ -28,6 +28,12 @@ public class TypeChecker {
             }
             return lhsType == rhsType;
         }
+        if (assignmentSign == AssignmentSign.ASSIGN) {
+            return isNumericTypes(lhsType) && lhsType == rhsType;
+        }
+        if (assignmentSign.isShiftSign()) {
+            return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
+        }
         if (isNumericTypes(lhsType) && isNumericTypes(rhsType)) {
             return true;
         }
@@ -39,5 +45,9 @@ public class TypeChecker {
             return true;
         }
         return lhsType == rhsType;
+    }
+
+    public static boolean isLegalShiftType(Type leftType, Type rightType) {
+        return isIntegerTypes(leftType) && isIntegerTypes(rightType);
     }
 }

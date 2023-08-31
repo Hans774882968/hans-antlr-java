@@ -4,6 +4,8 @@ import java.util.Objects;
 
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.utils.Const;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -29,6 +31,26 @@ public class ClassType implements Type {
     @Override
     public String getInternalName() {
         return name.replace(".", "/");
+    }
+
+    @Override
+    public Double getPriority() {
+        return Double.NaN;
+    }
+
+    @Override
+    public boolean isNumericTypes() {
+        return false;
+    }
+
+    @Override
+    public int getToHigherPriorityNumericTypeOpcode(Type targetType) {
+        return Const.INVALID_OPCODE;
+    }
+
+    @Override
+    public int getToOtherNumericTypeOpcode(Type targetType) {
+        return Const.INVALID_OPCODE;
     }
 
     @Override
@@ -59,6 +81,11 @@ public class ClassType implements Type {
     @Override
     public int getDoubleToThisTypeOpcode() {
         throw new RuntimeException("Double to this type instruction not supported for custom objects");
+    }
+
+    @Override
+    public int getToIntOpcode() {
+        throw new RuntimeException("To int instruction not supported for custom objects");
     }
 
     @Override

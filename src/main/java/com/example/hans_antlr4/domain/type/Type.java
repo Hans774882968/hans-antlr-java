@@ -9,6 +9,14 @@ public interface Type {
 
     String getInternalName();
 
+    Double getPriority();
+
+    boolean isNumericTypes();
+
+    int getToHigherPriorityNumericTypeOpcode(Type targetType);
+
+    int getToOtherNumericTypeOpcode(Type targetType);
+
     int slotUsage();
 
     int getLoadVariableOpcode();
@@ -20,6 +28,8 @@ public interface Type {
     int getToDoubleOpcode();
 
     int getDoubleToThisTypeOpcode();
+
+    int getToIntOpcode();
 
     int getUnaryNegativeOpcode();
 

@@ -1,0 +1,87 @@
+print "----- int -----"
+{
+    var x = 10
+    var yl = 10l
+    yl = x * yl + 1
+    print yl // 101
+    var yf = 1.5f
+    yf = x * yf + 2.5f * x
+    print yf // 40.0
+    var yd = 2.5
+    yd = x * yd + yl
+    print yd // 126.0
+}
+
+print "----- long -----"
+{
+    var yl = 10l
+    var tmpF = 1.5f
+    var yf = yl % 8 * tmpF + 2.5f * yl
+    print yf // 28.0
+    var yd = yl % 8 * tmpF + 2.7 * yl
+    print yd // 30.0
+    yl = 13 & yl
+    print yl // 8
+    yl = 9 | yl
+    print yl // 9
+    yl = 8 ^ yl
+    print yl // 1
+}
+
+print "----- double -----"
+{
+    var tmpI = 0x3f
+    var tmpL = 10l
+    var tmpF = 1.5f
+    var tmpD = 2.7
+    var yd = (tmpI & tmpL) + (tmpI << tmpL) + (tmpI >> (tmpL - 8)) + tmpI * tmpI + tmpI * tmpL + tmpI * tmpF + tmpI * tmpD + tmpL * tmpL + tmpL * tmpF + tmpL * tmpD + tmpF * tmpF + tmpF * tmpD + tmpD * tmpD
+    print yd // 69556.19
+}
+
+print "----- assign long -----"
+{
+    var x = 0x3fl
+    x += 1
+    x += 1l
+    print x // 65
+    x -= 1
+    x -= 1l
+    print x // 63
+    x *= 2
+    x *= 2l
+    print x // 252
+    x /= 2
+    x /= 2l
+    print x // 63
+    x %= 32
+    print x // 31
+    x <<= 25
+    x <<= 25l
+    print x // 34902897112121344 = 31 * (2 ** 50)
+    x >>= 25
+    print x // 1040187392
+    x >>= 25l
+    print x // 31
+
+    var xn = -1040187392
+    xn >>>= 25
+    print "xn = " + xn // 97
+
+    x &= 0b11110
+    print x // 30
+    x |= 0b111111
+    print x // 63
+    x ^= 0b100011
+    print x // 28
+    x ^= 0b100011l
+    print x // 63
+}
+
+print "----- assign double -----"
+{
+    var x = 15.5
+    x *= 2
+    print x // 31.0
+    x /= 2.1f
+    print x // 14.7619054322881
+}

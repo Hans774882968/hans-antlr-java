@@ -22,7 +22,6 @@ public class StringAppendGenerator implements Opcodes {
     private MethodVisitor mv;
 
     public void generate(AssignmentExpression assignmentExpression) {
-        // TODO: 阅读生成的ASM代码，修复这段逻辑以支持 str += any
         if (assignmentExpression.getSign() != AssignmentSign.ADD) {
             throw new RuntimeException(
                     "String append operation not supported for operator " + assignmentExpression.getSign());

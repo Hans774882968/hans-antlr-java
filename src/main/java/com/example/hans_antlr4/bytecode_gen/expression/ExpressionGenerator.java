@@ -14,6 +14,7 @@ import com.example.hans_antlr4.domain.expression.Mod;
 import com.example.hans_antlr4.domain.expression.Multiplication;
 import com.example.hans_antlr4.domain.expression.Or;
 import com.example.hans_antlr4.domain.expression.Pow;
+import com.example.hans_antlr4.domain.expression.Shift;
 import com.example.hans_antlr4.domain.expression.Shl;
 import com.example.hans_antlr4.domain.expression.Shr;
 import com.example.hans_antlr4.domain.expression.Subtraction;
@@ -41,6 +42,7 @@ public class ExpressionGenerator implements Opcodes {
     private ConditionalExpressionGenerator conditionalExpressionGenerator;
     private AssignmentExpressionGenerator assignmentExpressionGenerator;
     private StringAppendGenerator stringAppendGenerator;
+    private ShiftExpressionGenerator shiftExpressionGenerator;
 
     public ExpressionGenerator(MethodVisitor mv, Scope scope) {
         this.mv = mv;
@@ -48,6 +50,7 @@ public class ExpressionGenerator implements Opcodes {
         this.conditionalExpressionGenerator = new ConditionalExpressionGenerator(this, mv);
         this.assignmentExpressionGenerator = new AssignmentExpressionGenerator(this, mv);
         this.stringAppendGenerator = new StringAppendGenerator(this, mv);
+        this.shiftExpressionGenerator = new ShiftExpressionGenerator(this, mv);
     }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
@@ -133,7 +136,8 @@ public class ExpressionGenerator implements Opcodes {
         String fieldDescriptor = owner.getInternalName(); // "java/lang/Math"
         String descriptor = "(DD)D";
         mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
-        mv.visitInsn(leftExpression.getType().getDoubleToThisTypeOpcode());
+        // 把运算结果的 double 强转为左右侧的最高优先级类型
+        mv.visitInsn(expression.getType().getDoubleToThisTypeOpcode());
     }
 
     public void generate(Mod expression) {
@@ -142,17 +146,17 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(Shl expression) {
-        evaluateArithmeticComponents(expression);
+        evaluateShiftComponents(expression);
         mv.visitInsn(expression.getType().getShlOpcode());
     }
 
     public void generate(Shr expression) {
-        evaluateArithmeticComponents(expression);
+        evaluateShiftComponents(expression);
         mv.visitInsn(expression.getType().getShrOpcode());
     }
 
     public void generate(UnsignedShr expression) {
-        evaluateArithmeticComponents(expression);
+        evaluateShiftComponents(expression);
         mv.visitInsn(expression.getType().getUnsignedShrOpcode());
     }
 
@@ -183,7 +187,15 @@ public class ExpressionGenerator implements Opcodes {
     private void evaluateArithmeticComponents(ArithmeticExpression expression) {
         Expression leftExpression = expression.getLeftExpression();
         Expression rightExpression = expression.getRightExpression();
+        Type leftType = leftExpression.getType();
+        Type rightType = rightExpression.getType();
         leftExpression.accept(this);
+        mv.visitInsn(leftType.getToHigherPriorityNumericTypeOpcode(rightType));
         rightExpression.accept(this);
+        mv.visitInsn(rightType.getToHigherPriorityNumericTypeOpcode(leftType));
+    }
+
+    private void evaluateShiftComponents(Shift shift) {
+        shiftExpressionGenerator.evaluateShiftComponents(shift);
     }
 }
