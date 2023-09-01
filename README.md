@@ -3531,10 +3531,11 @@ statement:
 	| breakStatement
 	| continueStatement;
 standardForStatement:
-	'for' ('(')? standardForInit? ';' expression? ';' expressionStatement? (
+	'for' ('(')? standardForInit? ';' expression? ';' standardForUpdate? (
 		')'
 	)? statement;
-standardForInit: variable | expressionStatement;
+standardForInit: variable | print | expressionStatement;
+standardForUpdate: variable | print | expressionStatement;
 ```
 
 新增的`StandardForStatement`：
@@ -3607,8 +3608,8 @@ public StandardForStatement visitStandardForStatement(HansAntlrParser.StandardFo
             ? ctx.expression().accept(expressionVisitor)
             : null;
     Statement statement = ctx.statement().accept(statementVisitor);
-    Statement forUpdate = ctx.expressionStatement() != null
-            ? ctx.expressionStatement().accept(statementVisitor)
+    Statement forUpdate = ctx.standardForUpdate() != null
+            ? ctx.standardForUpdate().accept(statementVisitor)
             : null;
 
     StandardForStatement standardForStatement = new StandardForStatement(

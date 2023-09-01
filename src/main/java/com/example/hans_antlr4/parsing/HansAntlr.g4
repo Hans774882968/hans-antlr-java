@@ -30,10 +30,11 @@ rangedForStatement:
 rangedForConditions:
 	iterator = variableReference ':' startExpr = expression range = 'to' endExpr = expression;
 standardForStatement:
-	'for' ('(')? standardForInit? ';' expression? ';' expressionStatement? (
+	'for' ('(')? standardForInit? ';' expression? ';' standardForUpdate? (
 		')'
 	)? statement;
-standardForInit: variable | expressionStatement;
+standardForInit: variable | print | expressionStatement;
+standardForUpdate: variable | print | expressionStatement;
 breakStatement: 'break';
 continueStatement: 'continue';
 

@@ -113,6 +113,15 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitStandardForInit(HansAntlrParser.StandardForInitContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#standardForUpdate}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitStandardForUpdate(HansAntlrParser.StandardForUpdateContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#breakStatement}.
 	 * 
 	 * @param ctx

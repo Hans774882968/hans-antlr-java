@@ -167,6 +167,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitStandardForUpdate(HansAntlrParser.StandardForUpdateContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitBreakStatement(HansAntlrParser.BreakStatementContext ctx) {
 		return visitChildren(ctx);
 	}

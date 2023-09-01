@@ -178,8 +178,8 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
                 ? ctx.expression().accept(expressionVisitor)
                 : null;
         Statement statement = ctx.statement().accept(statementVisitor);
-        Statement forUpdate = ctx.expressionStatement() != null
-                ? ctx.expressionStatement().accept(statementVisitor)
+        Statement forUpdate = ctx.standardForUpdate() != null
+                ? ctx.standardForUpdate().accept(statementVisitor)
                 : null;
 
         StandardForStatement standardForStatement = new StandardForStatement(
