@@ -215,7 +215,7 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         Type rhsType = expression.getType();
         if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(assignmentSign, lhsType, rhsType)) {
             int sourceLine = ctx.AssignmentOperator.getLine();
-            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sourceLine);
+            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, assignmentSign, sourceLine);
         }
         return new AssignmentExpression(localVariable, assignmentSign, expression);
     }

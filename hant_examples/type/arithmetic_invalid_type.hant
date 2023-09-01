@@ -1,0 +1,4 @@
+var x = 12
+x -= "x"
+print x
+// Exception in thread "main" com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException: Assignment expression LHS type and RHS type are incompatible for operator -= at line 2. LHS type: int, RHS type: string

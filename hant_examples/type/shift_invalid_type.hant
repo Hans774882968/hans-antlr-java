@@ -1,0 +1,4 @@
+var x = 0x13fL
+x >>>= 2.2f
+print x
+// Exception in thread "main" com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException: Assignment expression LHS type and RHS type are incompatible for operator >>>= at line 2. LHS type: long, RHS type: float

@@ -18,7 +18,8 @@ public class AssignmentExpression extends Expression {
     private Expression expression;
 
     public AssignmentExpression(LocalVariable variable, AssignmentSign sign, Expression expression) {
-        super(expression.getType(), null, null);
+        // AssignmentExpression 的类型为 LHS 类型，计算时左右侧入栈顶并转为 max 类型，计算完毕后把 max 类型转为 LHS 类型再赋值
+        super(variable.getType(), null, null);
         this.variable = variable;
         this.sign = sign;
         this.expression = expression;
@@ -37,7 +38,7 @@ public class AssignmentExpression extends Expression {
     }
 
     public Type getRhsType() {
-        return getType();
+        return expression.getType();
     }
 
     public Type getMaxPriorityNumericType() {

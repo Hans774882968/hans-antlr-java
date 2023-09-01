@@ -27,4 +27,20 @@ public enum AssignmentSign {
     public boolean isShiftSign() {
         return isShiftSign(this);
     }
+
+    public static boolean isNonShiftBitwiseSign(AssignmentSign assignmentSign) {
+        return assignmentSign == AND || assignmentSign == XOR || assignmentSign == OR;
+    }
+
+    public boolean isNonShiftBitwiseSign() {
+        return isNonShiftBitwiseSign(this);
+    }
+
+    public static boolean isBitwiseSign(AssignmentSign assignmentSign) {
+        return isShiftSign(assignmentSign) || isNonShiftBitwiseSign(assignmentSign);
+    }
+
+    public boolean isBitwiseSign() {
+        return isBitwiseSign(this);
+    }
 }

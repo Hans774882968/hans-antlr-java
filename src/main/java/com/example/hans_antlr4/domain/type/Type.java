@@ -25,6 +25,8 @@ public interface Type {
 
     int getReturnOpcode();
 
+    int getDupOpcode();
+
     int getToDoubleOpcode();
 
     int getDoubleToThisTypeOpcode();

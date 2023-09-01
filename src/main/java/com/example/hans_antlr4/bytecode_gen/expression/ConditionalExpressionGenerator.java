@@ -9,7 +9,6 @@ import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
-import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.SupportGenerateObjectsComparisonLaterException;
 
 import lombok.AllArgsConstructor;
@@ -24,7 +23,7 @@ public class ConditionalExpressionGenerator implements Opcodes {
         Expression rightExpression = conditionalExpression.getRightExpression();
         CompareSign compareSign = conditionalExpression.getCompareSign();
         if (conditionalExpression.isPrimitiveComparison()) {
-            generatePrimitivesComparison(leftExpression, rightExpression, compareSign);
+            generatePrimitivesComparison(conditionalExpression);
         } else {
             throw new SupportGenerateObjectsComparisonLaterException(leftExpression, rightExpression, compareSign);
         }
@@ -38,32 +37,31 @@ public class ConditionalExpressionGenerator implements Opcodes {
         mv.visitLabel(endLabel);
     }
 
-    private void generatePrimitivesComparison(
-            Expression leftExpression,
-            Expression rightExpression,
-            CompareSign compareSign) {
-        leftExpression.accept(parent);
-        rightExpression.accept(parent);
-        // TODO: 支持隐式类型转换后删除这段检测
+    private void generatePrimitivesComparison(ConditionalExpression conditionalExpression) {
+        Expression leftExpression = conditionalExpression.getLeftExpression();
+        Expression rightExpression = conditionalExpression.getRightExpression();
+        CompareSign compareSign = conditionalExpression.getCompareSign();
+        Type maxPriorityNumericType = conditionalExpression.getMaxPriorityNumericType();
         Type lhsType = leftExpression.getType();
         Type rhsType = rightExpression.getType();
-        if (lhsType != rhsType) {
-            throw new ConditionalExprLhsAndRhsTypeIncompatibleException(lhsType, rhsType);
-        }
-        if (lhsType == BuiltInType.INT) {
+        leftExpression.accept(parent);
+        mv.visitInsn(lhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+        rightExpression.accept(parent);
+        mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+        if (maxPriorityNumericType == BuiltInType.INT) {
             mv.visitInsn(ISUB);
         }
-        if (lhsType == BuiltInType.LONG) {
+        if (maxPriorityNumericType == BuiltInType.LONG) {
             mv.visitInsn(LCMP);
         }
-        if (lhsType == BuiltInType.FLOAT) {
+        if (maxPriorityNumericType == BuiltInType.FLOAT) {
             if (compareSign == CompareSign.LESS || compareSign == CompareSign.LESS_OR_EQUAL) {
                 mv.visitInsn(FCMPG);
             } else {
                 mv.visitInsn(FCMPL);
             }
         }
-        if (lhsType == BuiltInType.DOUBLE) {
+        if (maxPriorityNumericType == BuiltInType.DOUBLE) {
             if (compareSign == CompareSign.LESS || compareSign == CompareSign.LESS_OR_EQUAL) {
                 mv.visitInsn(DCMPG);
             } else {

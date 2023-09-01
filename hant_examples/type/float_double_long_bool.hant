@@ -4,6 +4,12 @@
 }
 
 {
+    var x = "str1"
+    x = "str2"
+    print x
+}
+
+{
     var x = 2.1
     var y = 0.6
     print x + y // float 2.6999998 double 2.7
@@ -100,6 +106,21 @@ print "整除分块："
         ans = (ans + (R - L + 1l) * L % mod) % mod
         if mx < (R - L + 1l) * L mx = (R - L + 1l) * L
         L = R + 1l
+    }
+    print "mx = " + mx // 2500050000
+    print "ans = " + ans // 556021808
+}
+print "整除分块 with 隐式类型转换："
+{
+    var ans = 0L
+    var mx = 0L
+    var n = 100000
+    var mod = 998244353
+    for var L = 1; L <= n; {
+        var R = n / (n / L)
+        ans = (ans + (R - L + 1l) * L % mod) % mod
+        if mx < 1l * (R - L + 1) * L mx = 1l * (R - L + 1) * L
+        L = R + 1
     }
     print "mx = " + mx // 2500050000
     print "ans = " + ans // 556021808

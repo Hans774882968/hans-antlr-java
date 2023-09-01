@@ -195,6 +195,11 @@ public enum BuiltInType implements Type {
     }
 
     @Override
+    public int getDupOpcode() {
+        return opcodes.getDup();
+    }
+
+    @Override
     public int getToDoubleOpcode() {
         return opcodes.getToDouble();
     }

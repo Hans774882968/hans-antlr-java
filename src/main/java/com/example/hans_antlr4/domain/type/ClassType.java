@@ -74,6 +74,11 @@ public class ClassType implements Type {
     }
 
     @Override
+    public int getDupOpcode() {
+        return Opcodes.DUP;
+    }
+
+    @Override
     public int getToDoubleOpcode() {
         throw new RuntimeException("To double instruction not supported for custom objects");
     }

@@ -87,3 +87,29 @@ print "----- var -----"
     print tmp1 // 65
     print tmp2 // 65
 }
+
+print "----- int long float double -----"
+{
+    var tmpI = 123
+    var tmpL = 1L * (tmpI += 1) + (tmpI -= 124)
+    print "tmpI = " + tmpI + ", tmpL = " + tmpL // 0 124
+
+    (tmpL -= tmpI += 100) + (tmpL += 100 - 2 * 24L)
+    print "tmpI = " + tmpI + ", tmpL = " + tmpL // 100 76
+
+    tmpI = 0
+    tmpL = 124L
+    tmpL = (tmpL -= tmpI += 100) + (tmpL += 100 - 2 * 24L)
+    print "tmpI = " + tmpI + ", tmpL = " + tmpL // 100 100
+
+    var tmpF = 0.5f
+    var tmpD = 1.5
+    tmpF *= tmpF += tmpL = 0L + (tmpI -= -tmpD + 98L)
+    print "tmpI = " + tmpI + ", tmpL = " + tmpL + ", tmpF = " + tmpF // tmpI = 3, tmpL = 3, tmpF = 1.75
+
+    tmpI = 100
+    tmpL = 100L
+    tmpF = 0.5f
+    tmpF = (tmpF += tmpD + (tmpL = 0L + (tmpI -= 98L))) * tmpF
+    print "tmpI = " + tmpI + ", tmpL = " + tmpL + ", tmpF = " + tmpF // tmpI = 2, tmpL = 2, tmpF = 16.0
+}

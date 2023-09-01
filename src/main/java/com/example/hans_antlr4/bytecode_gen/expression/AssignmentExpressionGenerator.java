@@ -134,7 +134,7 @@ public class AssignmentExpressionGenerator implements Opcodes {
             }
 
             if (i > 0 || (i == 0 && !assignmentExpression.notNecessaryToGenerateDupInstruction())) {
-                mv.visitInsn(DUP);
+                mv.visitInsn(lhsType.getDupOpcode());
             }
             mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
         }

@@ -1,0 +1,3 @@
+var x = 1L
+x ^= 3.45
+print x

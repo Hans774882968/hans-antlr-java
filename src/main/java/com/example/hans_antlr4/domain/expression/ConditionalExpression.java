@@ -5,6 +5,7 @@ import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.exception.MixedComparisonNotAllowedException;
 
 import lombok.Getter;
@@ -30,6 +31,15 @@ public class ConditionalExpression extends Expression {
         if (isMixedComparison) {
             throw new MixedComparisonNotAllowedException(leftExpression.getType(), rightExpression.getType());
         }
+    }
+
+    public Type getMaxPriorityNumericType() {
+        Type leftType = leftExpression.getType();
+        Type rightType = rightExpression.getType();
+        if (leftType.getPriority().compareTo(rightType.getPriority()) >= 0) {
+            return leftType;
+        }
+        return rightType;
     }
 
     @Override

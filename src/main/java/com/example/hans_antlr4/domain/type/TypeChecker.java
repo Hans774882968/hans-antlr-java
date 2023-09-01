@@ -29,15 +29,12 @@ public class TypeChecker {
             return lhsType == rhsType;
         }
         if (assignmentSign == AssignmentSign.ASSIGN) {
-            return isNumericTypes(lhsType) && lhsType == rhsType;
+            return (isNumericTypes(lhsType) || lhsType == BuiltInType.STRING) && lhsType == rhsType;
         }
-        if (assignmentSign.isShiftSign()) {
+        if (assignmentSign.isBitwiseSign()) {
             return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
         }
-        if (isNumericTypes(lhsType) && isNumericTypes(rhsType)) {
-            return true;
-        }
-        return lhsType == rhsType;
+        return isNumericTypes(lhsType) && isNumericTypes(rhsType);
     }
 
     public static boolean conditionalLhsTypeAndRhsAreCompatible(Type lhsType, Type rhsType) {
