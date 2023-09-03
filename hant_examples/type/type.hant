@@ -16,6 +16,12 @@
 }
 
 {
+    var x = +~1L
+    print "x == ~-+-1L " + (x == ~-+-1L) // true
+    print x // -2
+}
+
+{
     var x = 1.2
     for var i = 1; i <= 10; i += 1 {
         x *= 1.2

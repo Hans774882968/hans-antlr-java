@@ -21,6 +21,27 @@ print y // -670
 print z // 40
 print w // 10
 
+{
+    var x = 1
+    var y = 2
+    y = (x += 2) * (y += y = (x &= 4))
+    print "x = " + x + ", y = " + y // 0 6
+}
+
+{
+    var x = "str"
+    var y = 1.23
+    x += x = x + y
+    print x // strstr1.23
+}
+
+{
+    var tmpL = 0xfcL
+    var tmpF = 2.34f
+    tmpF *= (tmpF + tmpL |= tmpL ^= tmpL &= 0x3f1)
+    print tmpF + " = tmpF, " + tmpL + " = tmpL" // 595.1556 = tmpF, 252 = tmpL
+}
+
 print "----- with for loop -----"
 var s = 0
 var fac = 1
@@ -90,12 +111,20 @@ print "----- var -----"
 
 print "----- int long float double -----"
 {
+    var x = 1
+    x += 3.7 + (x += x = 4 + (x += 3L))
+    print x + " = x" // 13
+}
+
+{
     var tmpI = 123
     var tmpL = 1L * (tmpI += 1) + (tmpI -= 124)
     print "tmpI = " + tmpI + ", tmpL = " + tmpL // 0 124
 
     (tmpL -= tmpI += 100) + (tmpL += 100 - 2 * 24L)
     print "tmpI = " + tmpI + ", tmpL = " + tmpL // 100 76
+    (tmpI %= 3.5) + (tmpL %= 3.5)
+    print "tmpI = " + tmpI + ", tmpL = " + tmpL // 2 2 (98 % 3.5 = 0, 76 % 3.5 = 2.5)
 
     tmpI = 0
     tmpL = 124L

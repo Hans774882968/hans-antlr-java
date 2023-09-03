@@ -20,6 +20,18 @@ public class AssignmentExpressionGenerator implements Opcodes {
     private ExpressionGenerator parent;
     private MethodVisitor mv;
 
+    private void generateCastToHigherPriorityTypeInsn(Type type, Type targetType) {
+        if (type.isNumericTypes() && targetType.isNumericTypes()) {
+            mv.visitInsn(type.getToHigherPriorityNumericTypeOpcode(targetType));
+        }
+    }
+
+    private void generateCastToOtherPriorityTypeInsn(Type type, Type targetType) {
+        if (type.isNumericTypes() && targetType.isNumericTypes()) {
+            mv.visitInsn(type.getToOtherNumericTypeOpcode(targetType));
+        }
+    }
+
     public void generate(AssignmentExpression assignmentExpression) {
         Expression currentExpression = assignmentExpression;
         List<Integer> variableIndexes = new ArrayList<>();
@@ -40,13 +52,14 @@ public class AssignmentExpressionGenerator implements Opcodes {
             AssignmentExpression currentAssignmentExpression = assignmentExpressions.get(i);
             Type lhsType = currentAssignmentExpression.getLhsType();
             Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-            if (sign != AssignmentSign.ASSIGN) {
-                mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
-                if (sign == AssignmentSign.POW) {
-                    mv.visitInsn(lhsType.getToDoubleOpcode());
-                } else if (!sign.isShiftSign()) {
-                    mv.visitInsn(lhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
-                }
+            if (sign == AssignmentSign.ASSIGN) {
+                continue;
+            }
+            mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
+            if (sign == AssignmentSign.POW) {
+                mv.visitInsn(lhsType.getToDoubleOpcode());
+            } else if (!sign.isShiftSign()) {
+                generateCastToHigherPriorityTypeInsn(lhsType, maxPriorityNumericType);
             }
         }
 
@@ -70,37 +83,37 @@ public class AssignmentExpressionGenerator implements Opcodes {
             }
             if (sign == AssignmentSign.MUL) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getMultiplyOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
             if (sign == AssignmentSign.DIV) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getDivideOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
             if (sign == AssignmentSign.MOD) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getModOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
             if (sign == AssignmentSign.ADD) {
                 if (lhsType == BuiltInType.STRING) {
                     new StringAppendGenerator(parent, mv).generate(currentAssignmentExpression);
                 } else {
                     Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                    mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                    generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                     mv.visitInsn(maxPriorityNumericType.getAddOpcode());
-                    mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                    generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
                 }
             }
             if (sign == AssignmentSign.MINUS) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getSubtractOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
             if (sign == AssignmentSign.SHL) {
                 mv.visitInsn(rhsType.getToIntOpcode());
@@ -116,21 +129,21 @@ public class AssignmentExpressionGenerator implements Opcodes {
             }
             if (sign == AssignmentSign.AND) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getAndOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
             if (sign == AssignmentSign.XOR) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getXorOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
             if (sign == AssignmentSign.OR) {
                 Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
-                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+                generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
                 mv.visitInsn(maxPriorityNumericType.getOrOpcode());
-                mv.visitInsn(maxPriorityNumericType.getToOtherNumericTypeOpcode(lhsType));
+                generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
             }
 
             if (i > 0 || (i == 0 && !assignmentExpression.notNecessaryToGenerateDupInstruction())) {

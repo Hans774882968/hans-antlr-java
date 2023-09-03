@@ -90,7 +90,7 @@ public class HansAntlr4Test {
                 "(compilationUnit (statements (statement (variable var x = (expression (expression (expression (expression (value 2)) ** (expression (value 3))) * (expression (expression (value 3)) ** (expression (value 2)))) + (expression (expression (value 2)) ** (expression (value 3)))))) (statement (print print (expression (variableReference x))))) <EOF>)",
                 treeString);
 
-        Statement firstStatement = compilationUnit.getInstructionsQueue().peek();
+        Statement firstStatement = compilationUnit.getInstructionsQueue().get(0);
         Expression expression = new Addition(
                 new Multiplication(
                         new Pow(new Value(BuiltInType.INT, "2"),

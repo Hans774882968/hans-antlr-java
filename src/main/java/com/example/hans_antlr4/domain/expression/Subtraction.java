@@ -2,13 +2,14 @@ package com.example.hans_antlr4.domain.expression;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
+import com.example.hans_antlr4.domain.global.ArithmeticSign;
 import com.example.hans_antlr4.domain.statement.Statement;
 
 import java.util.Objects;
 
 public class Subtraction extends Additive {
     public Subtraction(Expression leftExpression, Expression rightExpression) {
-        super(leftExpression, rightExpression);
+        super(leftExpression, rightExpression, ArithmeticSign.MINUS);
     }
 
     @Override

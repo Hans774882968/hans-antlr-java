@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.example.hans_antlr4.domain.expression.Addition;
+import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Mod;
@@ -17,6 +18,9 @@ import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
+import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.scope.LocalVariable;
+import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
@@ -141,5 +145,19 @@ public class HantOperatorPriorityTest {
                 new UnaryTilde(new UnaryNegative(new Value(BuiltInType.INT, "3"))));
         VariableDeclaration variableDeclaration = new VariableDeclaration("x", expression);
         Assert.assertEquals(variableDeclaration, statement);
+    }
+
+    @Test
+    public void assignmentTest1() {
+        Statement statement = TestUtils.getLastStatementFromCode("var x = 1 x += x = 4 + (x += 3L)");
+        LocalVariable x = new LocalVariable("x", BuiltInType.INT);
+        Expression expression = new AssignmentExpression(
+                x, AssignmentSign.ADD, new AssignmentExpression(
+                        x, AssignmentSign.ASSIGN, new Addition(
+                                new Value(BuiltInType.INT, "4"),
+                                new AssignmentExpression(x, AssignmentSign.ADD,
+                                        new Value(BuiltInType.LONG, "3")))));
+        ExpressionStatement expressionStatement = new ExpressionStatement(expression);
+        Assert.assertEquals(expressionStatement, statement);
     }
 }

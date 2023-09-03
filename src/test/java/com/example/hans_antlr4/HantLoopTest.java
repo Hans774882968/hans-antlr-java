@@ -1,6 +1,6 @@
 package com.example.hans_antlr4;
 
-import java.util.Queue;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,7 +30,7 @@ public class HantLoopTest {
 
     @Test
     public void definedVarAsIteratorVariable() {
-        Queue<Statement> statements = TestUtils.getStatementsFromCode(
+        List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var i = 114510\nfor i: 114512 to 114514 print i");
         statements.forEach(stmt -> {
             if (!(stmt instanceof RangedForStatement))

@@ -5,7 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
-import java.util.Queue;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -61,7 +61,7 @@ public class HantIfTest {
 
     @Test
     public void confirmNewScopeCreatedTest() {
-        Queue<Statement> statements = TestUtils
+        List<Statement> statements = TestUtils
                 .getStatementsFromCode("if 123 { var x = 10 if 456 var x = 12 else var x = 15 } var x = 20");
         MethodVisitor mv = TestUtils.mockGenerateBytecode(statements);
 

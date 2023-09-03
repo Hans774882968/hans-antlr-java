@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.mock;
 
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Value;
@@ -27,12 +27,14 @@ public class StatementProcessorTest {
         Addition startExpr = new Addition(addL, addR);
         Value value2 = new Value(BuiltInType.INT, "2");
         UnaryTilde endExpr = new UnaryTilde(value2);
-        Break breakStatement = new Break(anyInt());
-        RangedForStatement rangedForStatement = new RangedForStatement(variableDeclaration, "x", startExpr, endExpr,
+        final int ANY_SOURCE_LINE = 0;
+        Break breakStatement = new Break(ANY_SOURCE_LINE);
+        RangedForStatement rangedForStatement = new RangedForStatement(
+                variableDeclaration, "x", startExpr, endExpr,
                 breakStatement, null);
         Block block = new Block(new ArrayList<>(Arrays.asList(rangedForStatement)), null);
 
-        RangedForStatement mockRangedForStatement = new RangedForStatement(null, null, null, null, null, null);
+        RangedForStatement mockRangedForStatement = mock(RangedForStatement.class);
 
         block.processSubStatementTree(new StatementTreeProcessor(), null, mockRangedForStatement);
         Assert.assertTrue(block.getParent() == null);

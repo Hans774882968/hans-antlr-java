@@ -1,8 +1,7 @@
 package com.example.hans_antlr4.parsing.biz_visitor;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -36,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
     private Scope scope;
-    private Queue<Statement> instructionsQueue = new ArrayDeque<>();
+    private List<Statement> instructionsQueue = new ArrayList<>();
 
     public StatementVisitor(Scope scope) {
         super();

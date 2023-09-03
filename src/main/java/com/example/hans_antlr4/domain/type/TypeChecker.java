@@ -1,5 +1,7 @@
 package com.example.hans_antlr4.domain.type;
 
+import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
+import com.example.hans_antlr4.domain.global.ArithmeticSign;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
 
 public class TypeChecker {
@@ -13,6 +15,29 @@ public class TypeChecker {
 
     public static boolean isNumericTypes(Type type) {
         return isDecimalTypes(type) || isIntegerTypes(type);
+    }
+
+    public static boolean arithmeticLhsTypeAndRhsAreCompatible(
+            ArithmeticExpression arithmeticExpression) {
+        ArithmeticSign arithmeticSign = arithmeticExpression.getSign();
+        Type lhsType = arithmeticExpression.getLeftExpression().getType();
+        Type rhsType = arithmeticExpression.getRightExpression().getType();
+        if (arithmeticSign == ArithmeticSign.ADD) {
+            if (lhsType == BuiltInType.STRING || rhsType == BuiltInType.STRING) {
+                return true;
+            }
+            if (isNumericTypes(lhsType)) {
+                return isNumericTypes(rhsType);
+            }
+            if (isNumericTypes(rhsType)) {
+                return isNumericTypes(lhsType);
+            }
+            return lhsType == rhsType;
+        }
+        if (arithmeticSign.isBitwiseSign()) {
+            return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
+        }
+        return isNumericTypes(lhsType) && isNumericTypes(rhsType);
     }
 
     public static boolean assignmentLhsTypeAndRhsAreCompatible(

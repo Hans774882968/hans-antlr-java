@@ -1,6 +1,6 @@
 package com.example.hans_antlr4.bytecode_gen;
 
-import java.util.Queue;
+import java.util.List;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -17,7 +17,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class CompilationUnit implements Opcodes {
     private Scope scope;
-    private Queue<Statement> instructionsQueue;
+    private List<Statement> instructionsQueue;
 
     public byte[] generateBytecode(String name) {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
