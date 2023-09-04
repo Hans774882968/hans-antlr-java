@@ -48,12 +48,12 @@ print "----- 整除分块 -----"
     var mod = 998244353
     for var L = 1; L <= n; {
         var R = n / (n / L)
-        ans = (ans + (R - L + 1) * L % mod) % mod
-        if mx < (R - L + 1) * L mx = (R - L + 1) * L
+        ans = (ans + (R - L + 1) * (n / L) % mod) % mod
+        if mx < (R - L + 1) * (n / L) mx = (R - L + 1) * (n / L)
         L = R + 1
     }
-    print mx // 625025000 = 25000 * 25001
-    print ans // 887711275
+    print mx // 50000
+    print ans // 548725
 }
 
 print "----- ranged for 和 standard for 混用 -----"

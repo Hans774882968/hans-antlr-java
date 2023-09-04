@@ -3731,7 +3731,7 @@ print mx // 625025000 = 25000 * 25001
 print ans // 887711275
 ```
 
-## Part15：1-支持float、double、boolean
+## Part15：1-支持long、float、double、boolean
 
 TODO
 
@@ -3765,7 +3765,7 @@ public int slotUsage() {
 }
 ```
 
-## Part15：2-支持隐式类型转换
+## Part15：2-支持表达式的类型提升
 
 TODO
 
@@ -3937,6 +3937,17 @@ public class TestLookAtBytecode {
 ```
 
 这种格式。其中`dcmpxx`对于小于和小于等于是`dcmpg`，对于其他是`dcmpl`；`ifxx`是当前运算符的相反运算符。`float`类型结论完全类似。`long`类型生成的所有`cmp`指令都是`lcmp`。
+## Part15：3-支持关系运算符的隐式类型转换
+
+TODO
+
+## Part15：4-支持赋值运算符的隐式类型转换
+
+TODO
+
+## Part7-支持方法
+
+TODO
 
 ## 参考资料
 
