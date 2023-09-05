@@ -1,5 +1,5 @@
 {
     var x = "str"
-    x = true
+    x = false
     print x
 }

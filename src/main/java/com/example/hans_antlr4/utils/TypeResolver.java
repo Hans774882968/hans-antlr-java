@@ -45,7 +45,7 @@ public class TypeResolver {
                 return BuiltInType.FLOAT;
             }
         }
-        if (BooleanUtils.toBoolean(value)) {
+        if (BooleanUtils.toBooleanObject(value) != null) {
             return BuiltInType.BOOLEAN;
         }
         return BuiltInType.STRING;

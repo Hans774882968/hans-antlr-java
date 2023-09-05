@@ -15,6 +15,7 @@ import com.example.hans_antlr4.domain.expression.Shr;
 import com.example.hans_antlr4.domain.expression.Subtraction;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
+import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
@@ -159,5 +160,30 @@ public class HantOperatorPriorityTest {
                                         new Value(BuiltInType.LONG, "3")))));
         ExpressionStatement expressionStatement = new ExpressionStatement(expression);
         Assert.assertEquals(expressionStatement, statement);
+    }
+
+    @Test
+    public void assignmentTest2() {
+        String code1 = "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + (tmpL |= tmpL ^= tmpL &= 0x3f1)";
+        String code2 = "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + tmpL |= tmpL ^= tmpL &= 0x3f1";
+        Statement statement1 = TestUtils.getLastStatementFromCode(code1);
+        Statement statement2 = TestUtils.getLastStatementFromCode(code2);
+        LocalVariable tmpF = new LocalVariable("tmpF", BuiltInType.FLOAT);
+        LocalVariable tmpL = new LocalVariable("tmpL", BuiltInType.LONG);
+        Expression expression = new AssignmentExpression(
+                tmpF, AssignmentSign.MUL, new Addition(
+                        new VarReference("tmpF", BuiltInType.FLOAT),
+                        new AssignmentExpression(tmpL, AssignmentSign.OR,
+                                new AssignmentExpression(
+                                        tmpL, AssignmentSign.XOR,
+                                        new AssignmentExpression(
+                                                tmpL,
+                                                AssignmentSign.AND,
+                                                new Value(BuiltInType.INT,
+                                                        "0x3f1"))))));
+        ExpressionStatement expressionStatement = new ExpressionStatement(expression);
+        Assert.assertEquals(expressionStatement, statement1);
+        Assert.assertEquals(expressionStatement, statement2);
+        Assert.assertEquals(statement1, statement2);
     }
 }

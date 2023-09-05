@@ -1,3 +1,5 @@
+for var i = 1L; i <= 5; i += 1 print i
+
 for var i = 0; i < 10; i += 1 {
     if i % 2 == 0 continue
     print i // 奇数
@@ -25,7 +27,7 @@ for i = 0;; i += 1 {
 }
 
 print "----- without forUpdate -----"
-var bVal = 1895575359 // 0x70fc2f3f
+var bVal = 0x70fc2f3f // 1895575359
 var bcVal = 0
 for var i = 1; i <= (1 << 30); {
     if (bVal & i) > 0 bcVal += 1

@@ -38,7 +38,7 @@ print w // 10
 {
     var tmpL = 0xfcL
     var tmpF = 2.34f
-    tmpF *= (tmpF + tmpL |= tmpL ^= tmpL &= 0x3f1)
+    tmpF *= tmpF + (tmpL |= tmpL ^= tmpL &= 0x3f1)
     print tmpF + " = tmpF, " + tmpL + " = tmpL" // 595.1556 = tmpF, 252 = tmpL
 }
 

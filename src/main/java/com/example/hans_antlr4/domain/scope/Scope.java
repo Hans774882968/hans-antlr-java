@@ -25,6 +25,12 @@ public class Scope {
         localVariables.add(localVariable);
     }
 
+    public void addLocalVariables(LocalVariable... localVariableList) {
+        for (LocalVariable localVariable : localVariableList) {
+            addLocalVariable(localVariable);
+        }
+    }
+
     public LocalVariable getLocalVariable(String varName) {
         // 越靠后的元素作用域层级越大，所以可以通过返回最后一个元素来实现变量 shadow
         return localVariables.stream()

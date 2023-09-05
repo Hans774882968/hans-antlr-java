@@ -23,6 +23,12 @@ public class TypeResolverTest {
     }
 
     @Test
+    public void testGetFromValueBoolean() {
+        Assert.assertEquals(BuiltInType.BOOLEAN, TypeResolver.getFromValue("true"));
+        Assert.assertEquals(BuiltInType.BOOLEAN, TypeResolver.getFromValue("false"));
+    }
+
+    @Test
     public void testGetFromValueInt() {
         for (String integerString : integerStrings) {
             Assert.assertEquals(BuiltInType.INT, TypeResolver.getFromValue(integerString));
