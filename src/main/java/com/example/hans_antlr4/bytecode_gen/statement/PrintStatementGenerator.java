@@ -32,6 +32,7 @@ public class PrintStatementGenerator implements Opcodes {
         String descriptor = "(" + type.getDescriptor() + ")V"; // such as "(Ljava/lang/String;)V"
         ClassType owner = new ClassType("java.io.PrintStream");
         String fieldDescriptor = owner.getInternalName(); // "java/io/PrintStream"
-        mv.visitMethodInsn(INVOKEVIRTUAL, fieldDescriptor, "println", descriptor, false);
+        String printMethodName = printStatement.isShouldNotPrintLine() ? "print" : "println";
+        mv.visitMethodInsn(INVOKEVIRTUAL, fieldDescriptor, printMethodName, descriptor, false);
     }
 }

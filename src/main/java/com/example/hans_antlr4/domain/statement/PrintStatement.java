@@ -5,14 +5,23 @@ import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProce
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.Objects;
 
-@AllArgsConstructor
 @Data
 public class PrintStatement extends Statement {
     private Expression expression;
+    private boolean shouldNotPrintLine;
+
+    public PrintStatement(Expression expression) {
+        this.expression = expression;
+        this.shouldNotPrintLine = false;
+    }
+
+    public PrintStatement(Expression expression, String printArg) {
+        this.expression = expression;
+        this.shouldNotPrintLine = printArg.equals("-n");
+    }
 
     @Override
     public void accept(StatementGenerator generator) {

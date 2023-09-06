@@ -1,4 +1,4 @@
-package com.example.hans_antlr4.validation;
+package com.example.hans_antlr4.program_arguments;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 [toc]
 
-# antlr4：实现一门编译到Java字节码的语言
+# 基于antlr4实现一门编译到Java字节码的语言hant，参考了Enkel但高于Enkel
 
 ## 引言
 
@@ -703,6 +703,7 @@ public class PrintVariable implements Instruction, Opcodes {
 `VariableDeclaration`：
 
 - `visitIntInsn` - 第一个参数是操作符，第二个是操作数，操作数类型为`int`。
+- `ICONST_XX`，比如`ICONST_M1` - 把常量`-1`到`5`入栈。
 - `BIPUSH` - 把一个`byte(integer)`入栈，同理`SIPUSH`把两个`byte(integer)`入栈。
 - `ISTORE` - int 类型的值出栈，并存储到局部变量中，需要指定局部变量的索引。
 - `ASTORE` - 和`ISTORE`功能类似，但是数据类型是索引。
@@ -724,7 +725,21 @@ public void generate(Value value) {
     String stringValue = value.getValue();
     if (type == BuiltInType.INT) {
         int intValue = Integer.parseInt(stringValue);
-        if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
+        if (intValue == -1) {
+            mv.visitInsn(ICONST_M1);
+        } else if (intValue == 0) {
+            mv.visitInsn(ICONST_0);
+        } else if (intValue == 1) {
+            mv.visitInsn(ICONST_1);
+        } else if (intValue == 2) {
+            mv.visitInsn(ICONST_2);
+        } else if (intValue == 3) {
+            mv.visitInsn(ICONST_3);
+        } else if (intValue == 4) {
+            mv.visitInsn(ICONST_4);
+        } else if (intValue == 5) {
+            mv.visitInsn(ICONST_5);
+        } else if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
             mv.visitIntInsn(BIPUSH, intValue);
         } else if (Short.MIN_VALUE <= intValue && intValue <= Short.MAX_VALUE) {
             mv.visitIntInsn(SIPUSH, intValue);
@@ -882,8 +897,6 @@ public class App {
 }
 ```
 
-TODO: 这部分代码开始乱了，要整理下~考虑引入命令行参数解析框架
-
 新增的`src\main\java\com\example\hans_antlr4\CodeRunner.java`从`byte[]`加载类并调用其`main`函数：
 
 ```java
@@ -969,6 +982,152 @@ public void unicodeVarNameAndComments() {
     StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
     statementGenerator.generate(statement);
     verify(mv, times(1)).visitVarInsn(eq(Opcodes.ASTORE), eq(0));
+}
+```
+
+## Part3：6-字符串支持Java的转义字符+支持双引号
+
+之前我们原样输出了antlr解析出的字符串，现在我们希望`hant`的字符串支持Java的转义字符。根据[参考链接6](https://stackoverflow.com/questions/4997325/java-how-to-create-unicode-from-string-u00c3-etc/4997427)，这个需求可以直接使用开源的解决方案来实现。
+
+```xml
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-text</artifactId>
+    <version>1.10.0</version>
+</dependency>
+```
+
+相关代码：
+
+```java
+import org.apache.commons.text.StringEscapeUtils;
+
+public class TypeResolver {
+    public static String getTransformedString(String value) {
+        value = StringUtils.removeStart(value, "\"");
+        value = StringUtils.removeEnd(value, "\"");
+        value = StringEscapeUtils.unescapeJava(value);
+        return value;
+    }
+
+    // 约定：getValueFromString 调用时 stringValue 已经没有 typeSuffix
+    public static Object getValueFromString(String stringValue, Type type) {
+        // ...
+        if (type == BuiltInType.BOOLEAN) {
+            return Boolean.valueOf(stringValue);
+        }
+        if (type == BuiltInType.STRING) {
+            return getTransformedString(stringValue);
+        }
+        throw new AssertionError("Objects not yet implemented!");
+    }
+}
+```
+
+为了支持双引号，需要改造文法。直接参考[Java9语法规则的antlr描述](https://github.com/antlr/grammars-v4/blob/master/java/java9/Java9Lexer.g4)即可。
+
+```g4
+STRING: '"' StringCharacter* '"';
+fragment StringCharacter: ~["\\\r\n] | EscapeSequence;
+fragment EscapeSequence:
+	'\\' 'u005c'? [btnfr"'\\]
+	| OctalEscape
+	| UnicodeEscape;
+fragment OctalEscape:
+	'\\' 'u005c'? OctalDigit
+	| '\\' 'u005c'? OctalDigit OctalDigit
+	| '\\' 'u005c'? ZeroToThree OctalDigit OctalDigit;
+fragment UnicodeEscape:
+	'\\' 'u'+ HexDigit HexDigit HexDigit HexDigit;
+fragment HexDigit: [0-9a-fA-F];
+fragment OctalDigit: [0-7];
+fragment ZeroToThree: [0-3];
+```
+
+## Part3：7-引入命令行参数解析框架：JCommander
+
+技术选型：`jcommander`。添加依赖：
+
+```xml
+<dependency>
+    <groupId>com.beust</groupId>
+    <artifactId>jcommander</artifactId>
+    <version>1.82</version>
+</dependency>
+```
+
+命令设计：
+1. `-runMode`参数存在表示在命令行直接运行`.hant`代码。
+2. `-file`参数必须指定。
+3. `-constantFolding`参数：后续将实现`val`语句，`val x = 42`表示`x`为常量，于是只有常量的表达式可以在编译期计算好，最后只输出一条字节码指令。该参数就是常量折叠优化的开关。
+4. 未指定必选参数所导致的`ParameterException`输出帮助信息，其他参数不合法情况只输出`ParameterException`。这个需求点可以依据[参考链接7](https://github.com/cbeust/jcommander/issues/337)来实现。
+
+命令示例：
+
+```ps1
+java -jar <path of hans_antlr-1.0-SNAPSHOT-jar-with-dependencies.jar> -runMode -file C:\java_project\hans-antlr-java\hant_examples\for\print_graphics.hant
+```
+
+新增的`src\main\java\com\example\hans_antlr4\program_arguments\CompilerArguments.java`和`src\main\java\com\example\hans_antlr4\program_arguments\HantFilePathValidator.java`：
+
+```java
+@Getter
+public class CompilerArguments {
+    @Parameter(names = { "help", "-help", "-h" }, description = "View help information", help = true, order = 1)
+    private boolean help;
+
+    @Parameter(names = "-file", description = "File path ends with '.hant' extension", required = true, validateWith = HantFilePathValidator.class, order = 2)
+    private String filePath;
+
+    @Parameter(names = "-runMode", description = "Run the compiled class directly without writing the '.class' file to disk")
+    private boolean runMode = false;
+
+    @Parameter(names = "-constantFolding", description = "Enable constant folding optimization (Will be supported after supporting the 'val' statement)")
+    private boolean constantFolding = false;
+}
+
+public class HantFilePathValidator implements IParameterValidator {
+    @Override
+    public void validate(String key, String filePath) throws ParameterException {
+        if (!filePath.endsWith(".hant")) {
+            throw new ParameterException(ARGUMENT_ERRORS.BAD_FILE_EXTENSION.getMessage());
+        }
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new ParameterException("'" + filePath + "' does not exist");
+        }
+    }
+}
+```
+
+入口改造：
+
+```java
+@Slf4j
+public class App {
+    private static CompilerArguments compilerArguments = new CompilerArguments();
+
+    public static void main(String[] args) {
+        JCommander commander = JCommander.newBuilder()
+                .programName("hant-compiler (java -jar <hant-compiler-jar-path>)")
+                .addObject(compilerArguments)
+                .build();
+        try {
+            commander.parse(args);
+        } catch (ParameterException e) {
+            if (e.getMessage().contains("The following option is required:")) {
+                e.usage();
+                System.exit(114514);
+            } else {
+                throw e;
+            }
+        }
+        if (compilerArguments.isHelp()) {
+            commander.usage();
+            return;
+        }
+        // ...
+    }
 }
 ```
 
@@ -3945,6 +4104,77 @@ TODO
 
 TODO
 
+## print语句支持换行与不换行
+
+借鉴`Linux Shell`的设计，我们约定`print -n "foo"`表示不需要换行，`print "foo"`表示需要换行，与原本行为一致。
+
+修改文法：
+
+```g4
+print: PRINT (printArg = '-n')? expression;
+```
+
+修改`PrintStatement`：
+
+```java
+@Data
+public class PrintStatement extends Statement {
+    private Expression expression;
+    private boolean shouldNotPrintLine;
+
+    public PrintStatement(Expression expression) {
+        this.expression = expression;
+        this.shouldNotPrintLine = false;
+    }
+
+    public PrintStatement(Expression expression, String printArg) {
+        this.expression = expression;
+        this.shouldNotPrintLine = printArg.equals("-n");
+    }
+
+    // 其他方法省略
+}
+```
+
+visitor读取`printArg`：
+
+```java
+@Override
+public PrintStatement visitPrint(HansAntlrParser.PrintContext ctx) {
+    String printArg = ctx.printArg != null ? ctx.printArg.getText() : "";
+    PrintStatement printStatement = new PrintStatement(expression, printArg);
+    // ...
+}
+```
+
+generator根据`shouldNotPrintLine`决定调用`System.out.println`或`System.out.print`：
+
+```java
+public void generate(PrintStatement printStatement) {
+    // ...
+    String printMethodName = printStatement.isShouldNotPrintLine() ? "print" : "println";
+    mv.visitMethodInsn(INVOKEVIRTUAL, fieldDescriptor, printMethodName, descriptor, false);
+}
+```
+
+相关`.hant`测试代码：[hant_examples\for\print_graphics.hant](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/print_graphics.hant)
+
+目前`hant`已经具备打印字符画的能力！以心型为例：
+
+```hant
+print "心型"
+var stp = 0.15
+for (var y = 1.5; y > -1.5; y -= stp) {
+    var halfStp = stp / 2
+    for (var x = -1.5; x < 1.5; x += halfStp) {
+        var a = x ** 2 + y ** 2 - 1
+        if (a ** 3 - x * x * y ** 3 <= 0) print -n "*"
+        else print -n " "
+    }
+    print ""
+}
+```
+
 ## Part7-支持方法
 
 TODO
@@ -3956,3 +4186,5 @@ TODO
 3. `Mockito`：https://blog.csdn.net/shangboerds/article/details/99611079
 4. 编译原理笔记9：语法分析树、语法树、二义性的消除：https://www.jianshu.com/p/2d55d50f8bc4
 5. 【小白打造编译器系列7】Anltr 重构脚本语言：https://blog.csdn.net/weixin_41960890/article/details/105263228
+6. https://stackoverflow.com/questions/4997325/java-how-to-create-unicode-from-string-u00c3-etc/4997427
+7. `jcommander`必选参数未提供时如何自动输出帮助信息：https://github.com/cbeust/jcommander/issues/337

@@ -99,7 +99,7 @@ public class HantLoopTest implements Opcodes {
 
         inOrder.verify(mv).visitVarInsn(eq(LLOAD), eq(0));
         inOrder.verify(mv).visitInsn(eq(NOP));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(1));
+        inOrder.verify(mv).visitInsn(eq(ICONST_1));
         inOrder.verify(mv).visitInsn(eq(I2L));
         inOrder.verify(mv).visitInsn(eq(LADD));
         inOrder.verify(mv).visitInsn(eq(NOP));
@@ -107,7 +107,7 @@ public class HantLoopTest implements Opcodes {
 
         inOrder.verify(mv).visitVarInsn(eq(LLOAD), eq(0));
         inOrder.verify(mv).visitInsn(eq(NOP));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(5));
+        inOrder.verify(mv).visitInsn(eq(ICONST_5));
         inOrder.verify(mv).visitInsn(eq(I2L));
         inOrder.verify(mv).visitInsn(eq(LCMP));
         inOrder.verify(mv).visitJumpInsn(eq(IFGT), isA(Label.class));
@@ -128,17 +128,17 @@ public class HantLoopTest implements Opcodes {
         MethodVisitor mv = TestUtils.mockGenerateBytecode(statements, scope);
         InOrder inOrder = inOrder(mv);
 
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(0));
+        inOrder.verify(mv).visitInsn(eq(ICONST_0));
         inOrder.verify(mv).visitVarInsn(eq(ISTORE), eq(0));
         inOrder.verify(mv).visitJumpInsn(eq(GOTO), isA(Label.class));
 
         inOrder.verify(mv).visitVarInsn(eq(ILOAD), eq(0));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(2));
+        inOrder.verify(mv).visitInsn(eq(ICONST_2));
         inOrder.verify(mv).visitInsn(eq(NOP));
         inOrder.verify(mv).visitInsn(eq(IREM));
         inOrder.verify(mv).visitInsn(eq(NOP));
 
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(0));
+        inOrder.verify(mv).visitInsn(eq(ICONST_0));
         inOrder.verify(mv).visitInsn(eq(NOP));
         inOrder.verify(mv).visitInsn(eq(ISUB));
 
@@ -165,7 +165,7 @@ public class HantLoopTest implements Opcodes {
 
         inOrder.verify(mv).visitVarInsn(eq(ILOAD), eq(0));
         inOrder.verify(mv).visitInsn(eq(NOP));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(1));
+        inOrder.verify(mv).visitInsn(eq(ICONST_1));
         inOrder.verify(mv).visitInsn(eq(NOP));
         inOrder.verify(mv).visitInsn(eq(IADD));
         inOrder.verify(mv).visitInsn(eq(NOP));
@@ -173,7 +173,7 @@ public class HantLoopTest implements Opcodes {
 
         inOrder.verify(mv).visitVarInsn(eq(ILOAD), eq(0));
         inOrder.verify(mv).visitInsn(eq(NOP));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(5));
+        inOrder.verify(mv).visitInsn(eq(ICONST_5));
         inOrder.verify(mv).visitInsn(eq(NOP));
         inOrder.verify(mv).visitInsn(eq(ISUB));
         inOrder.verify(mv).visitJumpInsn(eq(IFGE), isA(Label.class));

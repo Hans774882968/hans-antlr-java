@@ -64,7 +64,8 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final ExpressionContext expressionContext = ctx.expression();
         final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
         Expression expression = expressionContext.accept(expressionVisitor);
-        PrintStatement printStatement = new PrintStatement(expression);
+        String printArg = ctx.printArg != null ? ctx.printArg.getText() : "";
+        PrintStatement printStatement = new PrintStatement(expression, printArg);
         instructionsQueue.add(printStatement);
         return printStatement;
     }

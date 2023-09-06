@@ -7,27 +7,18 @@ import java.io.OutputStream;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.parsing.ParseEntry;
-import com.example.hans_antlr4.validation.ARGUMENT_ERRORS;
+import com.example.hans_antlr4.program_arguments.CompilerArguments;
 
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class App {
-    private static boolean runMode = false;
-
-    private static ARGUMENT_ERRORS getArgumentValidationError(String[] args) {
-        if ((runMode && args.length != 2) || (!runMode && args.length != 1)) {
-            return ARGUMENT_ERRORS.NO_FILE;
-        }
-        String filePath = runMode ? args[1] : args[0];
-        if (!filePath.endsWith(".hant")) {
-            return ARGUMENT_ERRORS.BAD_FILE_EXTENSION;
-        }
-        return ARGUMENT_ERRORS.NONE;
-    }
+    private static CompilerArguments compilerArguments = new CompilerArguments();
 
     private static void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
         final String classFile = StringUtils.replace(fileAbsolutePath, ".hant", ".class");
@@ -41,14 +32,26 @@ public class App {
     }
 
     public static void main(String[] args) {
-        runMode = args[0].equals("run");
-        ARGUMENT_ERRORS argumentError = getArgumentValidationError(args);
-        if (argumentError != ARGUMENT_ERRORS.NONE) {
-            log.error(argumentError.getMessage());
+        JCommander commander = JCommander.newBuilder()
+                .programName("hant-compiler (java -jar <hant-compiler-jar-path>)")
+                .addObject(compilerArguments)
+                .build();
+        try {
+            commander.parse(args);
+        } catch (ParameterException e) {
+            if (e.getMessage().contains("The following option is required:")) {
+                e.usage();
+                System.exit(114514);
+            } else {
+                throw e;
+            }
+        }
+        if (compilerArguments.isHelp()) {
+            commander.usage();
             return;
         }
 
-        String inputFilePath = runMode ? args[1] : args[0];
+        String inputFilePath = compilerArguments.getFilePath();
         File hantFile = new File(inputFilePath);
         String fileName = hantFile.getName();
         String fileAbsolutePath = hantFile.getAbsolutePath();
@@ -62,8 +65,9 @@ public class App {
         }
 
         final byte[] byteCode = compilationUnit.generateBytecode(StringUtils.remove(fileName, ".hant"));
+
         try {
-            if (runMode) {
+            if (compilerArguments.isRunMode()) {
                 runClass(byteCode);
             } else {
                 saveBytecodeToClassFile(fileAbsolutePath, byteCode);

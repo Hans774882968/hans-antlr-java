@@ -5,6 +5,18 @@ if 1 {
     print x + y // 30
 }
 
+if true {
+    var y = 21
+    print x + y // 31
+}
+
+/* TODO: 拦截所有非 boolean 、 int 和 Conditional Expression 的情况
+if 1.23 {
+    var y = 22
+    print x + y // 32
+}
+*/
+
 if 0 {
 
 } else {

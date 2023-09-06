@@ -41,7 +41,7 @@ public class ExpressionTypeCastTest implements Opcodes {
                 eq("Ljava/io/PrintStream;"));
         inOrder.verify(mv).visitVarInsn(eq(LLOAD), eq(0));
         inOrder.verify(mv).visitInsn(eq(NOP));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(4));
+        inOrder.verify(mv).visitInsn(eq(ICONST_4));
         inOrder.verify(mv).visitInsn(eq(I2L));
         inOrder.verify(mv).visitInsn(eq(LMUL));
         inOrder.verify(mv).visitInsn(eq(L2D));
@@ -69,7 +69,7 @@ public class ExpressionTypeCastTest implements Opcodes {
 
         inOrder.verify(mv).visitLdcInsn(eq(18L));
         inOrder.verify(mv).visitVarInsn(eq(LSTORE), eq(0));
-        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(3));
+        inOrder.verify(mv).visitInsn(eq(ICONST_3));
         inOrder.verify(mv).visitVarInsn(eq(ISTORE), eq(2));
 
         inOrder.verify(mv).visitFieldInsn(

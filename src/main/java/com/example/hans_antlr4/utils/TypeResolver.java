@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.utils;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.example.hans_antlr4.domain.type.BuiltInType;
@@ -77,6 +78,13 @@ public class TypeResolver {
         return Long.valueOf(stringValue);
     }
 
+    public static String getTransformedString(String value) {
+        value = StringUtils.removeStart(value, "\"");
+        value = StringUtils.removeEnd(value, "\"");
+        value = StringEscapeUtils.unescapeJava(value);
+        return value;
+    }
+
     // 约定：getValueFromString 调用时 stringValue 已经没有 typeSuffix
     public static Object getValueFromString(String stringValue, Type type) {
         if (type == BuiltInType.INT) {
@@ -103,9 +111,7 @@ public class TypeResolver {
             return Boolean.valueOf(stringValue);
         }
         if (type == BuiltInType.STRING) {
-            stringValue = StringUtils.removeStart(stringValue, "\"");
-            stringValue = StringUtils.removeEnd(stringValue, "\"");
-            return stringValue;
+            return getTransformedString(stringValue);
         }
         throw new AssertionError("Objects not yet implemented!");
     }
