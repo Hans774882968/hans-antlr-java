@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -13,12 +14,20 @@ import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.parsing.ParseEntry;
 import com.example.hans_antlr4.program_arguments.CompilerArguments;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 import lombok.Cleanup;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class App {
     private static CompilerArguments compilerArguments = new CompilerArguments();
+
+    private static void setLogLevel() {
+        Logger logger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        Level wantLevel = compilerArguments.isDebug() ? Level.DEBUG : Level.INFO;
+        logger.setLevel(wantLevel);
+    }
 
     private static void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
         final String classFile = StringUtils.replace(fileAbsolutePath, ".hant", ".class");
@@ -50,6 +59,7 @@ public class App {
             commander.usage();
             return;
         }
+        setLogLevel();
 
         String inputFilePath = compilerArguments.getFilePath();
         File hantFile = new File(inputFilePath);

@@ -54,7 +54,10 @@ public class TypeChecker {
             return lhsType == rhsType;
         }
         if (assignmentSign == AssignmentSign.ASSIGN) {
-            return (isNumericTypes(lhsType) || lhsType == BuiltInType.STRING) && lhsType == rhsType;
+            if (isNumericTypes(lhsType)) {
+                return isNumericTypes(rhsType) && lhsType.getPriority().compareTo(rhsType.getPriority()) >= 0;
+            }
+            return lhsType == rhsType;
         }
         if (assignmentSign.isBitwiseSign()) {
             return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);

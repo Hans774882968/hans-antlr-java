@@ -33,6 +33,38 @@ class BootstrapMethodArgMatcher extends ArgumentMatcher<Object> {
 
 public class AssignmentWithTypesTest implements Opcodes {
     @Test
+    public void assignmentAssignNumericTest1() {
+        // 低优先级RHS可以赋值给高优先级LHS
+        List<Statement> statements = TestUtils.getStatementsFromCode("var tmpD = 0.5\ntmpD = 0x3f2L\nprint tmpD = 3");
+        Scope scope = new Scope(new MetaData(null));
+        scope.addLocalVariables(new LocalVariable("tmpD", BuiltInType.DOUBLE));
+        MethodVisitor mv = TestUtils.mockGenerateBytecode(statements, scope);
+        InOrder inOrder = inOrder(mv);
+
+        inOrder.verify(mv).visitLdcInsn(eq(0.5));
+        inOrder.verify(mv).visitVarInsn(eq(DSTORE), eq(0));
+
+        inOrder.verify(mv).visitLdcInsn(eq(1010L));
+        inOrder.verify(mv).visitInsn(eq(L2D));
+        inOrder.verify(mv).visitVarInsn(eq(DSTORE), eq(0));
+
+        inOrder.verify(mv).visitFieldInsn(
+                eq(GETSTATIC),
+                eq("java/lang/System"),
+                eq("out"),
+                eq("Ljava/io/PrintStream;"));
+        inOrder.verify(mv).visitInsn(eq(ICONST_3));
+        inOrder.verify(mv).visitInsn(eq(I2D));
+        inOrder.verify(mv).visitVarInsn(eq(DSTORE), eq(0));
+        inOrder.verify(mv).visitMethodInsn(
+                eq(INVOKEVIRTUAL),
+                eq("java/io/PrintStream"),
+                eq("println"),
+                eq("(D)V"),
+                eq(false));
+    }
+
+    @Test
     public void assignmentNumericTest1() {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + (tmpL |= tmpL ^= tmpL &= 0x3f1)");

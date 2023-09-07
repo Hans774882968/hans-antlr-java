@@ -72,6 +72,9 @@ public class AssignmentExpressionGenerator implements Opcodes {
             Type lhsType = currentAssignmentExpression.getVariable().getType();
             Type rhsType = currentAssignmentExpression.getRhsType();
 
+            if (sign == AssignmentSign.ASSIGN) {
+                mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(lhsType, true));
+            }
             if (sign == AssignmentSign.POW) {
                 mv.visitInsn(rhsType.getToDoubleOpcode());
                 ClassType owner = new ClassType("java.lang.Math");

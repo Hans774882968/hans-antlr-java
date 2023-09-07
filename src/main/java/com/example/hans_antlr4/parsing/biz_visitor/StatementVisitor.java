@@ -72,7 +72,7 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
     private void logVariableDeclarationStatementFound(TerminalNode varTerminalNode, Expression expression) {
         final int line = varTerminalNode.getSymbol().getLine();
-        log.info("OK: Define variable '{}' with type '{}' at line {}",
+        log.debug("OK: Define variable '{}' with type '{}' at line {}",
                 varTerminalNode.getText(), expression.getType(), line);
     }
 

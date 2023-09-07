@@ -9,6 +9,40 @@ import com.example.hans_antlr4.exception.IllegalShiftTypeException;
 
 public class TypeIncompatibleExceptionTest {
     @Test
+    public void assignNumericToNumericTest() {
+        String[] assignmentExceptionCodes = {
+                "var x = 12\nx = 13L\nprint x",
+                "var x = 12\nx = 1.4f\nprint x",
+                "var x = 12\nx = 1.5\nprint x",
+                "var x = 13L\nx = 1.4f\nprint x",
+                "var x = 13L\nx = 1.5\nprint x",
+                "var x = 1.4f\nx = 1.5\nprint x",
+        };
+        for (String code : assignmentExceptionCodes) {
+            Assert.assertThrows(AssignmentLhsAndRhsTypeIncompatibleException.class, () -> {
+                TestUtils.getStatementsFromCode(code);
+            });
+        }
+    }
+
+    @Test
+    public void assignNumericToStringTest() {
+        String[] assignmentExceptionCodes = {
+                "var x = \"str\"\nx = true\nprint x",
+                "var x = \"str\"\nx = false\nprint x",
+                "var x = \"str\"\nx = 12\nprint x",
+                "var x = \"str\"\nx = 12L\nprint x",
+                "var x = \"str\"\nx = 1.3f\nprint x",
+                "var x = \"str\"\nx = 1.4\nprint x",
+        };
+        for (String code : assignmentExceptionCodes) {
+            Assert.assertThrows(AssignmentLhsAndRhsTypeIncompatibleException.class, () -> {
+                TestUtils.getStatementsFromCode(code);
+            });
+        }
+    }
+
+    @Test
     public void assignStringToNumericTest() {
         String[] assignmentExceptionCodes = {
                 "var x = 12\nx = \"x\"\nprint x",

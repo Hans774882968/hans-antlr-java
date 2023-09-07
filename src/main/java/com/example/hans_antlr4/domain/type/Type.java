@@ -15,6 +15,8 @@ public interface Type {
 
     int getToHigherPriorityNumericTypeOpcode(Type targetType);
 
+    int getToHigherPriorityNumericTypeOpcode(Type targetType, boolean silent);
+
     int getToOtherNumericTypeOpcode(Type targetType);
 
     int slotUsage();

@@ -11,6 +11,9 @@ import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.data_processor.ProcessorEntry;
 import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ParseEntry {
     public static CompilationUnit parseFromFilePath(String fileAbsolutePath) throws IOException {
         CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
@@ -37,7 +40,7 @@ public class ParseEntry {
         onParseEnd(compilationUnit);
 
         String treeString = tree.toStringTree(parser);
-        System.out.println(treeString);
+        log.debug(treeString);
 
         return compilationUnit;
     }

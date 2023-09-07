@@ -17,4 +17,7 @@ public class CompilerArguments {
 
     @Parameter(names = "-constantFolding", description = "Enable constant folding optimization (Will be supported after supporting the 'val' statement)")
     private boolean constantFolding = false;
+
+    @Parameter(names = "-debug", description = "Output debug information", hidden = true)
+    private boolean debug = false;
 }

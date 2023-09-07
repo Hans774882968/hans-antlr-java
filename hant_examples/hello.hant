@@ -18,3 +18,10 @@ print "/* 这不是块注释 */"
 print "<div class=\"div1\">\n\t<div></div>\n\t<div></div>\n    <div></div>\n\t<div class=\"pay-money\">\n\t\t实付\n\t\t<span class=\"pay-money-span\" data-nowprice=\"\" data-oldprice=\"\">元</span>\n\t</div>\n</div>"
 print "\u6211\u662f\u4e00\u4F4Dacmer\uD83D\uDE0A" // 我是一位acmer😊
 print "\"abc\" 'def' \'ghi\'"
+
+print "\033[31m红色字符串\033[0m"
+print "\033[32m黄色字符串\033[0m"
+print "\033[33m橙色字符串\033[0m"
+print "\033[34m蓝色字符串\033[0m"
+print "\033[35m紫色字符串\033[0m"
+print "\033[36m青色字符串\033[0m"

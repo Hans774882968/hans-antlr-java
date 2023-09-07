@@ -149,14 +149,19 @@ public enum BuiltInType implements Type {
 
     @Override
     public int getToHigherPriorityNumericTypeOpcode(Type targetType) {
+        return getToHigherPriorityNumericTypeOpcode(targetType, false);
+    }
+
+    @Override
+    public int getToHigherPriorityNumericTypeOpcode(Type targetType, boolean silent) {
         if (!isNumericTypes() || !TypeChecker.isNumericTypes(targetType)) {
-            return Const.INVALID_OPCODE;
+            return silent ? Opcodes.NOP : Const.INVALID_OPCODE;
         }
         if (!toHigherPriorityNumericTypeConvertMap.containsKey(this)) {
-            return Const.INVALID_OPCODE;
+            return silent ? Opcodes.NOP : Const.INVALID_OPCODE;
         }
         HashMap<Type, Integer> mp = toHigherPriorityNumericTypeConvertMap.get(this);
-        return mp.getOrDefault(targetType, Const.INVALID_OPCODE);
+        return mp.getOrDefault(targetType, silent ? Opcodes.NOP : Const.INVALID_OPCODE);
     }
 
     @Override

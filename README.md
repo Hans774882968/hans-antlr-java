@@ -1061,6 +1061,7 @@ fragment ZeroToThree: [0-3];
 2. `-file`参数必须指定。
 3. `-constantFolding`参数：后续将实现`val`语句，`val x = 42`表示`x`为常量，于是只有常量的表达式可以在编译期计算好，最后只输出一条字节码指令。该参数就是常量折叠优化的开关。
 4. 未指定必选参数所导致的`ParameterException`输出帮助信息，其他参数不合法情况只输出`ParameterException`。这个需求点可以依据[参考链接7](https://github.com/cbeust/jcommander/issues/337)来实现。
+5. 实现依据命令行参数设置日志级别。
 
 命令示例：
 
@@ -1084,6 +1085,9 @@ public class CompilerArguments {
 
     @Parameter(names = "-constantFolding", description = "Enable constant folding optimization (Will be supported after supporting the 'val' statement)")
     private boolean constantFolding = false;
+
+    @Parameter(names = "-debug", description = "Output debug information", hidden = true)
+    private boolean debug = false;
 }
 
 public class HantFilePathValidator implements IParameterValidator {
@@ -1127,6 +1131,26 @@ public class App {
             return;
         }
         // ...
+    }
+}
+```
+
+依据[参考链接8](https://www.baeldung.com/logback)实现运行时设置日志级别：
+
+```java
+@Slf4j
+public class App {
+    private static CompilerArguments compilerArguments = new CompilerArguments();
+
+    private static void setLogLevel() {
+        Logger logger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        Level wantLevel = compilerArguments.isDebug() ? Level.DEBUG : Level.INFO;
+        logger.setLevel(wantLevel);
+    }
+
+    public static void main(String[] args) {
+        // ...
+        setLogLevel();
     }
 }
 ```
@@ -1714,6 +1738,24 @@ public class HansAntlr4Test {
         verify(mv, times(0)).visitVarInsn(eq(Opcodes.ASTORE), anyInt());
         verify(mv, times(1)).visitIntInsn(eq(Opcodes.SIPUSH), anyInt());
         verify(mv, times(0)).visitLdcInsn(anyString());
+    }
+}
+```
+
+为了验证字节码的生成顺序符合预期，可以使用`Mockito`提供的`InOrder`类。示例：
+
+```java
+public class ExpressionTypeCastTest implements Opcodes {
+    @Test
+    public void arithmeticExpressionTypeCastTest() {
+        MethodVisitor mv = TestUtils.mockGenerateBytecode(statements, scope);
+        InOrder inOrder = inOrder(mv);
+
+        inOrder.verify(mv).visitLdcInsn(eq(63L));
+        inOrder.verify(mv).visitVarInsn(eq(LSTORE), eq(0));
+        inOrder.verify(mv).visitLdcInsn(eq(0.3));
+        inOrder.verify(mv).visitVarInsn(eq(DSTORE), eq(2));
+        // ...
     }
 }
 ```
@@ -3892,11 +3934,120 @@ print ans // 887711275
 
 ## Part15：1-支持long、float、double、boolean
 
-TODO
+到目前为止`hant`仅支持`int`类型和字符串类型。是时候支持其他的原始类型了！这是本项目最难实现的一部分了，建议萌新查看[这个版本对比链接](https://github.com/Hans774882968/hans-antlr-java/compare/8df8d734b2ba5cf49cb722684948c4b845a476ce...3661533ca0a4b103aed76de92a5e7f625eee1c6d)进行学习。
+
+`hant`是强类型语言，这意味着每个表达式的类型都可以在编译时推断出。为了支持类型推断，我们的改动点主要有：
+
+1. 从源代码中读取立即数的类型信息。
+2. 在各种`Expression`中实现类型推断。
+3. 在generator中，根据`Expression`的类型推断结果来选择生成对应的指令。如果需要类型转换，还需要生成`I2L`等类型转换指令。
+
+为了推断出立即数的类型，我们需要像Java一样，支持在源代码层面给立即数添加类型信息。在此约定：`0x3f`、`0x3fL`、`1.2f`、`1.0`、`1.0d`的类型分别为`int, long, float, double, double`。另外，我们不妨顺便支持2进制、8进制和16进制，前缀分别为`0b, 0o, 0x`，其中8进制的前缀和Java的不一样，这是因为之前定义的10进制数的文法为`NUMBER: [0-9]+;`，为了改动方便，我们约定8进制的前缀不是数字0。所以在`hant`中，`0123`是10进制数。
+
+参考[Java9语法规则的antlr描述](https://github.com/antlr/grammars-v4/blob/master/java/java9/Java9Lexer.g4)修改文法：
+
+```g4
+NUMBER:
+	IntegerOrDecimalLiteral
+	| HexIntegerLiteral
+	| OctalIntegerLiteral
+	| BinaryIntegerLiteral;
+IntegerOrDecimalLiteral: [0-9.]+ [lLfFdD]?;
+HexIntegerLiteral: '0' [xX] HexDigit+ [lL]?;
+OctalIntegerLiteral: '0' [oO] [0-7]+ [lL]?;
+BinaryIntegerLiteral: '0' [bB] [01]+ [lL]?;
+```
+
+接下来需要在visitor中提取立即数的类型信息。因为我们没有改造`Value`类，所以传入`Value`类的字符串必须没有类型后缀，所以我们需要一些工具方法，来完成立即数的类型判断、提取出无类型后缀的立即数字符串等工作。
+
+```java
+public Expression visitValue(HansAntlrParser.ValueContext ctx) {
+    String value = ctx.getText();
+    Type type = TypeResolver.getFromValue(value);
+    // 约定：getValueFromString 调用时已经没有 typeSuffix
+    String pureNumber = HantNumber.getStringWithoutTypeSuffix(value);
+    return new Value(type, pureNumber);
+}
+```
+
+[上述新增的工具类`src\main\java\com\example\hans_antlr4\utils\HantNumber.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/utils/HantNumber.java)，代码较长就不贴出啦。
+
+generator的改动点主要是，根据推断好的类型信息来决定要生成的指令。对于最简单的`if-else`判断，可以参考[原项目](https://juejin.cn/post/6844903671692541960)，定义一个枚举`TypeSpecificOpcodes`，里面列举了尽量多的可能有多种类型的指令，来避免写大量`if-else`。但对于其他更复杂的情况（比如后文要实现的连续赋值语句的隐式类型转换特性），还是得老实写`if-else`。
+
+```java
+@AllArgsConstructor
+@Getter
+public enum TypeSpecificOpcodes {
+    INT(ILOAD, ISTORE, IRETURN, DUP, I2D, D2I, NOP, INEG, IMUL, IDIV, IREM, IADD, ISUB, ISHL, ISHR, IUSHR, IAND, IXOR,
+            IOR), LONG(LLOAD, LSTORE, LRETURN, DUP2, L2D, D2L, L2I, LNEG, LMUL, LDIV, LREM, LADD, LSUB, LSHL, LSHR,
+                    LUSHR, LAND, LXOR, LOR), FLOAT(FLOAD, FSTORE, FRETURN, DUP, F2D, D2F, F2I, FNEG, FMUL, FDIV, FREM,
+                            FADD, FSUB, -1, -1, -1, -1, -1, -1), DOUBLE(DLOAD, DSTORE, DRETURN, DUP2, NOP, NOP, D2I,
+                                    DNEG, DMUL, DDIV, DREM, DADD, DSUB, -1, -1, -1, -1, -1, -1), VOID(ALOAD, ASTORE,
+                                            RETURN, DUP, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                            -1), OBJECT(ALOAD, ASTORE, ARETURN, DUP, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                                                    -1, -1, -1, -1, -1, -1);
+
+    private final int load;
+    private final int store;
+    private final int ret;
+    private final int dup;
+    private final int toDouble;
+    private final int doubleToThisType;
+    private final int toInt;
+    private final int unaryNegative;
+    private final int mul;
+    private final int div;
+    private final int rem;
+    private final int add;
+    private final int sub;
+    private final int shl;
+    private final int shr;
+    private final int unsignedShr;
+    private final int and;
+    private final int xor;
+    private final int or;
+}
+```
+
+和原项目不同，我对于大部分未定义的指令都给了魔数`-1`。因为`ASM`发现输入的指令号为`-1`时一定会抛出异常，这样我就能发现我的代码存在漏洞，所以我认为原项目全部给0（即`NOP`）会掩盖问题，并不是最好的选择。
+
+接下来改造`BuiltinType`，添加类型相关的方法：
+
+```java
+@AllArgsConstructor
+@Getter
+public enum BuiltInType implements Type {
+    private final TypeSpecificOpcodes opcodes;
+    // 其他方法，比如 getMultiplyOpcode ，就省略了
+    @Override
+    public int getLoadVariableOpcode() {
+        return opcodes.getLoad();
+    }
+
+    @Override
+    public int getStoreVariableOpcode() {
+        return opcodes.getStore();
+    }
+
+    @Override
+    public int getReturnOpcode() {
+        return opcodes.getRet();
+    }
+
+    @Override
+    public int getDupOpcode() {
+        return opcodes.getDup();
+    }
+}
+```
+
+于是generator可以这么使用：`mv.visitInsn(expression.getType().getAndOpcode());`。
+
+另外还需要对`Scope`做一些改造。
 
 > 在局部变量表里，32位以内的类型只占用一个slot（包括`returnAddress`类型），64位的类型(long和double)占用两个slot。
 
-为了支持double类型，我们需要改造一下`Scope.getLocalVariableIndex`，在遍历过程中对使用的slot总数进行累加。
+为了支持`long`和`double`类型，我们需要改造一下`Scope.getLocalVariableIndex`，在遍历过程中对使用的slot总数进行累加。
 
 ```java
 public int getLocalVariableIndex(String varName) {
@@ -3924,49 +4075,353 @@ public int slotUsage() {
 }
 ```
 
-## Part15：2-支持表达式的类型提升
+[相关测试用例：`src\test\java\com\example\hans_antlr4\type\TypeResolverTest.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/type/TypeResolverTest.java)
 
-TODO
+[相关`.hant`测试代码：`hant_examples\type\type.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/type/type.hant)。
 
-我们已经知道，数值类型的隐式类型转换有优先级：`int < long < float < double`。写一段代码来探究其性质：
+```hant
+{
+    var x = true
+    print x
+}
+
+{
+    var x = 2.1
+    var y = 0.6
+    print x + y // float 2.6999998 double 2.7
+}
+```
+
+反编译结果：
 
 ```java
-public class TestLookAtBytecode {
-    public static void main(String[] args) {
-        double d1 = 2.5, d2 = 3.5;
-        float f1 = 4.5f, f2 = 1.5f;
-        long l1 = 5, l2 = 6;
-        int i1 = 3, i2 = 4;
-        // int v1 = l1 * i2; // Type mismatch: cannot convert from long to int
-        double v1 = l1 * l2;
-        long v2 = l1 * i2;
-        // long v3 = f1 * l2; // Type mismatch: cannot convert from float to long
-        float v3 = l1 * l2;
-        System.out.println(v1);
-        System.out.println(v2);
-        System.out.println(v3);
-        int v4 = 0;
-        v4 += f2;
-        long v5 = 0;
-        v5 += d1;
-        System.out.println(v4);
-        System.out.println(v5);
-        int v6 = 0;
-        v6 += i1 * d2;
-        System.out.println(v6);
-        double v7 = 0;
-        v7 += f1 * i2;
-        System.out.println(v7);
+public class type {
+    public static void main(String[] var0) {
+        int var12 = 1;
+        System.out.println((boolean)var12);
+        double var13 = 2.1;
+        double var2 = 0.6;
+        System.out.println(var13 + var2);
     }
 }
 ```
 
-结论：
+## Part15：2-支持表达式的类型提升
 
-1. 某种类型的变量只能被小于等于它等级的类型的变量赋值。
-2. 对于其他赋值运算符，right hand side可以是任意等级类型。
+为了实现方便，编译器的类型系统需要给出许多约定和约束。上文已经介绍了一条约束，就是所有表达式的类型都可以推断。这一节就是要实现表达式的类型推断。我们已经知道，Java数值类型的隐式类型转换有优先级：`int < long < float < double`，这是类型优先级升高的路径。而类型优先级降低的路径需要由强制类型转换来实现。为了实现方便，本项目只实现前半部分，即只提供类型优先级升高的路径，不实现强制类型转换。
 
-关系运算符的隐式类型转换：
+所以我们需要给`BuiltinType`提供数值类型的优先级：
+
+```java
+@AllArgsConstructor
+@Getter
+public enum BuiltInType implements Type {
+    private Double priority;
+}
+```
+
+`byte 10, short 20, int 30, long 40, float 50, double 60, string 70`，其他为`NaN`。
+
+接下来改造`ArithmeticExpression`。类型推断工作在构造函数中完成。
+
+```java
+@Getter
+public abstract class ArithmeticExpression extends Expression {
+    private Expression leftExpression;
+    private Expression rightExpression;
+    private ArithmeticSign sign;
+
+    public ArithmeticExpression(
+            Expression leftExpression,
+            Expression rightExpression,
+            ArithmeticSign sign) {
+        super(getCommonType(leftExpression, rightExpression), null, null);
+        this.leftExpression = leftExpression;
+        this.rightExpression = rightExpression;
+        this.sign = sign;
+    }
+
+    public ArithmeticExpression(
+            Type type,
+            Expression leftExpression,
+            Expression rightExpression,
+            ArithmeticSign sign) {
+        super(type, null, null);
+        this.leftExpression = leftExpression;
+        this.rightExpression = rightExpression;
+        this.sign = sign;
+    }
+
+    private static Type getCommonType(Expression leftExpression, Expression rightExpression) {
+        Type leftType = leftExpression.getType();
+        Type rightType = rightExpression.getType();
+        if (leftType == BuiltInType.STRING || rightType == BuiltInType.STRING) {
+            return BuiltInType.STRING;
+        }
+        if (leftType.getPriority().compareTo(rightType.getPriority()) >= 0) {
+            return leftType;
+        }
+        return rightType;
+    }
+}
+```
+
+接下来写一段代码来探究存在隐式类型转换的场景下生成的字节码。
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        int tmpI = 0x3f;
+        double tmpD = 2.7;
+        System.out.println(tmpI * tmpD);
+    }
+}
+```
+
+```
+L9
+    LINENUMBER 17 L9
+    GETSTATIC java/lang/System.out : Ljava/io/PrintStream;
+    ILOAD 5
+    I2D
+    DLOAD 6
+    DMUL
+    INVOKEVIRTUAL java/io/PrintStream.println (D)V
+```
+
+结论：低优先级的类型需要先转换为高优先级的类型，再生成高优先级的类型的运算指令。
+
+所以我们需要给`BuiltinType`新增`getToHigherPriorityNumericTypeOpcode()`。
+
+```java
+public enum BuiltInType implements Type {
+    private static final HashMap<Type, HashMap<Type, Integer>> toHigherPriorityNumericTypeConvertMap = new HashMap<Type, HashMap<Type, Integer>>() {
+        {
+            put(INT, new HashMap<Type, Integer>() {
+                {
+                    put(INT, Opcodes.NOP);
+                    put(LONG, Opcodes.I2L);
+                    put(FLOAT, Opcodes.I2F);
+                    put(DOUBLE, Opcodes.I2D);
+                }
+            });
+            put(LONG, new HashMap<Type, Integer>() {
+                {
+                    put(INT, Opcodes.NOP);
+                    put(LONG, Opcodes.NOP);
+                    put(FLOAT, Opcodes.L2F);
+                    put(DOUBLE, Opcodes.L2D);
+                }
+            });
+            put(FLOAT, new HashMap<Type, Integer>() {
+                {
+                    put(INT, Opcodes.NOP);
+                    put(LONG, Opcodes.NOP);
+                    put(FLOAT, Opcodes.NOP);
+                    put(DOUBLE, Opcodes.F2D);
+                }
+            });
+            put(DOUBLE, new HashMap<Type, Integer>() {
+                {
+                    put(INT, Opcodes.NOP);
+                    put(LONG, Opcodes.NOP);
+                    put(FLOAT, Opcodes.NOP);
+                    put(DOUBLE, Opcodes.NOP);
+                }
+            });
+        }
+    };
+
+    @Override
+    public int getToHigherPriorityNumericTypeOpcode(Type targetType) {
+        if (!isNumericTypes() || !TypeChecker.isNumericTypes(targetType)) {
+            return Const.INVALID_OPCODE;
+        }
+        if (!toHigherPriorityNumericTypeConvertMap.containsKey(this)) {
+            return Const.INVALID_OPCODE;
+        }
+        HashMap<Type, Integer> mp = toHigherPriorityNumericTypeConvertMap.get(this);
+        return mp.getOrDefault(targetType, Const.INVALID_OPCODE);
+    }
+}
+```
+
+于是generator可以这么使用：`leftType.getToHigherPriorityNumericTypeOpcode(rightType)`。这个改动会带来不少多余的`NOP`指令，暂时不优化。
+
+其他`Arithmetic`表达式和`Shift`表达式的改动分别如下：
+
+```java
+public class ExpressionGenerator implements Opcodes {
+    private void evaluateArithmeticComponents(ArithmeticExpression expression) {
+        Expression leftExpression = expression.getLeftExpression();
+        Expression rightExpression = expression.getRightExpression();
+        Type leftType = leftExpression.getType();
+        Type rightType = rightExpression.getType();
+        leftExpression.accept(this);
+        mv.visitInsn(leftType.getToHigherPriorityNumericTypeOpcode(rightType));
+        rightExpression.accept(this);
+        mv.visitInsn(rightType.getToHigherPriorityNumericTypeOpcode(leftType));
+    }
+
+    private void evaluateShiftComponents(Shift shift) {
+        shiftExpressionGenerator.evaluateShiftComponents(shift);
+    }
+}
+
+@AllArgsConstructor
+public class ShiftExpressionGenerator implements Opcodes {
+    private ExpressionGenerator parent;
+    private MethodVisitor mv;
+
+    public void evaluateShiftComponents(Shift shift) {
+        Expression leftExpression = shift.getLeftExpression();
+        Expression rightExpression = shift.getRightExpression();
+        leftExpression.accept(parent);
+        rightExpression.accept(parent);
+        Type rightType = rightExpression.getType();
+        mv.visitInsn(rightType.getToIntOpcode());
+    }
+}
+```
+
+其他`Arithmetic`表达式和`Shift`表达式对类型的要求是不一样的，为了实现方便，在此我们约定：不在generator处校验类型，generator之前的环节已经保证各种`Expression`的类型是合法的。类型校验逻辑将在下文《支持类型检查》讲解。
+
+`Pow`运算符是用`Math.pow`实现的，其类型转换规则需要特殊约定：
+
+1. 和其他二元运算符一样，返回值类型取两边优先级最大者。
+2. 先转`double`再传入`Math.pow`。
+
+`Pow`运算符实现改动如下：
+
+```java
+public void generate(Pow expression) {
+    Expression leftExpression = expression.getLeftExpression();
+    Expression rightExpression = expression.getRightExpression();
+    leftExpression.accept(this);
+    mv.visitInsn(leftExpression.getType().getToDoubleOpcode());
+    rightExpression.accept(this);
+    mv.visitInsn(rightExpression.getType().getToDoubleOpcode());
+    ClassType owner = new ClassType("java.lang.Math");
+    String fieldDescriptor = owner.getInternalName(); // "java/lang/Math"
+    String descriptor = "(DD)D";
+    mv.visitMethodInsn(INVOKESTATIC, fieldDescriptor, "pow", descriptor, false);
+    // 把运算结果的 double 强转为左右侧的最高优先级类型
+    mv.visitInsn(expression.getType().getDoubleToThisTypeOpcode());
+}
+```
+
+相关测试用例：
+
+1. 直接测试生成的字节码：https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/type/ExpressionTypeCastTest.java
+2. 测试`Expression`对象的类型推断结果：https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/type/TypeInferTest.java
+
+[相关`.hant`测试代码：`hant_examples\type\type_cast.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/type/type_cast.hant)。
+
+### 支持字符串拼接
+
+在原本的实现之前加一个分支，如果推断出的类型为`string`，就导流到本次新增的`StringAppendGenerator`：
+
+```java
+public void generate(Addition expression) {
+    if (expression.getType() == BuiltInType.STRING) {
+        stringAppendGenerator.generate(expression);
+        return;
+    }
+    evaluateArithmeticComponents(expression);
+    mv.visitInsn(expression.getType().getAddOpcode());
+}
+```
+
+我们选择用`StringBuilder`来实现字符串拼接，具体来说只需要实现以下效果：
+
+```java
+StringBuilder sb = new StringBuilder();
+// 生成 leftExpression 的字节码
+sb.append(leftExpression);
+// 生成 rightExpression 的字节码
+sb.append(rightExpression);
+sb.toString(); // toString 的结果入栈即可
+```
+
+用`javap`查看以上代码对应的字节码，即可轻松写出实现代码。
+
+```java
+public void generate(Addition addition) {
+    mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
+    mv.visitInsn(DUP);
+    mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
+
+    Expression leftExpression = addition.getLeftExpression();
+    leftExpression.accept(parent);
+    String leftExprDescriptor = leftExpression.getType().getDescriptor();
+    String descriptor = "(" + leftExprDescriptor + ")Ljava/lang/StringBuilder;";
+    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", descriptor, false);
+
+    Expression rightExpression = addition.getRightExpression();
+    rightExpression.accept(parent);
+    String rightExprDescriptor = rightExpression.getType().getDescriptor();
+    descriptor = "(" + rightExprDescriptor + ")Ljava/lang/StringBuilder;";
+    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", descriptor, false);
+
+    mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+}
+```
+
+### 支持类型检查
+
+我目前想到了两种实现方式：
+
+1. 全部收敛到`TypeChecker`实现，检测时机为visitor遍历时。各种`Expression`的构造函数不再检查类型。
+2. 在各种`Expression`的构造函数中检查，并给`Expression`增加抽象方法`typeCheck`，强制每种后续产生的`Expression`实现这个方法。这种方案要求把待抛出异常`ArithmeticExprLhsAndRhsTypeIncompatibleException`所需的参数都传入构造函数，即时这个类不需要其中某些参数。
+
+因为目前类型检查逻辑很简单，所以我选择了方案1。
+
+```java
+public static boolean arithmeticLhsTypeAndRhsAreCompatible(
+        ArithmeticExpression arithmeticExpression) {
+    ArithmeticSign arithmeticSign = arithmeticExpression.getSign();
+    Type lhsType = arithmeticExpression.getLeftExpression().getType();
+    Type rhsType = arithmeticExpression.getRightExpression().getType();
+    if (arithmeticSign == ArithmeticSign.ADD) {
+        if (lhsType == BuiltInType.STRING || rhsType == BuiltInType.STRING) {
+            return true;
+        }
+        if (isNumericTypes(lhsType)) {
+            return isNumericTypes(rhsType);
+        }
+        if (isNumericTypes(rhsType)) {
+            return isNumericTypes(lhsType);
+        }
+        return lhsType == rhsType;
+    }
+    if (arithmeticSign.isBitwiseSign()) {
+        return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
+    }
+    return isNumericTypes(lhsType) && isNumericTypes(rhsType);
+}
+```
+
+`ExpressionVisitor`使用（仅以`&`为例）：
+
+```java
+@Override
+public And visitAND(HansAntlrParser.ANDContext ctx) {
+    ExpressionContext leftExpressionContext = ctx.expression(0);
+    ExpressionContext rightExpressionContext = ctx.expression(1);
+    Expression leftExpression = leftExpressionContext.accept(this);
+    Expression rightExpression = rightExpressionContext.accept(this);
+    And res = new And(leftExpression, rightExpression);
+    if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
+        int sourceLine = ctx.getStart().getLine();
+        throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
+    }
+    return res;
+}
+```
+
+## Part15：3-支持关系运算符的隐式类型转换
+
+首先写一段代码来探究存在隐式类型转换的关系运算符对应的字节码。
 
 ```java
 public class TestLookAtBytecode {
@@ -4084,7 +4539,7 @@ public class TestLookAtBytecode {
 
 结论：
 
-1. 对于不同数值类型的表达式，会将低优先级的表达式运算结果转化为高等级的类型，即上面的`l2d`指令。
+1. 对于不同数值类型的表达式，会将低优先级的表达式运算结果转化为高优先级的类型，即上面的`l2d`指令。
 2. 对于每种运算符，生成的都是：
 
 ```
@@ -4096,13 +4551,238 @@ public class TestLookAtBytecode {
 ```
 
 这种格式。其中`dcmpxx`对于小于和小于等于是`dcmpg`，对于其他是`dcmpl`；`ifxx`是当前运算符的相反运算符。`float`类型结论完全类似。`long`类型生成的所有`cmp`指令都是`lcmp`。
-## Part15：3-支持关系运算符的隐式类型转换
 
-TODO
+据此改造`ConditionalExpression`：
+
+```java
+@Getter
+public class ConditionalExpression extends Expression {
+    // ...
+    public Type getMaxPriorityNumericType() {
+        Type leftType = leftExpression.getType();
+        Type rightType = rightExpression.getType();
+        if (leftType.getPriority().compareTo(rightType.getPriority()) >= 0) {
+            return leftType;
+        }
+        return rightType;
+    }
+}
+```
+
+接下来看`ConditionalExpressionGenerator`的改造。
+
+生成两侧表达式的逻辑的改动点：
+
+1. 左右侧表达式字节码生成完毕后，需要转为高优先级的类型。
+2. 根据上述字节码给出`lcmp`、`dcmpg`等指令。
+
+```java
+private void generatePrimitivesComparison(ConditionalExpression conditionalExpression) {
+    Expression leftExpression = conditionalExpression.getLeftExpression();
+    Expression rightExpression = conditionalExpression.getRightExpression();
+    CompareSign compareSign = conditionalExpression.getCompareSign();
+    Type maxPriorityNumericType = conditionalExpression.getMaxPriorityNumericType();
+    Type lhsType = leftExpression.getType();
+    Type rhsType = rightExpression.getType();
+    leftExpression.accept(parent);
+    mv.visitInsn(lhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+    rightExpression.accept(parent);
+    mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+    if (maxPriorityNumericType == BuiltInType.INT) {
+        mv.visitInsn(ISUB);
+    }
+    if (maxPriorityNumericType == BuiltInType.LONG) {
+        mv.visitInsn(LCMP);
+    }
+    if (maxPriorityNumericType == BuiltInType.FLOAT) {
+        if (compareSign == CompareSign.LESS || compareSign == CompareSign.LESS_OR_EQUAL) {
+            mv.visitInsn(FCMPG);
+        } else {
+            mv.visitInsn(FCMPL);
+        }
+    }
+    if (maxPriorityNumericType == BuiltInType.DOUBLE) {
+        if (compareSign == CompareSign.LESS || compareSign == CompareSign.LESS_OR_EQUAL) {
+            mv.visitInsn(DCMPG);
+        } else {
+            mv.visitInsn(DCMPL);
+        }
+    }
+}
+```
+
+将bool值压入栈顶的逻辑也需要调整。原本的实现是：
+
+```java
+Label endLabel = new Label();
+Label trueLabel = new Label();
+mv.visitJumpInsn(compareSign.getOpcode(), trueLabel);
+mv.visitInsn(ICONST_0);
+mv.visitJumpInsn(GOTO, endLabel);
+mv.visitLabel(trueLabel);
+mv.visitInsn(ICONST_1);
+mv.visitLabel(endLabel);
+```
+
+为了兼容`lcmp`等指令，我们不得不把这段逻辑改写成下面这段等价的逻辑：
+
+```java
+Label endLabel = new Label();
+Label falseLabel = new Label();
+// getOppositeCompareSign 获取相反运算符，比如 > 的相反运算符为 <=。
+mv.visitJumpInsn(compareSign.getOppositeCompareSign().getOpcode(), falseLabel);
+mv.visitInsn(ICONST_1);
+mv.visitJumpInsn(GOTO, endLabel);
+mv.visitLabel(falseLabel);
+mv.visitInsn(ICONST_0);
+mv.visitLabel(endLabel);
+```
+
+[相关单测用例：`src\test\java\com\example\hans_antlr4\type\RelationalExpressionTypeCastTest.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/type/RelationalExpressionTypeCastTest.java)
+
+[相关`.hant`测试代码：`hant_examples\if\relational_exp.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/if/relational_exp.hant)
+
+### 支持类型检查
+
+和表达式相同，在visitor做检查：
+
+```java
+public ConditionalExpression getConditionalExpression(
+        ExpressionContext leftExpressionContext,
+        ExpressionContext rightExpressionContext,
+        TerminalNode terminalNode) {
+    // ...
+    Type lhsType = leftExpression.getType();
+    Type rhsType = rightExpression.getType();
+    if (!TypeChecker.conditionalLhsTypeAndRhsAreCompatible(lhsType, rhsType)) {
+        int sourceLine = leftExpressionContext.getStart().getLine();
+        throw new ConditionalExprLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sourceLine);
+    }
+    // ...
+}
+```
+
+类型相容判定：
+
+```java
+public static boolean conditionalLhsTypeAndRhsAreCompatible(Type lhsType, Type rhsType) {
+    if (isNumericTypes(lhsType) && isNumericTypes(rhsType)) {
+        return true;
+    }
+    return lhsType == rhsType;
+}
+```
 
 ## Part15：4-支持赋值运算符的隐式类型转换
 
-TODO
+照例写demo代码查看赋值运算符的字节码：
+
+```java
+public class TestLookAtBytecode {
+    public static void main(String[] args) {
+        double d1 = 2.5, d2 = 3.5;
+        float f1 = 4.5f, f2 = 1.5f;
+        long l1 = 5, l2 = 6;
+        int i1 = 3, i2 = 4;
+        // int v1 = l1 * i2; // Type mismatch: cannot convert from long to int
+        double v1 = l1 * l2;
+        long v2 = l1 * i2;
+        // long v3 = f1 * l2; // Type mismatch: cannot convert from float to long
+        float v3 = l1 * l2;
+        System.out.println(v1);
+        System.out.println(v2);
+        System.out.println(v3);
+        int v4 = 0;
+        v4 += f2;
+        long v5 = 0;
+        v5 += d1;
+        System.out.println(v4);
+        System.out.println(v5);
+        int v6 = 0;
+        v6 += i1 * d2;
+        System.out.println(v6);
+        double v7 = 0;
+        v7 += f1 * i2;
+        System.out.println(v7);
+    }
+}
+```
+
+为节省篇幅，就不贴出字节码了，总结一下结论：
+
+1. 某种类型的变量只能被小于等于它等级的类型的变量赋值。
+2. 对于`=`以外的赋值运算符，right hand side（后文简称LHS和RHS）可以是任意等级类型，额外生成一条RHS类型强转LHS类型的指令即可。
+3. 对于`=`赋值运算符，RHS类型优先级不能高于LHS类型。
+
+另外，因为`hant`是强类型语言，所以我们约定：任何赋值运算符不会改变变量的类型。这对于简化实现是至关重要的。
+
+对`AssignmentExpressionGenerator`的改造比较多，不贴代码了，总结一下关键点：
+
+1. 设`maxPriorityNumericType`为LHS、RHS中优先级更高的数值类型。
+2. `=`以外的赋值运算符（二元赋值运算符）事先把LHS入栈阶段：`**=`要生成LHS转`double`指令，非shift赋值运算符要生成LHS转`maxPriorityNumericType`指令，shift赋值运算符无动作。
+3. 计算阶段：对于`**=`，要记得RHS也要转`double`，计算完毕后从`double`转为LHS类型；对于非shift赋值运算符，要生成RHS转`maxPriorityNumericType`指令，计算完毕后从`maxPriorityNumericType`转LHS；对于shift运算符，要将RHS强转为int（查看Java字节码可知shift运算符会生成to int的指令），计算完毕后因为之前没有转换入栈的LHS的类型，所以无动作。
+4. 计算完毕阶段：`DUP`指令根据LHS类型，调整为`DUP or DUP2`。`STORE`指令也依据LHS类型。
+
+相关单测用例：
+
+1. [`src\test\java\com\example\hans_antlr4\assignment\AssignmentWithTypesTest.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/assignment/AssignmentWithTypesTest.java)
+2. [`src\test\java\com\example\hans_antlr4\type\TypeIncompatibleExceptionTest.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/type/TypeIncompatibleExceptionTest.java)
+
+相关`.hant`测试代码：
+
+1. [`hant_examples\expression\assignment.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/expression/assignment.hant)
+2. [`hant_examples\for\print_graphics.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/for/print_graphics.hant)
+
+### 支持类型检查
+
+和表达式、关系运算符相同，在visitor做检查：
+
+```java
+@Override
+public AssignmentExpression visitASSIGNMENT(HansAntlrParser.ASSIGNMENTContext ctx) {
+    // ...
+    Type lhsType = localVariable.getType();
+    Type rhsType = expression.getType();
+    if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(assignmentSign, lhsType, rhsType)) {
+        int sourceLine = ctx.AssignmentOperator.getLine();
+        throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, assignmentSign, sourceLine);
+    }
+    return new AssignmentExpression(localVariable, assignmentSign, expression);
+}
+```
+
+类型相容判定：
+
+1. `+=`如果LHS是`string`，则RHS可以是任意类型。
+2. `=`：如果LHS是数值类型，那么LHS类型优先级>=RHS；否则要求LHS、RHS类型相同。
+3. 位运算符号：要求LHS和RHS都是整数。
+
+```java
+public static boolean assignmentLhsTypeAndRhsAreCompatible(
+        AssignmentSign assignmentSign,
+        Type lhsType,
+        Type rhsType) {
+    if (assignmentSign == AssignmentSign.ADD) {
+        if (isNumericTypes(lhsType)) {
+            return isNumericTypes(rhsType);
+        }
+        if (lhsType == BuiltInType.STRING) {
+            return true;
+        }
+        return lhsType == rhsType;
+    }
+    if (assignmentSign == AssignmentSign.ASSIGN) {
+        if (isNumericTypes(lhsType)) {
+            return isNumericTypes(rhsType) && lhsType.getPriority().compareTo(rhsType.getPriority()) >= 0;
+        }
+        return lhsType == rhsType;
+    }
+    if (assignmentSign.isBitwiseSign()) {
+        return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
+    }
+    return isNumericTypes(lhsType) && isNumericTypes(rhsType);
+}
+```
 
 ## print语句支持换行与不换行
 
@@ -4188,3 +4868,4 @@ TODO
 5. 【小白打造编译器系列7】Anltr 重构脚本语言：https://blog.csdn.net/weixin_41960890/article/details/105263228
 6. https://stackoverflow.com/questions/4997325/java-how-to-create-unicode-from-string-u00c3-etc/4997427
 7. `jcommander`必选参数未提供时如何自动输出帮助信息：https://github.com/cbeust/jcommander/issues/337
+8. `logback`运行时修改日志级别：https://www.baeldung.com/logback
