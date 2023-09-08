@@ -1,0 +1,12 @@
+var stp = 0.0005
+var tmp = 0
+var D = 1d
+for var i = 0d; i <= D; i += stp {
+    for var j = 0d; j <= D; j += stp {
+        if (i - D / 2) ** 2 + (j - D / 2) ** 2 <= D ** 2 / 4 {
+            tmp += 1
+        }
+    }
+}
+var ans = 4 * tmp / (D / stp + 1) ** 2
+print ans // 0.0005: 3.1384098055919565 0.00025: 3.1400150462259466

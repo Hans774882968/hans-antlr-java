@@ -1760,6 +1760,42 @@ public class ExpressionTypeCastTest implements Opcodes {
 }
 ```
 
+为了实现黑盒测试，可以使用：
+
+```xml
+<dependency>
+    <groupId>uk.org.webcompere</groupId>
+    <artifactId>system-stubs-junit4</artifactId>
+    <version>2.1.1</version>
+</dependency>
+```
+
+黑盒测试代码示例：
+
+```java
+package com.example.hans_antlr4.blackbox_tests;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import com.example.hans_antlr4.TestUtils;
+
+import uk.org.webcompere.systemstubs.stream.SystemOut;
+
+public class HantBlackBoxTest {
+    @Test
+    public void piEstimatedValueTest() throws Exception {
+        SystemOut systemOut = new SystemOut();
+        systemOut.execute(() -> {
+            TestUtils.runBlackBox("hant_examples\\acm_and_leetcode\\pi.hant");
+        });
+        systemOut.getLines().findFirst().ifPresent(v -> {
+            Assert.assertTrue(v.startsWith("3.138409"));
+        });
+    }
+}
+```
+
 值得注意的是，`Mockito`依赖`cglib`实现hook，导致Java17报非法反射的错。对于VSCode的`Test Runner for Java`插件，可以通过在`.vscode\settings.json`设置`--add-opens`解决：
 
 ```json
@@ -3934,7 +3970,10 @@ print ans // 887711275
 
 ## Part15：1-支持long、float、double、boolean
 
-到目前为止`hant`仅支持`int`类型和字符串类型。是时候支持其他的原始类型了！这是本项目最难实现的一部分了，建议萌新查看[这个版本对比链接](https://github.com/Hans774882968/hans-antlr-java/compare/8df8d734b2ba5cf49cb722684948c4b845a476ce...3661533ca0a4b103aed76de92a5e7f625eee1c6d)进行学习。
+到目前为止`hant`仅支持`int`类型和字符串类型。是时候支持其他的原始类型了！这是本项目最难实现的一部分了，建议萌新查看以下版本对比链接进行学习：
+
+1. https://github.com/Hans774882968/hans-antlr-java/compare/8df8d734b2ba5cf49cb722684948c4b845a476ce...3661533ca0a4b103aed76de92a5e7f625eee1c6d
+2. https://github.com/Hans774882968/hans-antlr-java/commit/bf01ab45689edd824d77591eee8b889f97a97662
 
 `hant`是强类型语言，这意味着每个表达式的类型都可以在编译时推断出。为了支持类型推断，我们的改动点主要有：
 
@@ -4642,6 +4681,102 @@ mv.visitLabel(endLabel);
 
 [相关`.hant`测试代码：`hant_examples\if\relational_exp.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/if/relational_exp.hant)
 
+### 支持字符串拼接
+
+和加法表达式支持字符串拼接的逻辑类似，我们在`AssignmentExpressionGenerator.java`的`if (sign == AssignmentSign.ADD)`处加一个分支，如果LHS类型是`string`，就导流到本次新增的`StringAppendGenerator`：
+
+```java
+if (sign == AssignmentSign.ADD) {
+    if (lhsType == BuiltInType.STRING) {
+        new StringAppendGenerator(parent, mv).generate(currentAssignmentExpression);
+    } else {
+        Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
+        generateCastToHigherPriorityTypeInsn(rhsType, maxPriorityNumericType);
+        mv.visitInsn(maxPriorityNumericType.getAddOpcode());
+        generateCastToOtherPriorityTypeInsn(maxPriorityNumericType, lhsType);
+    }
+}
+```
+
+字符串`+=`仍然可以用`StringBuilder`实现，但这次我们换一种方式。根据[参考链接9](https://juejin.cn/post/7182872058743750715)，从Java9开始，为了对用户透明地支持性能优化，字符串拼接的字节码实现由`StringBuilder`改为`动态生成的拼接函数(a, b, c)`。
+
+> 在`new StringBuilder().append(a).append(b).toString()`的过程中可能会发生两次内存分配：
+
+> - builder.append(a) 时内部空间不足，需要扩容；
+> - builder.append(b) 时内部空间又不足了，需要再次扩容。
+
+我们只要给 StringBuilder 指定一个初始容量即可克服这一点，但不够方便，把这个过程交给JVM即可实现对用户透明地支持性能优化。具体来说，Java9里字符串拼接的字节码使用了`InvokeDynamic`，指向了`makeConcatWithConstants`方法。
+
+我们写一段代码来探究其字节码：
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        String x0 = "x", x1 = "y";
+        x0 += x1;
+    }
+}
+```
+
+IDEA ASM Bytecode Viewer插件查看编译结果：
+
+```
+   L0
+    LINENUMBER 4 L0
+    LDC "x"
+    ASTORE 1
+   L1
+    LDC "y"
+    ASTORE 2
+   L3
+    LINENUMBER 5 L3
+    ALOAD 1
+    ALOAD 2
+    INVOKEDYNAMIC makeConcatWithConstants(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String; [
+      // handle kind 0x6 : INVOKESTATIC
+      java/lang/invoke/StringConcatFactory.makeConcatWithConstants(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
+      // arguments:
+      "\u0001\u0001"
+    ]
+    ASTORE 1
+```
+
+插件给出的对应的Java ASM代码：
+
+```java
+methodVisitor.visitVarInsn(ALOAD, 1);
+methodVisitor.visitVarInsn(ALOAD, 2);
+methodVisitor.visitInvokeDynamicInsn("makeConcatWithConstants", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", new Handle(Opcodes.H_INVOKESTATIC, "java/lang/invoke/StringConcatFactory", "makeConcatWithConstants", "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;", false), new Object[]{"\u0001\u0001"});
+methodVisitor.visitVarInsn(ASTORE, 1);
+```
+
+很快就能总结出`mv.visitInvokeDynamicInsn`需要的几个参数：
+
+1. `String descriptor`：`lhsType.getDescriptor()`和`rhsType.getDescriptor()`。
+2. `Handle bootstrapMethodHandle`：可以直接使用上面给出的Java ASM代码，也可以在Stack Overflow或者GitHub开源代码中找到`Handle`实例化的最佳实践。具体见我下面贴出的代码。
+3. `Object... bootstrapMethodArguments`：根据上面的字节码，因为我们只需要处理LHS和RHS两个字符串，所以传入`new Object[]{"\u0001\u0001"}`就行。
+
+```java
+public void generate(AssignmentExpression assignmentExpression) {
+    if (assignmentExpression.getSign() != AssignmentSign.ADD) {
+        throw new RuntimeException(
+                "String append operation not supported for operator " + assignmentExpression.getSign());
+    }
+    Handle handle = new Handle(
+            H_INVOKESTATIC,
+            org.objectweb.asm.Type.getInternalName(java.lang.invoke.StringConcatFactory.class),
+            "makeConcatWithConstants",
+            MethodType.methodType(
+                    CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class,
+                    String.class, Object[].class).toMethodDescriptorString(),
+            false);
+    Type lhsType = assignmentExpression.getVariable().getType();
+    Type rhsType = assignmentExpression.getRhsType();
+    String descriptor = "(" + lhsType.getDescriptor() + rhsType.getDescriptor() + ")Ljava/lang/String;";
+    mv.visitInvokeDynamicInsn("makeConcatWithConstants", descriptor, handle, new Object[] { "\u0001\u0001" });
+}
+```
+
 ### 支持类型检查
 
 和表达式相同，在visitor做检查：
@@ -4869,3 +5004,4 @@ TODO
 6. https://stackoverflow.com/questions/4997325/java-how-to-create-unicode-from-string-u00c3-etc/4997427
 7. `jcommander`必选参数未提供时如何自动输出帮助信息：https://github.com/cbeust/jcommander/issues/337
 8. `logback`运行时修改日志级别：https://www.baeldung.com/logback
+9. 字符串拼接的底层原理：https://juejin.cn/post/7182872058743750715

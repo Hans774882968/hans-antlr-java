@@ -1,0 +1,12 @@
+var n = 2
+var l = 1.0
+var r = 1.0 * n
+for ; r - l >= 0.00000001; {
+    var mid = (l + r) / 2.0
+    if mid ** 2 <= n l = mid
+    else r = mid
+}
+var ans1 = l
+var ans2 = n ** 0.5
+print ans1 // 1.4142135605216026
+print ans2 // 1.4142135623730951

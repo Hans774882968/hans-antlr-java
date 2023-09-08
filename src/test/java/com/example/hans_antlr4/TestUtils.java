@@ -4,6 +4,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.objectweb.asm.MethodVisitor;
 
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
@@ -45,5 +46,12 @@ public class TestUtils {
             statement.accept(statementGenerator);
         }
         return mv;
+    }
+
+    public static void runBlackBox(String filePath) {
+        App.main(ArrayUtils.addAll(new String[] {
+                "-runMode",
+                "-file",
+        }, filePath));
     }
 }

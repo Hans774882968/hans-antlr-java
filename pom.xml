@@ -20,6 +20,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>uk.org.webcompere</groupId>
+      <artifactId>system-stubs-junit4</artifactId>
+      <version>2.1.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.beust</groupId>
       <artifactId>jcommander</artifactId>
       <version>1.82</version>

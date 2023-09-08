@@ -21,29 +21,30 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class App {
-    private static CompilerArguments compilerArguments = new CompilerArguments();
+    private CompilerArguments compilerArguments = new CompilerArguments();
 
-    private static void setLogLevel() {
+    private void setLogLevel() {
         Logger logger = (Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         Level wantLevel = compilerArguments.isDebug() ? Level.DEBUG : Level.INFO;
         logger.setLevel(wantLevel);
     }
 
-    private static void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
+    private void saveBytecodeToClassFile(String fileAbsolutePath, byte[] byteCode) throws IOException {
         final String classFile = StringUtils.replace(fileAbsolutePath, ".hant", ".class");
         @Cleanup
         OutputStream os = new FileOutputStream(classFile);
         os.write(byteCode);
     }
 
-    private static void runClass(byte[] byteCode) {
+    private void runClass(byte[] byteCode) {
         CodeRunner.run(byteCode);
     }
 
     public static void main(String[] args) {
+        App app = new App();
         JCommander commander = JCommander.newBuilder()
                 .programName("hant-compiler (java -jar <hant-compiler-jar-path>)")
-                .addObject(compilerArguments)
+                .addObject(app.compilerArguments)
                 .build();
         try {
             commander.parse(args);
@@ -55,17 +56,17 @@ public class App {
                 throw e;
             }
         }
-        if (compilerArguments.isHelp()) {
+        if (app.compilerArguments.isHelp()) {
             commander.usage();
             return;
         }
-        setLogLevel();
+        app.setLogLevel();
 
-        String inputFilePath = compilerArguments.getFilePath();
+        String inputFilePath = app.compilerArguments.getFilePath();
         File hantFile = new File(inputFilePath);
         String fileName = hantFile.getName();
         String fileAbsolutePath = hantFile.getAbsolutePath();
-        log.info("trying to parse hant file \"{}\" ...", fileAbsolutePath);
+        log.debug("trying to parse hant file \"{}\" ...", fileAbsolutePath);
         CompilationUnit compilationUnit = null;
         try {
             compilationUnit = ParseEntry.parseFromFilePath(fileAbsolutePath);
@@ -77,10 +78,10 @@ public class App {
         final byte[] byteCode = compilationUnit.generateBytecode(StringUtils.remove(fileName, ".hant"));
 
         try {
-            if (compilerArguments.isRunMode()) {
-                runClass(byteCode);
+            if (app.compilerArguments.isRunMode()) {
+                app.runClass(byteCode);
             } else {
-                saveBytecodeToClassFile(fileAbsolutePath, byteCode);
+                app.saveBytecodeToClassFile(fileAbsolutePath, byteCode);
             }
         } catch (IOException e) {
             e.printStackTrace();
