@@ -23,6 +23,96 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitCompilationUnit(HansAntlrParser.CompilationUnitContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#functions}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctions(HansAntlrParser.FunctionsContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#function}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunction(HansAntlrParser.FunctionContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#functionDeclaration}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionDeclaration(HansAntlrParser.FunctionDeclarationContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#functionName}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionName(HansAntlrParser.FunctionNameContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#functionParameterList}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionParameterList(HansAntlrParser.FunctionParameterListContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#functionParameter}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionParameter(HansAntlrParser.FunctionParameterContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#type}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitType(HansAntlrParser.TypeContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#primitiveType}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimitiveType(HansAntlrParser.PrimitiveTypeContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#classType}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitClassType(HansAntlrParser.ClassTypeContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#qualifiedName}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitQualifiedName(HansAntlrParser.QualifiedNameContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#statements}.
 	 * 
 	 * @param ctx
@@ -270,6 +360,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitXOR(HansAntlrParser.XORContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code FunctionCall}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionCall(HansAntlrParser.FunctionCallContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code UNARY}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -287,6 +387,24 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#funcCall}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitFuncCall(HansAntlrParser.FuncCallContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#argumentList}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitArgumentList(HansAntlrParser.ArgumentListContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#print}.

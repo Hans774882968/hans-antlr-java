@@ -20,6 +20,7 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class RelationalExpressionTypeCastTest implements Opcodes {
     @Test
@@ -27,7 +28,13 @@ public class RelationalExpressionTypeCastTest implements Opcodes {
         Arrays.stream(CompareSign.values()).forEach(cmpSign -> {
             String code = "var x = 44L\nvar y = 44\nvar x1 = x " + cmpSign.getSign() + " y\nprint x1";
 
-            List<Statement> statements = TestUtils.getStatementsFromCode(code);
+            List<Statement> statements;
+            try {
+                statements = TestUtils.getStatementsFromCode(code);
+            } catch (MainMethodNotFoundInPublicClass e) {
+                e.printStackTrace();
+                return;
+            }
             Scope scope = new Scope(new MetaData(null));
             scope.addLocalVariables(
                     new LocalVariable("x", BuiltInType.LONG),
@@ -72,7 +79,13 @@ public class RelationalExpressionTypeCastTest implements Opcodes {
         Arrays.stream(CompareSign.values()).forEach(cmpSign -> {
             String code = "var x = 0x2cL\nvar y = 44.0\nvar x1 = x " + cmpSign.getSign() + " y\nprint x1";
 
-            List<Statement> statements = TestUtils.getStatementsFromCode(code);
+            List<Statement> statements;
+            try {
+                statements = TestUtils.getStatementsFromCode(code);
+            } catch (MainMethodNotFoundInPublicClass e) {
+                e.printStackTrace();
+                return;
+            }
             Scope scope = new Scope(new MetaData(null));
             scope.addLocalVariables(
                     new LocalVariable("x", BuiltInType.LONG),

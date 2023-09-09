@@ -16,10 +16,11 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class ExpressionTypeCastTest implements Opcodes {
     @Test
-    public void arithmeticExpressionTypeCastTest() {
+    public void arithmeticExpressionTypeCastTest() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var tmpL = 0x3fl\nvar tmpD = 0.3\nprint tmpL * 4 % tmpD");
         Scope scope = new Scope(new MetaData(null));
@@ -57,7 +58,7 @@ public class ExpressionTypeCastTest implements Opcodes {
     }
 
     @Test
-    public void shiftExpressionTypeCastTest() {
+    public void shiftExpressionTypeCastTest() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var tmpL = 0b10010l\nvar tmpI = 3\nprint (tmpL >> (tmpI << tmpL)) >>> tmpI");
         Scope scope = new Scope(new MetaData(null));

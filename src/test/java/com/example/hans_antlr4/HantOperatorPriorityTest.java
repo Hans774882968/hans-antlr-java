@@ -25,10 +25,11 @@ import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantOperatorPriorityTest {
     @Test
-    public void addSubtract1() {
+    public void addSubtract1() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = 3 + 4 - 5");
         Expression expression = new Subtraction(
                 new Addition(new Value(BuiltInType.INT, "3"), new Value(BuiltInType.INT, "4")),
@@ -38,7 +39,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void addSubtract2() {
+    public void addSubtract2() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = 3 - 4 + 5");
         Expression expression = new Addition(
                 new Subtraction(new Value(BuiltInType.INT, "3"), new Value(BuiltInType.INT, "4")),
@@ -48,7 +49,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void additiveAndMultiplicative() {
+    public void additiveAndMultiplicative() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = 3 * 4 % 5 + 6 % 7 / 8 - 9 % 10");
         Expression expression = new Subtraction(
                 new Addition(
@@ -68,7 +69,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void additiveAndShift() {
+    public void additiveAndShift() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = 3 << 4 >>> 5 - 6 + 7 >> 9 - 8");
         Expression expression = new Shr(
                 new UnsignedShr(
@@ -88,7 +89,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void bracketTest1() {
+    public void bracketTest1() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = (3 * 10 + 70)");
         Expression expression = new Addition(
                 new Multiplication(new Value(BuiltInType.INT, "3"), new Value(BuiltInType.INT, "10")),
@@ -98,7 +99,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void bracketTest2() {
+    public void bracketTest2() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = (3 * (10 + 70))");
         Expression expression = new Multiplication(
                 new Value(BuiltInType.INT, "3"),
@@ -108,7 +109,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void unaryTest1() {
+    public void unaryTest1() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = ~-~~-+~-+114514");
         Expression expression = new UnaryTilde(
                 new UnaryNegative(
@@ -126,7 +127,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void unaryTest2() {
+    public void unaryTest2() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = -10 - +- 20");
         Expression expression = new Subtraction(
                 new UnaryNegative(new Value(BuiltInType.INT, "10")),
@@ -136,7 +137,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void unaryAndBracketTest1() {
+    public void unaryAndBracketTest1() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var x = ~(40 + 30) ** ~-3");
         Expression expression = new Pow(
                 new UnaryTilde(
@@ -149,7 +150,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void assignmentTest1() {
+    public void assignmentTest1() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getLastStatementFromCode("var x = 1 x += x = 4 + (x += 3L)");
         LocalVariable x = new LocalVariable("x", BuiltInType.INT);
         Expression expression = new AssignmentExpression(
@@ -163,7 +164,7 @@ public class HantOperatorPriorityTest {
     }
 
     @Test
-    public void assignmentTest2() {
+    public void assignmentTest2() throws MainMethodNotFoundInPublicClass {
         String code1 = "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + (tmpL |= tmpL ^= tmpL &= 0x3f1)";
         String code2 = "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + tmpL |= tmpL ^= tmpL &= 0x3f1";
         Statement statement1 = TestUtils.getLastStatementFromCode(code1);

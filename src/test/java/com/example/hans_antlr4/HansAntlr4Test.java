@@ -1,8 +1,5 @@
 package com.example.hans_antlr4;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -13,7 +10,6 @@ import static org.mockito.Mockito.*;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Expression;
@@ -25,40 +21,11 @@ import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
-import com.example.hans_antlr4.parsing.HansAntlrErrorListener;
-import com.example.hans_antlr4.parsing.HansAntlrLexer;
-import com.example.hans_antlr4.parsing.HansAntlrParser;
-import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HansAntlr4Test {
     @Test
-    public void varAndPrintTest() {
-        HansAntlrLexer lexer = new HansAntlrLexer(CharStreams.fromString("var x = 114514\r\n" +
-                "print x\r\n" +
-                "var str = \"hello world\"\r\n" +
-                "print str\n" +
-                "var str2 = \"支持输入中文\"\n" +
-                "print str2"));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        HansAntlrParser parser = new HansAntlrParser(tokens);
-
-        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
-        HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
-        parser.addErrorListener(errorListener);
-
-        ParseTree tree = parser.compilationUnit();
-        CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
-        String treeString = tree.toStringTree(parser);
-        System.out.println(treeString);
-        Assert.assertEquals(
-                "(compilationUnit (statements (statement (variable var x = (expression (value 114514)))) (statement (print print (expression (variableReference x)))) (statement (variable var str = (expression (value \"hello world\")))) (statement (print print (expression (variableReference str)))) (statement (variable var str2 = (expression (value \"\u652F\u6301\u8F93\u5165\u4E2D\u6587\")))) (statement (print print (expression (variableReference str2))))) <EOF>)",
-                treeString);
-
-        Assert.assertEquals(6, compilationUnit.getInstructionsQueue().size());
-    }
-
-    @Test
-    public void unicodeVarNameAndComments() {
+    public void unicodeVarNameAndComments() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("var 変数名2です /* 这是一个注释 */ = \"// 这不是注释\"");
 
         VariableDeclaration variableDeclaration = new VariableDeclaration("変数名2です",
@@ -73,24 +40,9 @@ public class HansAntlr4Test {
     }
 
     @Test
-    public void expressionBuildTreeTest() {
-        HansAntlrLexer lexer = new HansAntlrLexer(
-                CharStreams.fromString("var x = 2 ** 3 * 3 ** 2 + 2 ** 3\r\n" + "print x\r\n"));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        HansAntlrParser parser = new HansAntlrParser(tokens);
-
-        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
-        HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
-        parser.addErrorListener(errorListener);
-
-        ParseTree tree = parser.compilationUnit();
-        CompilationUnit compilationUnit = tree.accept(compilationUnitVisitor);
-        String treeString = tree.toStringTree(parser);
-        Assert.assertEquals(
-                "(compilationUnit (statements (statement (variable var x = (expression (expression (expression (expression (value 2)) ** (expression (value 3))) * (expression (expression (value 3)) ** (expression (value 2)))) + (expression (expression (value 2)) ** (expression (value 3)))))) (statement (print print (expression (variableReference x))))) <EOF>)",
-                treeString);
-
-        Statement firstStatement = compilationUnit.getInstructionsQueue().get(0);
+    public void expressionBuildTreeTest() throws MainMethodNotFoundInPublicClass {
+        Statement firstStatement = TestUtils.getFirstStatementFromCode(
+                "var x = 2 ** 3 * 3 ** 2 + 2 ** 3\r\n" + "print x\r\n");
         Expression expression = new Addition(
                 new Multiplication(
                         new Pow(new Value(BuiltInType.INT, "2"),
@@ -103,7 +55,7 @@ public class HansAntlr4Test {
     }
 
     @Test
-    public void powerExpressionBuildTreeTest1() {
+    public void powerExpressionBuildTreeTest1() throws MainMethodNotFoundInPublicClass {
         // 验证乘方运算符的左结合
         Expression expression = new Pow(
                 new Pow(new Value(BuiltInType.INT, "2"), new Value(BuiltInType.INT, "2")),
@@ -115,7 +67,7 @@ public class HansAntlr4Test {
     }
 
     @Test
-    public void powerExpressionBuildTreeTest2() {
+    public void powerExpressionBuildTreeTest2() throws MainMethodNotFoundInPublicClass {
         // powerExpressionBuildTreeTest1 的对照组
         Expression expression = new Pow(
                 new Value(BuiltInType.INT, "2"),

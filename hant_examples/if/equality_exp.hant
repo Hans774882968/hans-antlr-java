@@ -1,18 +1,20 @@
-var const1 = 10 * 10
-var const2 = 10 ** 2
-if const1 == const2 {
-    print "10 * 10 == 10 ** 2"
-}
+void main(string[] args) {
+    var const1 = 10 * 10
+    var const2 = 10 ** 2
+    if const1 == const2 {
+        print "10 * 10 == 10 ** 2"
+    }
 
-var const3 = 99
-if const1 != -101 + const3 + 102 {} else {
-    print "!(100 != 100)"
-}
+    var const3 = 99
+    if const1 != -101 + const3 + 102 {} else {
+        print "!(100 != 100)"
+    }
 
-print "----- types -----"
-{
-    var xl = 9L + 1
-    var xd = 9.9 + 0.1
-    var xi = 9 + 1
-    print (xl == xi) + " " + (xl == xd) // true true
+    print "----- types -----"
+    {
+        var xl = 9L + 1
+        var xd = 9.9 + 0.1
+        var xi = 9 + 1
+        print (xl == xi) + " " + (xl == xd) // true true
+    }
 }

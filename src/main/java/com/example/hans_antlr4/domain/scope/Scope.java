@@ -5,20 +5,25 @@ import java.util.List;
 import java.util.Objects;
 
 import com.example.hans_antlr4.domain.global.MetaData;
+import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.exception.LocalVariableNotFoundException;
+import com.example.hans_antlr4.exception.func.MethodSignatureNotFoundException;
 
 public class Scope {
-    private List<LocalVariable> localVariables;
     private MetaData metaData;
+    private List<LocalVariable> localVariables;
+    private List<FunctionSignature> functionSignatures;
 
     public Scope(MetaData metaData) {
         this.metaData = metaData;
-        localVariables = new ArrayList<>();
+        this.localVariables = new ArrayList<>();
+        this.functionSignatures = new ArrayList<>();
     }
 
     public Scope(Scope scope) {
-        metaData = scope.metaData;
-        localVariables = new ArrayList<>(scope.localVariables);
+        this.metaData = scope.metaData;
+        this.localVariables = new ArrayList<>(scope.localVariables);
+        this.functionSignatures = new ArrayList<>(scope.functionSignatures);
     }
 
     public void addLocalVariable(LocalVariable localVariable) {
@@ -58,6 +63,33 @@ public class Scope {
 
     public String getClassName() {
         return metaData.getClassName();
+    }
+
+    public void addSignature(FunctionSignature signature) {
+        functionSignatures.add(signature);
+    }
+
+    // 支持重载功能
+    public FunctionSignature getSignature(String methodName, List<Type> argTypes, int sourceLine) {
+        return functionSignatures.stream()
+                .filter(signature -> {
+                    if (!signature.getName().equals(methodName)) {
+                        return false;
+                    }
+                    if (signature.getParameters().size() != argTypes.size()) {
+                        return false;
+                    }
+                    for (int i = 0; i < argTypes.size(); i++) {
+                        Type paramType = signature.getParameters().get(i).getType();
+                        Type argType = argTypes.get(i);
+                        if (paramType != argType) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
+                .findFirst()
+                .orElseThrow(() -> new MethodSignatureNotFoundException(this, methodName, sourceLine));
     }
 
     @Override

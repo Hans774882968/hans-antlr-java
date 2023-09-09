@@ -5,8 +5,31 @@ package com.example.hans_antlr4.parsing;
 }
 
 // compilationUnit: root rule
-compilationUnit: statements EOF;
-statements: statement*;
+compilationUnit: functions EOF;
+
+functions: function*;
+function: functionDeclaration block;
+functionDeclaration: (type)? functionName '(' functionParameterList? ')';
+functionName: Identifier;
+functionParameterList:
+	functionParameter (',' functionParameter)*;
+functionParameter: type Identifier;
+type: primitiveType | classType;
+primitiveType:
+	'boolean' ('[' ']')*
+	| 'string' ('[' ']')*
+	| 'char' ('[' ']')*
+	| 'byte' ('[' ']')*
+	| 'short' ('[' ']')*
+	| 'int' ('[' ']')*
+	| 'long' ('[' ']')*
+	| 'float' ('[' ']')*
+	| 'double' ('[' ']')*
+	| 'void' ('[' ']')*;
+classType: qualifiedName ('[' ']')*;
+qualifiedName: Identifier ('.' Identifier)*;
+
+statements: (statement ';'?)*;
 block: '{' statements '}';
 statement:
 	variable
@@ -39,7 +62,8 @@ breakStatement: 'break';
 continueStatement: 'continue';
 
 expression:
-	variableReference								# VarReference
+	funcCall										# FunctionCall
+	| variableReference								# VarReference
 	| value											# ValueExpr
 	| '(' expression ')'							# BRACKET
 	| UNARY = ('+' | '-' | '~') expression			# UNARY
@@ -68,6 +92,8 @@ expression:
 		| '|='
 	) expression # ASSIGNMENT;
 variableReference: Identifier;
+funcCall: functionName '(' argumentList ')';
+argumentList: expression? (',' expression)*;
 
 print: PRINT (printArg = '-n')? expression;
 

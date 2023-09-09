@@ -11,10 +11,11 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.domain.statement.Statement;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantBlockTest {
     @Test
-    public void confirmNewScopeCreatedTest() {
+    public void confirmNewScopeCreatedTest() throws MainMethodNotFoundInPublicClass {
         // 因为全局的 Scope 是 cglib mock 出来的，所以我们就不测有“全局变量”的情况了， hant_examples/block.hant cover 到就行
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "{ { var x = 10 } var x = 20 { var x = 30 { var y = 40 } { var y = 50 print x + y } } var y = 60 print x + y }");

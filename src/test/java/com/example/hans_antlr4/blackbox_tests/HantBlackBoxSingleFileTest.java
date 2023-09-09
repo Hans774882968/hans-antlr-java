@@ -7,7 +7,7 @@ import com.example.hans_antlr4.TestUtils;
 
 import uk.org.webcompere.systemstubs.stream.SystemOut;
 
-public class HantBlackBoxTest {
+public class HantBlackBoxSingleFileTest {
     @Test
     public void piEstimatedValueTest() throws Exception {
         SystemOut systemOut = new SystemOut();

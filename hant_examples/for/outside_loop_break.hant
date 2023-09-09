@@ -1,5 +1,7 @@
-{
-    if 1 {
-        break
+void main(string[] args) {
+    {
+        if 1 {
+            break
+        }
     }
 }

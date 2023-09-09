@@ -1,106 +1,108 @@
-print "----- int -----"
-{
-    var x = 10
-    var yl = 10l
-    yl = x * yl + 1
-    print yl // 101
-    var yf = 1.5f
-    yf = x * yf + 2.5f * x
-    print yf // 40.0
-    var yd = 2.5
-    yd = x * yd + yl
-    print yd // 126.0
+void main(string[] args) {
+    print "----- int -----"
+    {
+        var x = 10
+        var yl = 10l
+        yl = x * yl + 1
+        print yl // 101
+        var yf = 1.5f
+        yf = x * yf + 2.5f * x
+        print yf // 40.0
+        var yd = 2.5
+        yd = x * yd + yl
+        print yd // 126.0
+    }
+
+    print "----- long -----"
+    {
+        var yl = 10l
+        var tmpF = 1.5f
+        var yf = yl % 8 * tmpF + 2.5f * yl
+        print yf // 28.0
+        var yd = yl % 8 * tmpF + 2.7 * yl
+        print yd // 30.0
+        yl = (13L & yl) + (13 & yl) + (13L & 0xaL) + (13 & 0xa)
+        print yl // 32 = 8 * 4
+        yl = (0b1001L | yl) + (9 | yl) + (0b1001L | 0x20) + (0b1001 | 32)
+        print yl // 164 = 41 * 4
+        yl = (8L ^ yl) + (8 ^ yl) + (0o10L ^ 164) + (0b1000 ^ 164)
+        print yl // 688 = 172 * 4
+        yl = (yl = 1L) - 1 + (1 << 3) + (2L << 1) + (2 << yl) + (yl << yl)
+        print yl // 18
+    }
+
+    print "----- double -----"
+    {
+        var tmpI = 0x3f
+        var tmpL = 10l
+        var tmpF = 1.5f
+        var tmpD = 2.7
+        var yd = (tmpI & tmpL) + (tmpI << tmpL) + (tmpI >> (tmpL - 8)) + tmpI * tmpI + tmpI * tmpL + tmpI * tmpF + tmpI * tmpD + tmpL * tmpL + tmpL * tmpF + tmpL * tmpD + tmpF * tmpF + tmpF * tmpD + tmpD * tmpD
+        print yd // 69556.19
+    }
+
+    print "----- assign long -----"
+    {
+        var x = 0x3fl
+        x += 1
+        x += 1l
+        x += 5.5
+        print x // 70
+        x -= 1
+        x -= 1l
+        x -= 4.1
+        print x // 63
+        x *= 2
+        x *= 2l
+        x *= 2.3f
+        print x // 579 (579.5999999999999)
+        x /= 2
+        x /= 2l
+        x /= 2.28
+        print x // 63 (63.15789473684211)
+        x %= 31.6
+        print x // 31 (31.4)
+        x <<= 25
+        x <<= 25l
+        print x // 34902897112121344 = 31 * (2 ** 50)
+        x >>= 25
+        print x // 1040187392
+        x >>= 25l
+        print x // 31
+
+        var xn = -1040187392
+        xn >>>= 25
+        print "xn = " + xn // 97
+        var xnl = -1040187392L
+        xnl >>>= 24 + 1L
+        print "xnl = " + xnl // 549755813857
+
+        x &= 0b11110
+        print x // 30
+        x |= 0b011111
+        x |= 0b100000L
+        print x // 63
+        x ^= 0b100001
+        x ^= 0b000010L
+        print x // 28
+        x ^= 0b100011l
+        print x // 63    
+    }
+
+    print "----- assign double -----"
+    {
+        var x = 15.5
+        x *= 2
+        print x // 31.0
+        x *= 2.3f
+        print x // 71.29999852180481
+        x /= 2.3
+        print x // 30.999999357306443
+        x /= 2.1f
+        print x // 14.761905126243533
+        x %= 7.761905126243533f
+        print x // 6.999999932914676
+    }
+
+    // 连续 assign case 见 hant_examples\expression\assignment.hant
 }
-
-print "----- long -----"
-{
-    var yl = 10l
-    var tmpF = 1.5f
-    var yf = yl % 8 * tmpF + 2.5f * yl
-    print yf // 28.0
-    var yd = yl % 8 * tmpF + 2.7 * yl
-    print yd // 30.0
-    yl = (13L & yl) + (13 & yl) + (13L & 0xaL) + (13 & 0xa)
-    print yl // 32 = 8 * 4
-    yl = (0b1001L | yl) + (9 | yl) + (0b1001L | 0x20) + (0b1001 | 32)
-    print yl // 164 = 41 * 4
-    yl = (8L ^ yl) + (8 ^ yl) + (0o10L ^ 164) + (0b1000 ^ 164)
-    print yl // 688 = 172 * 4
-    yl = (yl = 1L) - 1 + (1 << 3) + (2L << 1) + (2 << yl) + (yl << yl)
-    print yl // 18
-}
-
-print "----- double -----"
-{
-    var tmpI = 0x3f
-    var tmpL = 10l
-    var tmpF = 1.5f
-    var tmpD = 2.7
-    var yd = (tmpI & tmpL) + (tmpI << tmpL) + (tmpI >> (tmpL - 8)) + tmpI * tmpI + tmpI * tmpL + tmpI * tmpF + tmpI * tmpD + tmpL * tmpL + tmpL * tmpF + tmpL * tmpD + tmpF * tmpF + tmpF * tmpD + tmpD * tmpD
-    print yd // 69556.19
-}
-
-print "----- assign long -----"
-{
-    var x = 0x3fl
-    x += 1
-    x += 1l
-    x += 5.5
-    print x // 70
-    x -= 1
-    x -= 1l
-    x -= 4.1
-    print x // 63
-    x *= 2
-    x *= 2l
-    x *= 2.3f
-    print x // 579 (579.5999999999999)
-    x /= 2
-    x /= 2l
-    x /= 2.28
-    print x // 63 (63.15789473684211)
-    x %= 31.6
-    print x // 31 (31.4)
-    x <<= 25
-    x <<= 25l
-    print x // 34902897112121344 = 31 * (2 ** 50)
-    x >>= 25
-    print x // 1040187392
-    x >>= 25l
-    print x // 31
-
-    var xn = -1040187392
-    xn >>>= 25
-    print "xn = " + xn // 97
-    var xnl = -1040187392L
-    xnl >>>= 24 + 1L
-    print "xnl = " + xnl // 549755813857
-
-    x &= 0b11110
-    print x // 30
-    x |= 0b011111
-    x |= 0b100000L
-    print x // 63
-    x ^= 0b100001
-    x ^= 0b000010L
-    print x // 28
-    x ^= 0b100011l
-    print x // 63    
-}
-
-print "----- assign double -----"
-{
-    var x = 15.5
-    x *= 2
-    print x // 31.0
-    x *= 2.3f
-    print x // 71.29999852180481
-    x /= 2.3
-    print x // 30.999999357306443
-    x /= 2.1f
-    print x // 14.761905126243533
-    x %= 7.761905126243533f
-    print x // 6.999999932914676
-}
-
-// 连续 assign case 见 hant_examples\expression\assignment.hant

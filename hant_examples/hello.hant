@@ -1,27 +1,29 @@
-var x1 = 114514
-print x1
-var str = "hello world"
-print str
-var str2 = "hello\n支持输出中文~"
-print str2
-// 支持单行注释
-var 中文变量名1 = 123
-print 中文变量名1
-print "// 这不是单行注释"
-/*
-支持块注释
-*/
-var 変数名2です = 中文变量名1 ** (中文变量名1 - 120)
-print 変数名2です
-print "/* 这不是块注释 */"
+void main(string[] args) {
+    var x1 = 114514
+    print x1
+    var str = "hello world"
+    print str
+    var str2 = "hello\n支持输出中文~"
+    print str2
+    // 支持单行注释
+    var 中文变量名1 = 123
+    print 中文变量名1
+    print "// 这不是单行注释"
+    /*
+    支持块注释
+    */
+    var 変数名2です = 中文变量名1 ** (中文变量名1 - 120)
+    print 変数名2です
+    print "/* 这不是块注释 */"
 
-print "<div class=\"div1\">\n\t<div></div>\n\t<div></div>\n    <div></div>\n\t<div class=\"pay-money\">\n\t\t实付\n\t\t<span class=\"pay-money-span\" data-nowprice=\"\" data-oldprice=\"\">元</span>\n\t</div>\n</div>"
-print "\u6211\u662f\u4e00\u4F4Dacmer\uD83D\uDE0A" // 我是一位acmer😊
-print "\"abc\" 'def' \'ghi\'"
+    print "<div class=\"div1\">\n\t<div></div>\n\t<div></div>\n    <div></div>\n\t<div class=\"pay-money\">\n\t\t实付\n\t\t<span class=\"pay-money-span\" data-nowprice=\"\" data-oldprice=\"\">元</span>\n\t</div>\n</div>"
+    print "\u6211\u662f\u4e00\u4F4Dacmer\uD83D\uDE0A" // 我是一位acmer😊
+    print "\"abc\" 'def' \'ghi\'"
 
-print "\033[31m红色字符串\033[0m"
-print "\033[32m黄色字符串\033[0m"
-print "\033[33m橙色字符串\033[0m"
-print "\033[34m蓝色字符串\033[0m"
-print "\033[35m紫色字符串\033[0m"
-print "\033[36m青色字符串\033[0m"
+    print "\033[31m红色字符串\033[0m"
+    print "\033[32m黄色字符串\033[0m"
+    print "\033[33m橙色字符串\033[0m"
+    print "\033[34m蓝色字符串\033[0m"
+    print "\033[35m紫色字符串\033[0m"
+    print "\033[36m青色字符串\033[0m"
+}

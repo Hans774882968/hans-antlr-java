@@ -1,4 +1,4 @@
-{
+void main(string[] args) {
     var x = "str"
     x = false
     print x

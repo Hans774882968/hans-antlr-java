@@ -1,6 +1,5 @@
 package com.example.hans_antlr4.parsing.biz_visitor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -35,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
     private Scope scope;
-    private List<Statement> instructionsQueue = new ArrayList<>();
 
     public StatementVisitor(Scope scope) {
         super();
@@ -52,7 +50,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
         scope.addLocalVariable(new LocalVariable(varName, expression.getType()));
         VariableDeclaration variableDeclaration = new VariableDeclaration(varName, expression);
-        instructionsQueue.add(variableDeclaration);
 
         logVariableDeclarationStatementFound(varTerminalNode, expression);
 
@@ -66,7 +63,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         Expression expression = expressionContext.accept(expressionVisitor);
         String printArg = ctx.printArg != null ? ctx.printArg.getText() : "";
         PrintStatement printStatement = new PrintStatement(expression, printArg);
-        instructionsQueue.add(printStatement);
         return printStatement;
     }
 
@@ -82,7 +78,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
         Expression expression = expressionContext.accept(expressionVisitor);
         ExpressionStatement expressionStatement = new ExpressionStatement(expression);
-        instructionsQueue.add(expressionStatement);
         return expressionStatement;
     }
 
@@ -92,7 +87,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         StatementsVisitor statementsVisitor = new StatementsVisitor(newScope);
         List<Statement> statements = ctx.statements().accept(statementsVisitor);
         Block block = new Block(statements, newScope);
-        instructionsQueue.add(block);
         return block;
     }
 
@@ -108,7 +102,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final StatementAfterIf trueStatementAfterIf = new StatementAfterIf(newTrueScope, trueStatement);
         if (ctx.falseStatement == null) {
             IfStatement ifStatementResult = new IfStatement(condition, trueStatementAfterIf);
-            instructionsQueue.add(ifStatementResult);
             return ifStatementResult;
         }
         Scope newFalseScope = new Scope(scope);
@@ -116,7 +109,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final Statement falseStatement = ctx.falseStatement.accept(falseStatementVisitor);
         final StatementAfterIf falseStatementAfterIf = new StatementAfterIf(newFalseScope, falseStatement);
         IfStatement ifStatementResult = new IfStatement(condition, trueStatementAfterIf, falseStatementAfterIf);
-        instructionsQueue.add(ifStatementResult);
         return ifStatementResult;
     }
 
@@ -145,7 +137,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
         RangedForStatement rangedForStatement = new RangedForStatement(
                 iteratorVariableStatement, iteratorVarName, startExpr, endExpr, statement, newScope);
-        instructionsQueue.add(rangedForStatement);
         return rangedForStatement;
     }
 
@@ -153,7 +144,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
     public Break visitBreakStatement(HansAntlrParser.BreakStatementContext ctx) {
         int sourceLine = ctx.getStart().getLine();
         Break breakStatement = new Break(sourceLine);
-        instructionsQueue.add(breakStatement);
         return breakStatement;
     }
 
@@ -161,7 +151,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
     public Continue visitContinueStatement(HansAntlrParser.ContinueStatementContext ctx) {
         int sourceLine = ctx.getStart().getLine();
         Continue continueStatement = new Continue(sourceLine);
-        instructionsQueue.add(continueStatement);
         return continueStatement;
     }
 
@@ -184,7 +173,6 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
 
         StandardForStatement standardForStatement = new StandardForStatement(
                 forInit, shouldEndLoopExpression, forUpdate, statement, newScope);
-        instructionsQueue.add(standardForStatement);
         return standardForStatement;
     }
 }

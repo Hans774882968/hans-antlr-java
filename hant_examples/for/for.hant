@@ -1,78 +1,80 @@
-for var i = 1L; i <= 5; i += 1 print i
+void main(string[] args) {
+    for var i = 1L; i <= 5; i += 1 print i
 
-for var i = 0; i < 10; i += 1 {
-    if i % 2 == 0 continue
-    print i // 奇数
-}
-
-print "----- forInit is AssignmentExpr -----"
-var i = 114512
-for i = 0; i < 5; i += 1 {
-    if i % 2 > 0 continue
-    print i // 偶数
-}
-
-print "----- without forInit -----"
-i = 0
-for ; i < 5; i += 1 {
-    if i % 2 == 0 continue
-    print i // 奇数
-}
-
-print "----- without expression -----"
-for i = 0;; i += 1 {
-    if i >= 5 break
-    if i % 2 > 0 continue
-    print i // 0 2 4
-}
-
-print "----- without forUpdate -----"
-var bVal = 0x70fc2f3f // 1895575359
-var bcVal = 0
-for var i = 1; i <= (1 << 30); {
-    if (bVal & i) > 0 bcVal += 1
-    i <<= 1
-}
-print bcVal // 20
-
-print "----- forInit and forUpdate support print statement -----"
-{
-    for var i = 11; i <= 15; print i += 2 {} // 13 15 17
-    var tmpL = 0x3fL
-    for print tmpL -= 65.5; tmpL <= 0; tmpL += 2 print tmpL // -2 -2 0
-}
-
-print "----- 整除分块 -----"
-{
-    var ans = 0
-    var mx = 0
-    var n = 50000
-    var mod = 998244353
-    for var L = 1; L <= n; {
-        var R = n / (n / L)
-        ans = (ans + (R - L + 1) * (n / L) % mod) % mod
-        if mx < (R - L + 1) * (n / L) mx = (R - L + 1) * (n / L)
-        L = R + 1
+    for var i = 0; i < 10; i += 1 {
+        if i % 2 == 0 continue
+        print i // 奇数
     }
-    print mx // 50000
-    print ans // 548725
-}
 
-print "----- ranged for 和 standard for 混用 -----"
-print i // “without expression”留下的i的最终值，5
-print "广义水仙花数："
-{
-    var ans = 0
-    for i: 10 to 100000 {
-        var dNum = 0
-        for var x = i;; x /= 10 {
-            if x == 0 break
-            dNum += 1
+    print "----- forInit is AssignmentExpr -----"
+    var i = 114512
+    for i = 0; i < 5; i += 1 {
+        if i % 2 > 0 continue
+        print i // 偶数
+    }
+
+    print "----- without forInit -----"
+    i = 0
+    for ; i < 5; i += 1 {
+        if i % 2 == 0 continue
+        print i // 奇数
+    }
+
+    print "----- without expression -----"
+    for i = 0;; i += 1 {
+        if i >= 5 break
+        if i % 2 > 0 continue
+        print i // 0 2 4
+    }
+
+    print "----- without forUpdate -----"
+    var bVal = 0x70fc2f3f // 1895575359
+    var bcVal = 0
+    for var i = 1; i <= (1 << 30); {
+        if (bVal & i) > 0 bcVal += 1
+        i <<= 1
+    }
+    print bcVal // 20
+
+    print "----- forInit and forUpdate support print statement -----"
+    {
+        for var i = 11; i <= 15; print i += 2 {} // 13 15 17
+        var tmpL = 0x3fL
+        for print tmpL -= 65.5; tmpL <= 0; tmpL += 2 print tmpL // -2 -2 0
+    }
+
+    print "----- 整除分块 -----"
+    {
+        var ans = 0
+        var mx = 0
+        var n = 50000
+        var mod = 998244353
+        for var L = 1; L <= n; {
+            var R = n / (n / L)
+            ans = (ans + (R - L + 1) * (n / L) % mod) % mod
+            if mx < (R - L + 1) * (n / L) mx = (R - L + 1) * (n / L)
+            L = R + 1
         }
-        var tmpSum = 0
-        for var v = 1; v <= i; v *= 10 tmpSum += (i / v % 10) ** dNum
-        if tmpSum == i {ans += 1 print i} // 153 370 371 407 1634 8208 9474 54748 92727 93084
+        print mx // 50000
+        print ans // 548725
     }
-    print ans // 10
+
+    print "----- ranged for 和 standard for 混用 -----"
+    print i // “without expression”留下的i的最终值，5
+    print "广义水仙花数："
+    {
+        var ans = 0
+        for i: 10 to 100000 {
+            var dNum = 0
+            for var x = i;; x /= 10 {
+                if x == 0 break
+                dNum += 1
+            }
+            var tmpSum = 0
+            for var v = 1; v <= i; v *= 10 tmpSum += (i / v % 10) ** dNum
+            if tmpSum == i {ans += 1 print i} // 153 370 371 407 1634 8208 9474 54748 92727 93084
+        }
+        print ans // 10
+    }
+    print i // 100001
 }
-print i // 100001

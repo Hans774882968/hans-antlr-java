@@ -26,10 +26,11 @@ import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.BreakStatementOutsideLoopException;
 import com.example.hans_antlr4.exception.ContinueStatementOutsideLoopException;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantLoopTest implements Opcodes {
     @Test
-    public void newVarAsIteratorVariable() {
+    public void newVarAsIteratorVariable() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode(
                 "for i: 114512 to 114514 print i");
         Assert.assertTrue(statement instanceof RangedForStatement);
@@ -41,7 +42,7 @@ public class HantLoopTest implements Opcodes {
     }
 
     @Test
-    public void definedVarAsIteratorVariable() {
+    public void definedVarAsIteratorVariable() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var i = 114510\nfor i: 114512 to 114514 print i");
         statements.forEach(stmt -> {
@@ -73,7 +74,7 @@ public class HantLoopTest implements Opcodes {
     }
 
     @Test
-    public void standardForLoopTest1() {
+    public void standardForLoopTest1() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode("for var i = 1L; i <= 5; i += 1 print i");
         Scope scope = new Scope(new MetaData(null));
         scope.addLocalVariable(new LocalVariable("i", BuiltInType.LONG));
@@ -120,7 +121,7 @@ public class HantLoopTest implements Opcodes {
     }
 
     @Test
-    public void standardForLoopWithoutForInitTest() {
+    public void standardForLoopWithoutForInitTest() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var i = 0\nfor ; i < 5; i += 1 { if i % 2 == 0 continue print i }");
         Scope scope = new Scope(new MetaData(null));

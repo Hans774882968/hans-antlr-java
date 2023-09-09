@@ -1,16 +1,30 @@
 package com.example.hans_antlr4.utils;
 
+import java.util.Optional;
+
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.exception.InvalidHantNumberException;
+import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 
 public class TypeResolver {
+    public static Type getFromTypeName(HansAntlrParser.TypeContext typeContext) {
+        if (typeContext == null)
+            return BuiltInType.VOID;
+        String typeName = typeContext.getText();
+        Optional<? extends Type> buildInType = BuiltInType.getBuiltInType(typeName);
+        if (buildInType.isPresent())
+            return buildInType.get();
+        return new ClassType(typeName);
+    }
+
     public static Type getFromValue(String value) {
         if (StringUtils.isEmpty(value)) {
             return BuiltInType.VOID;

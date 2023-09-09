@@ -22,6 +22,7 @@ import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
+import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
@@ -43,6 +44,7 @@ public class ExpressionGenerator implements Opcodes {
     private AssignmentExpressionGenerator assignmentExpressionGenerator;
     private StringAppendGenerator stringAppendGenerator;
     private ShiftExpressionGenerator shiftExpressionGenerator;
+    private CallExpressionGenerator callExpressionGenerator;
 
     public ExpressionGenerator(MethodVisitor mv, Scope scope) {
         this.mv = mv;
@@ -51,6 +53,7 @@ public class ExpressionGenerator implements Opcodes {
         this.assignmentExpressionGenerator = new AssignmentExpressionGenerator(this, mv);
         this.stringAppendGenerator = new StringAppendGenerator(this, mv);
         this.shiftExpressionGenerator = new ShiftExpressionGenerator(this, mv);
+        this.callExpressionGenerator = new CallExpressionGenerator(this, mv);
     }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
@@ -195,6 +198,10 @@ public class ExpressionGenerator implements Opcodes {
 
     public void generate(AssignmentExpression assignmentExpression) {
         assignmentExpressionGenerator.generate(assignmentExpression);
+    }
+
+    public void generate(FunctionCall functionCall) {
+        callExpressionGenerator.generate(functionCall);
     }
 
     // 递归，直到走到 generate(VarReference varReference) or generate(Value value)

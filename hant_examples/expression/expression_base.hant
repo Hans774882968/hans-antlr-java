@@ -1,119 +1,121 @@
-var x0 = 1 + 2 * 3
-print x0
-var x1 = (1 + 2) * 3
-print x1
-print x0 * x1 // 63
-var x2 = 1 + 1
-print 3 / x2 // 1
-print (4 / (x2 + 1)) // 1
-var x3 = 40 + 30 * 20 + 10
-print x3 // 650
-var x4 = (40 + 30) * (20 + 10)
-print x4 // 2100
+void main(string[] args) {
+    var x0 = 1 + 2 * 3
+    print x0
+    var x1 = (1 + 2) * 3
+    print x1
+    print x0 * x1 // 63
+    var x2 = 1 + 1
+    print 3 / x2 // 1
+    print (4 / (x2 + 1)) // 1
+    var x3 = 40 + 30 * 20 + 10
+    print x3 // 650
+    var x4 = (40 + 30) * (20 + 10)
+    print x4 // 2100
 
-print "----- power examples -----"
-var x5 = 2 * 4 ** 3 - 16 / 2
-print x5 // 120
-var x6 = (2 * 4) ** 3 - 16 / 2 ** 3
-print x6 // 510
-var x7 = 2 ** 3 * 3 ** 2
-print x7 // 72
-var x8 = 2 ** 3 * 3 ** 2 + 2 ** 3
-print(x8 + 0) // 80
-var x9 = 2 ** 3 ** 2 ** 2
-print x9 // 4096
-var x10 = 3 ** 2 ** 2 ** 2
-print x10 // 6561
-var x11 = 2 ** 2 ** 3
-print x11 // 64
-var x12 = 2 ** (2 ** 3)
-print x12 // 256
-{
-    var x = 2L ** 40
-    print "x = " + x + ", " + (x - (1L << 40)) // x = 1099511627776, 0
-    x = 2 ** 40L
-    print "x = " + x + ", " + (x - (1L << 40)) // x = 1099511627776, 0
+    print "----- power examples -----"
+    var x5 = 2 * 4 ** 3 - 16 / 2
+    print x5 // 120
+    var x6 = (2 * 4) ** 3 - 16 / 2 ** 3
+    print x6 // 510
+    var x7 = 2 ** 3 * 3 ** 2
+    print x7 // 72
+    var x8 = 2 ** 3 * 3 ** 2 + 2 ** 3
+    print(x8 + 0) // 80
+    var x9 = 2 ** 3 ** 2 ** 2
+    print x9 // 4096
+    var x10 = 3 ** 2 ** 2 ** 2
+    print x10 // 6561
+    var x11 = 2 ** 2 ** 3
+    print x11 // 64
+    var x12 = 2 ** (2 ** 3)
+    print x12 // 256
+    {
+        var x = 2L ** 40
+        print "x = " + x + ", " + (x - (1L << 40)) // x = 1099511627776, 0
+        x = 2 ** 40L
+        print "x = " + x + ", " + (x - (1L << 40)) // x = 1099511627776, 0
+    }
+
+    print "----- 运算符相同优先级的情况 -----"
+    var x13 = 3 - 1 + 2
+    print x13 // 4
+    var x14 = 12 + 2 * 6 / 3 * 2
+    print x14 // 20
+    print (3 * 10 + 70) // 100
+    print 3 * 10 + 70 // 100
+    print (3 * (10 + 70)) // 240
+
+    print "----- unary -----"
+    var x15 = -114514
+    print x15
+    var x16 = +114514
+    print x16
+    var x17 = ~114514
+    print x17 // -114515
+    var x18 = ~-~~-+~-+114514
+    print x18 // -114514
+    var const1 = 114514
+    var const2 = 10
+    var x19 = const1 - +~~- -+~ const2
+    print x19 // 114525
+    var x20 = (const1 - +~~- -+~ const2)
+    print x20 // 114525
+    var x21 = -const1 - +~~- -+~ const2
+    print x21 // -114503
+    var x22 = const1 - (const1 % const2) + const2
+    print x22 // 114520
+    var x23 = x22 - (const1 - const1 % const2 + const2)
+    print x23 // 0
+    var x24 = 20&-20
+    print x24 // 4
+
+    print "----- String Addition -----"
+    {
+        var x0 = "x"
+        var fName = "f"
+        x0 = fName + "(" + x0 + ", " + true + ")"
+        print x0 // f(x, true)
+        x0 = "x"
+        x0 = fName + "(" + x0 + ", " + 1 + 23 + ")"
+        print x0 // f(x, 123)
+        x0 = "x"
+        x0 = fName + "(" + x0 + ", " + (1 + 23) + ")"
+        print x0 // f(x, 24)
+        x0 = "x"
+        x0 = fName + "(" + x0 + ", " + (114f + 0.514f) + ")"
+        print x0 // f(x, 114.514)
+        x0 = "x"
+        x0 = fName + "(" + x0 + ", " + (1919d + 0.810) + ")"
+        print x0 // f(x, 1919.81)
+        x0 = "x"
+        x0 = fName + "(" + x0 + ", " + (0x12345678900l + 1L) + ")"
+        print x0 // f(x, 1250999896321)
+    }
+
+    print "----- String += -----"
+    {
+        var x0 = ""
+        x0 = "x"
+        x0 += 0.1
+        x0 += "y"
+        x0 += 1 + 23
+        x0 += 3.14f
+        x0 += true
+        x0 += 0x12345678901l
+        print x0 // x0.1y243.14true1250999896321
+        var y = "y = "
+        x0 += y += x0 = "f" + (x0 = "(x)")
+        print x0 // x0.1y243.14true1250999896321y = f(x)
+        print y // y = f(x)
+    }
+
+    print "----- 综合 -----"
+    var x25 = ~(40 + 30) * ~(20 + 10)
+    print x25 // 2201
+    var x26 = -+-~(10 + 2 * -+~~-30 / 2 * 2)
+    print x26 // -71
+    var x27 = (2+3)*4+5+5*2/(5-3)
+    print x27 // 30
+    var x28 = ((2 + 3) * 4 + 5 + 5 * 2 / (5 - 3))
+    print x28 // 30
 }
-
-print "----- 运算符相同优先级的情况 -----"
-var x13 = 3 - 1 + 2
-print x13 // 4
-var x14 = 12 + 2 * 6 / 3 * 2
-print x14 // 20
-print (3 * 10 + 70) // 100
-print 3 * 10 + 70 // 100
-print (3 * (10 + 70)) // 240
-
-print "----- unary -----"
-var x15 = -114514
-print x15
-var x16 = +114514
-print x16
-var x17 = ~114514
-print x17 // -114515
-var x18 = ~-~~-+~-+114514
-print x18 // -114514
-var const1 = 114514
-var const2 = 10
-var x19 = const1 - +~~- -+~ const2
-print x19 // 114525
-var x20 = (const1 - +~~- -+~ const2)
-print x20 // 114525
-var x21 = -const1 - +~~- -+~ const2
-print x21 // -114503
-var x22 = const1 - (const1 % const2) + const2
-print x22 // 114520
-var x23 = x22 - (const1 - const1 % const2 + const2)
-print x23 // 0
-var x24 = 20&-20
-print x24 // 4
-
-print "----- String Addition -----"
-{
-    var x0 = "x"
-    var fName = "f"
-    x0 = fName + "(" + x0 + ", " + true + ")"
-    print x0 // f(x, true)
-    x0 = "x"
-    x0 = fName + "(" + x0 + ", " + 1 + 23 + ")"
-    print x0 // f(x, 123)
-    x0 = "x"
-    x0 = fName + "(" + x0 + ", " + (1 + 23) + ")"
-    print x0 // f(x, 24)
-    x0 = "x"
-    x0 = fName + "(" + x0 + ", " + (114f + 0.514f) + ")"
-    print x0 // f(x, 114.514)
-    x0 = "x"
-    x0 = fName + "(" + x0 + ", " + (1919d + 0.810) + ")"
-    print x0 // f(x, 1919.81)
-    x0 = "x"
-    x0 = fName + "(" + x0 + ", " + (0x12345678900l + 1L) + ")"
-    print x0 // f(x, 1250999896321)
-}
-
-print "----- String += -----"
-{
-    var x0 = ""
-    x0 = "x"
-    x0 += 0.1
-    x0 += "y"
-    x0 += 1 + 23
-    x0 += 3.14f
-    x0 += true
-    x0 += 0x12345678901l
-    print x0 // x0.1y243.14true1250999896321
-    var y = "y = "
-    x0 += y += x0 = "f" + (x0 = "(x)")
-    print x0 // x0.1y243.14true1250999896321y = f(x)
-    print y // y = f(x)
-}
-
-print "----- 综合 -----"
-var x25 = ~(40 + 30) * ~(20 + 10)
-print x25 // 2201
-var x26 = -+-~(10 + 2 * -+~~-30 / 2 * 2)
-print x26 // -71
-var x27 = (2+3)*4+5+5*2/(5-3)
-print x27 // 30
-var x28 = ((2 + 3) * 4 + 5 + 5 * 2 / (5 - 3))
-print x28 // 30

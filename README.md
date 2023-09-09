@@ -4992,7 +4992,37 @@ for (var y = 1.5; y > -1.5; y -= stp) {
 
 ## Part7-支持方法
 
-TODO
+TODO: 函数重载已支持，return statement待支持。
+
+### 函数调用语法规则引入的二义性问题
+
+上文我定义的函数调用语法规则存在一个二义性问题。以下面的`hant`代码为例：
+
+```hant
+print "tmpI = " + tmpI + ", tmpL = " + tmpL // 0 124
+(tmpL -= tmpI += 100) + (tmpL += 100 - 2 * 24L)
+```
+
+第一行的`tmpL`和第二行的括号被认为是一个函数调用，导致了报错。Java没有这个问题，因为Java会使用分号标识语句的结束。那么JS有没有这个问题呢？我们在浏览器控制台运行这段代码：
+
+```js
+let x = 1
+let y = x
+(x += 3)
+```
+
+发现报错：`Uncaught TypeError: x is not a function`。但如果给第二行加分号，语句又能正常运行了。我找到了[JS语法规则的antlr描述](https://github.com/antlr/grammars-v4/blob/master/javascript/javascript/JavaScriptParser.g4)，发现果然存在歧义。如下图所示。
+
+![3-JS函数调用文法规则的二义性.jpg](./README_assets/3-JS函数调用文法规则的二义性.jpg)
+
+因此我认为这个二义性问题很可能是无解的，只能通过添加分号来规避。
+
+语法规则修改：
+
+```g4
+// statements: statement*;
+statements: (statement ';'?)*;
+```
 
 ## 参考资料
 

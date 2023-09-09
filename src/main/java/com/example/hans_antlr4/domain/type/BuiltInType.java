@@ -1,6 +1,8 @@
 package com.example.hans_antlr4.domain.type;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
 
 import org.objectweb.asm.Opcodes;
 
@@ -277,5 +279,11 @@ public enum BuiltInType implements Type {
     @Override
     public int getOrOpcode() {
         return opcodes.getOr();
+    }
+
+    public static Optional<BuiltInType> getBuiltInType(String typeName) {
+        return Arrays.stream(BuiltInType.values())
+                .filter(type -> type.getName().equals(typeName))
+                .findFirst();
     }
 }

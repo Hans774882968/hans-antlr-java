@@ -1,33 +1,35 @@
-var x = 10
-print x
-{
-    var x = 20
+void main(string[] args) {
+    var x = 10
     print x
-}
-{
-    // 一开始发现 y 输出40，不符合预期。有几个选项：
-    // 1、Scope 改造成跳 parent 的逻辑。2、检测变量 shadow 并报错。3、getLocalVariable 改成 findLast。
-    // 最后选择了3。
-    var y = x + 20
-    print y // 30
-}
-
-{
-    var y = 30
     {
-        var z1 = x + y
-        print z1 // 40
-        /*
-        var x = 40
-        var z2 = x + y
-        print z2
-        TODO: 这是 use before declare 的场景，生成的字节码把40赋值给最新的3号位置是符合预期的。
-        考虑怎么给出一个友好的编译时错误提示。
-        */
+        var x = 20
+        print x
     }
-    print x + y // 40
+    {
+        // 一开始发现 y 输出40，不符合预期。有几个选项：
+        // 1、Scope 改造成跳 parent 的逻辑。2、检测变量 shadow 并报错。3、getLocalVariable 改成 findLast。
+        // 最后选择了3。
+        var y = x + 20
+        print y // 30
+    }
+
+    {
+        var y = 30
+        {
+            var z1 = x + y
+            print z1 // 40
+            /*
+            var x = 40
+            var z2 = x + y
+            print z2
+            TODO: 这是 use before declare 的场景，生成的字节码把40赋值给最新的3号位置是符合预期的。
+            考虑怎么给出一个友好的编译时错误提示。
+            */
+        }
+        print x + y // 40
+    }
+
+    print "-----"
+
+    { var x1 = 10 } var x1 = 15 { var x1 = 30 { var y1 = 40 } { var y1 = 50 print x1 + y1 } } var y1 = 60 print x1 + y1 // 80和75
 }
-
-print "-----"
-
-{ var x1 = 10 } var x1 = 15 { var x1 = 30 { var y1 = 40 } { var y1 = 50 print x1 + y1 } } var y1 = 60 print x1 + y1 // 80和75

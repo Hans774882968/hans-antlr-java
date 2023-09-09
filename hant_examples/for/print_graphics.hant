@@ -1,101 +1,103 @@
-{
-    print "空心正方形"
-    var n = 5
-    for i: 1 to n {
-        if i == 1 {
-            for var j = 1; j <= n; j += 1 print -n "*"
+void main(string[] args) {
+    {
+        print "空心正方形"
+        var n = 5
+        for i: 1 to n {
+            if i == 1 {
+                for var j = 1; j <= n; j += 1 print -n "*"
+                print ""
+                continue
+            }
+            if i == n {
+                for var j = 1; j <= n; j += 1 print -n "*"
+                print ""
+                continue
+            }
+            for j: 1 to n {
+                if j == 1 print -n "*"
+                else if j == n print -n "*"
+                else print -n " "
+            }
             print ""
-            continue
         }
-        if i == n {
-            for var j = 1; j <= n; j += 1 print -n "*"
+    }
+
+    {
+        print "反直角三角形"
+        var n = 5
+        for i: n to 1 {
+            for var j = 1; j < i; j += 1 print -n " "
+            for j: i to n print -n "*"
             print ""
-            continue
         }
-        for j: 1 to n {
-            if j == 1 print -n "*"
-            else if j == n print -n "*"
-            else print -n " "
+    }
+
+    {
+        print "等腰梯形"
+        var n = 5
+        for var i = 1; i <= n; i += 1 {
+            for j: n to i
+                if j == n print -n "|"
+                else print -n " "
+            var v = ""
+            for j: 1 to (i << 1) + 3 v += "*"
+            print v
         }
-        print ""
     }
-}
 
-{
-    print "反直角三角形"
-    var n = 5
-    for i: n to 1 {
-        for var j = 1; j < i; j += 1 print -n " "
-        for j: i to n print -n "*"
-        print ""
-    }
-}
-
-{
-    print "等腰梯形"
-    var n = 5
-    for var i = 1; i <= n; i += 1 {
-        for j: n to i
-            if j == n print -n "|"
-            else print -n " "
-        var v = ""
-        for j: 1 to (i << 1) + 3 v += "*"
-        print v
-    }
-}
-
-{
-    print "菱形"
-    var n = 5
-    for i: 1 to (n << 1 | 1) - 2 {
-        var v1 = n - i
-        if i > n v1 = i - n
-        for var j = v1; j > 0; j -= 1 print -n " "
-        var v2 = (i << 1 | 1) - 2
-        if i > n v2 = (n << 2) - (i << 1 | 1)
-        for j: 1 to v2 print -n "*"
-        print ""
-    }
-}
-
-{
-    print "心型"
-    var stp = 0.15
-    for (var y = 1.5; y > -1.5; y -= stp) {
-        var halfStp = stp / 2
-        for (var x = -1.5; x < 1.5; x += halfStp) {
-            var a = x ** 2 + y ** 2 - 1
-            if (a ** 3 - x * x * y ** 3 <= 0) print -n "*"
-            else print -n " "
+    {
+        print "菱形"
+        var n = 5
+        for i: 1 to (n << 1 | 1) - 2 {
+            var v1 = n - i
+            if i > n v1 = i - n
+            for var j = v1; j > 0; j -= 1 print -n " "
+            var v2 = (i << 1 | 1) - 2
+            if i > n v2 = (n << 2) - (i << 1 | 1)
+            for j: 1 to v2 print -n "*"
+            print ""
         }
-        print ""
     }
-}
 
-{
-    print "圆"
-    var n = 15
-    var x0 = n / 2.0
-    var y0 = x0
-    var r = n / 2.0
-    for var i = 1; i <= n; i += 1 {
-        for j: 1 to n {
-            var b1 = (i - 1 - x0) ** 2 + (j - 1 - y0) ** 2
-            var b2 = (i - 1 - x0) ** 2 + (j - y0) ** 2
-            var b3 = (i - x0) ** 2 + (j - 1 - y0) ** 2
-            var b4 = (i - x0) ** 2 + (j - y0) ** 2
-            var b5 = (i - 0.5 - x0) ** 2 + (j - 0.5 - y0) ** 2
-            var tot = 0
-            if b1 <= r ** 2 tot += 1
-            if b2 <= r ** 2 tot += 1
-            if b3 <= r ** 2 tot += 1
-            if b4 <= r ** 2 tot += 1
-            if b5 <= r ** 2 tot += 1
-            var s = ""
-            if tot >= 3 s = "*"
-            else s = " "
-            print -n s
+    {
+        print "心型"
+        var stp = 0.15
+        for (var y = 1.5; y > -1.5; y -= stp) {
+            var halfStp = stp / 2
+            for (var x = -1.5; x < 1.5; x += halfStp) {
+                var a = x ** 2 + y ** 2 - 1
+                if (a ** 3 - x * x * y ** 3 <= 0) print -n "*"
+                else print -n " "
+            }
+            print ""
         }
-        print ""
+    }
+
+    {
+        print "圆"
+        var n = 15
+        var x0 = n / 2.0
+        var y0 = x0
+        var r = n / 2.0
+        for var i = 1; i <= n; i += 1 {
+            for j: 1 to n {
+                var b1 = (i - 1 - x0) ** 2 + (j - 1 - y0) ** 2
+                var b2 = (i - 1 - x0) ** 2 + (j - y0) ** 2
+                var b3 = (i - x0) ** 2 + (j - 1 - y0) ** 2
+                var b4 = (i - x0) ** 2 + (j - y0) ** 2
+                var b5 = (i - 0.5 - x0) ** 2 + (j - 0.5 - y0) ** 2
+                var tot = 0
+                if b1 <= r ** 2 tot += 1
+                if b2 <= r ** 2 tot += 1
+                if b3 <= r ** 2 tot += 1
+                if b4 <= r ** 2 tot += 1
+                if b5 <= r ** 2 tot += 1
+                var s = ""
+                if tot >= 3 s = "*"
+                else s = " "
+                print -n s
+            }
+            print ""
+        }
     }
 }

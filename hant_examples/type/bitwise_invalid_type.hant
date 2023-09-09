@@ -1,3 +1,5 @@
-var x = 1L
-x ^= 3.45
-print x
+void main(string[] args) {
+    var x = 1L
+    x ^= 3.45
+    print x
+}

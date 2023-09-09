@@ -22,6 +22,7 @@ import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
+import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
@@ -44,11 +45,14 @@ import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
 import com.example.hans_antlr4.utils.HantNumber;
 import com.example.hans_antlr4.utils.TypeResolver;
 
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
     private Scope scope;
+    private CallExpressionVisitor callExpressionVisitor;
+
+    public ExpressionVisitor(Scope scope) {
+        this.scope = scope;
+        this.callExpressionVisitor = new CallExpressionVisitor(scope, this);
+    }
 
     @Override
     public Expression visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
@@ -259,5 +263,10 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
             throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, assignmentSign, sourceLine);
         }
         return new AssignmentExpression(localVariable, assignmentSign, expression);
+    }
+
+    @Override
+    public FunctionCall visitFunctionCall(HansAntlrParser.FunctionCallContext ctx) {
+        return (FunctionCall) callExpressionVisitor.visitFunctionCall(ctx);
     }
 }

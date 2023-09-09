@@ -33,6 +33,7 @@ public class RangedForStatement extends Loop {
         this.startExpression = startExpression;
         this.endExpression = endExpression;
         this.iteratorVariableStatement = iteratorVariableStatement;
+        // TODO: RangedForStatement 支持long
         Type startExpressionType = startExpression.getType();
         Type endExpressionType = endExpression.getType();
         boolean typesAreIntegers = startExpressionType == BuiltInType.INT && endExpressionType == BuiltInType.INT;

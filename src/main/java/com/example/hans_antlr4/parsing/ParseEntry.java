@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ParseEntry {
+    public static String publicClassName;
+
     public static CompilationUnit parseFromFilePath(String fileAbsolutePath) throws IOException {
         CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
         return parse(charStream);
@@ -30,7 +32,7 @@ public class ParseEntry {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);
 
-        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor();
+        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor(publicClassName);
         HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
         parser.addErrorListener(errorListener);
 

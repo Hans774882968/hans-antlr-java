@@ -16,10 +16,11 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class AssignmentIntTest implements Opcodes {
     @Test
-    public void assignmentIntTest1() {
+    public void assignmentIntTest1() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var x = 1\nvar y = 2\ny = (x += 20) * (y += y = (x &= 40))");
         Scope scope = new Scope(new MetaData(null));

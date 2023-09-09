@@ -25,10 +25,11 @@ import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantIfTest {
     @Test
-    public void relationalExpressionTest() {
+    public void relationalExpressionTest() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("if 20 % 12 <= 8 {}");
         Scope scope = new Scope(new MetaData(null));
         Scope newScope = new Scope(scope);
@@ -43,7 +44,7 @@ public class HantIfTest {
     }
 
     @Test
-    public void equalityExpressionTest() {
+    public void equalityExpressionTest() throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode("if 21 % 12 == -1 + 10 {}");
         Scope scope = new Scope(new MetaData(null));
         Scope newScope = new Scope(scope);
@@ -60,9 +61,9 @@ public class HantIfTest {
     }
 
     @Test
-    public void confirmNewScopeCreatedTest() {
-        List<Statement> statements = TestUtils
-                .getStatementsFromCode("if 123 { var x = 10 if 456 var x = 12 else var x = 15 } var x = 20");
+    public void confirmNewScopeCreatedTest() throws MainMethodNotFoundInPublicClass {
+        List<Statement> statements = TestUtils.getStatementsFromCode(
+                "if 123 { var x = 10 if 456 var x = 12 else var x = 15 } var x = 20");
         MethodVisitor mv = TestUtils.mockGenerateBytecode(statements);
 
         verify(mv, times(1)).visitIntInsn(eq(Opcodes.BIPUSH), eq(10));

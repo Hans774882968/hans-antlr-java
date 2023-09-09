@@ -11,9 +11,11 @@ import org.objectweb.asm.Opcodes;
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantIntRangeTest {
-    public void intRangeTestTemplate(String code, int intValue, int bipushTimes, int sipushTimes, int ldcTimes) {
+    public void intRangeTestTemplate(String code, int intValue, int bipushTimes, int sipushTimes, int ldcTimes)
+            throws MainMethodNotFoundInPublicClass {
         Statement statement = TestUtils.getFirstStatementFromCode(code);
 
         MethodVisitor mv = mock(MethodVisitor.class);
@@ -27,7 +29,7 @@ public class HantIntRangeTest {
     }
 
     @Test
-    public void intRangeTests() {
+    public void intRangeTests() throws MainMethodNotFoundInPublicClass {
         intRangeTestTemplate("var v1 = 127", 127, 1, 0, 0);
         intRangeTestTemplate("var v2 = 128", 128, 0, 1, 0);
         intRangeTestTemplate("var v3 = 32767", 32767, 0, 1, 0);

@@ -67,15 +67,17 @@ public class App {
         String fileName = hantFile.getName();
         String fileAbsolutePath = hantFile.getAbsolutePath();
         log.debug("trying to parse hant file \"{}\" ...", fileAbsolutePath);
+        String publicClassName = StringUtils.remove(fileName, ".hant");
         CompilationUnit compilationUnit = null;
         try {
+            ParseEntry.publicClassName = publicClassName;
             compilationUnit = ParseEntry.parseFromFilePath(fileAbsolutePath);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
-        final byte[] byteCode = compilationUnit.generateBytecode(StringUtils.remove(fileName, ".hant"));
+        final byte[] byteCode = compilationUnit.generateBytecode(publicClassName);
 
         try {
             if (app.compilerArguments.isRunMode()) {

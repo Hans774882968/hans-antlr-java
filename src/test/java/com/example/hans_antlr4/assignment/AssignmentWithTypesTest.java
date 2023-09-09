@@ -20,6 +20,7 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 class BootstrapMethodArgMatcher extends ArgumentMatcher<Object> {
     @Override
@@ -33,9 +34,10 @@ class BootstrapMethodArgMatcher extends ArgumentMatcher<Object> {
 
 public class AssignmentWithTypesTest implements Opcodes {
     @Test
-    public void assignmentAssignNumericTest1() {
+    public void assignmentAssignNumericTest1() throws MainMethodNotFoundInPublicClass {
         // 低优先级RHS可以赋值给高优先级LHS
-        List<Statement> statements = TestUtils.getStatementsFromCode("var tmpD = 0.5\ntmpD = 0x3f2L\nprint tmpD = 3");
+        List<Statement> statements = TestUtils
+                .getStatementsFromCode("var tmpD = 0.5\ntmpD = 0x3f2L\nprint tmpD = 3");
         Scope scope = new Scope(new MetaData(null));
         scope.addLocalVariables(new LocalVariable("tmpD", BuiltInType.DOUBLE));
         MethodVisitor mv = TestUtils.mockGenerateBytecode(statements, scope);
@@ -65,7 +67,7 @@ public class AssignmentWithTypesTest implements Opcodes {
     }
 
     @Test
-    public void assignmentNumericTest1() {
+    public void assignmentNumericTest1() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + (tmpL |= tmpL ^= tmpL &= 0x3f1)");
         Scope scope = new Scope(new MetaData(null));
@@ -113,7 +115,7 @@ public class AssignmentWithTypesTest implements Opcodes {
     }
 
     @Test
-    public void assignmentStringTest1() {
+    public void assignmentStringTest1() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var x = \"str\"\nvar y = 1.23\nx += x = x + y");
         Scope scope = new Scope(new MetaData(null));

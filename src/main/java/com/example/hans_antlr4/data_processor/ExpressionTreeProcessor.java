@@ -6,6 +6,7 @@ import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
+import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.statement.Statement;
 
@@ -73,5 +74,16 @@ public class ExpressionTreeProcessor {
         }
         varReference.setParent(parent);
         varReference.setBelongStatement(belongStatement);
+    }
+
+    public void processExpressionTree(FunctionCall functionCall, Expression parent, Statement belongStatement) {
+        if (functionCall == null) {
+            return;
+        }
+        functionCall.setParent(parent);
+        functionCall.setBelongStatement(belongStatement);
+        functionCall.getArguments().forEach(arg -> {
+            arg.processSubExpressionTree(this, functionCall, belongStatement);
+        });
     }
 }
