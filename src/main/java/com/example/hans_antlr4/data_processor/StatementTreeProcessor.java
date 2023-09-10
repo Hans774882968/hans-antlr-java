@@ -9,11 +9,18 @@ import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.Loop;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
+import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 
+/*
+ * 1. setParent
+ * 2. processStatementTree
+ * 3. processSubExpressionTree
+ * 4. setNearestLoopStatement
+ */
 public class StatementTreeProcessor {
     // 目前不允许 Expression 的 parent 为 Statement
     private ExpressionTreeProcessor expressionTreeProcessor;
@@ -149,5 +156,16 @@ public class StatementTreeProcessor {
         standardForStatement.getStandardForUpdate().ifPresent(forUpdate -> {
             forUpdate.processSubStatementTree(this, standardForStatement, standardForStatement);
         });
+    }
+
+    public void processStatementTree(
+            ReturnStatement returnStatement,
+            Statement parent,
+            Loop nearestLoopStatement) {
+        if (returnStatement == null) {
+            return;
+        }
+        returnStatement.setParent(parent);
+        returnStatement.getExpression().processSubExpressionTree(expressionTreeProcessor, null, returnStatement);
     }
 }

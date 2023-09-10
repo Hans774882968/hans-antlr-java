@@ -6,9 +6,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
+import com.example.hans_antlr4.bytecode_gen.MethodGenerator;
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
 import com.example.hans_antlr4.domain.global.Function;
 import com.example.hans_antlr4.domain.scope.FunctionSignature;
@@ -97,5 +99,26 @@ public class TestUtils {
                 "-runMode",
                 "-file",
         }, filePath));
+    }
+
+    public static MethodVisitor mockGenerateOneFunction(String code) {
+        CompilationUnit compilationUnit = ParseEntry.parseFromCode(code);
+        ClassWriter cw = mock(ClassWriter.class);
+        MethodVisitor mv = mock(MethodVisitor.class);
+        new MethodGenerator(cw).generate(compilationUnit.getFunctions().get(0), mv);
+        return mv;
+    }
+
+    public static MethodVisitor[] mockGenerateFunctions(String code) {
+        CompilationUnit compilationUnit = ParseEntry.parseFromCode(code);
+        ClassWriter cw = mock(ClassWriter.class);
+        MethodVisitor[] mvs = new MethodVisitor[compilationUnit.getFunctions().size()];
+        for (int i = 0; i < mvs.length; i++) {
+            Function fn = compilationUnit.getFunctions().get(i);
+            MethodVisitor mv = mock(MethodVisitor.class);
+            mvs[i] = mv;
+            new MethodGenerator(cw).generate(fn, mv);
+        }
+        return mvs;
     }
 }

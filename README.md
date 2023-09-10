@@ -4992,7 +4992,7 @@ for (var y = 1.5; y > -1.5; y -= stp) {
 
 ## Part7-支持方法
 
-TODO: 函数重载已支持，return statement待支持。
+TODO: 函数重载、return statement已支持。
 
 ### 函数调用语法规则引入的二义性问题
 
@@ -5015,6 +5015,14 @@ let y = x
 
 ![3-JS函数调用文法规则的二义性.jpg](./README_assets/3-JS函数调用文法规则的二义性.jpg)
 
+那`Python`呢？不妨再看下[Python3语法规则的antlr描述](https://github.com/antlr/grammars-v4/blob/master/python/python3/Python3Parser.g4)。`Python`靠词法规则`NEWLINE`来标识语句的结束，和Java、C++等靠分号标识语句结束的语言没有区别。我为萌新们截取了相关的核心代码，有助于理解：
+
+```g4
+file_input: (NEWLINE | stmt)* EOF;
+stmt: simple_stmts | compound_stmt;
+simple_stmts: simple_stmt (';' simple_stmt)* ';'? NEWLINE;
+```
+
 因此我认为这个二义性问题很可能是无解的，只能通过添加分号来规避。
 
 语法规则修改：
@@ -5023,6 +5031,27 @@ let y = x
 // statements: statement*;
 statements: (statement ';'?)*;
 ```
+
+## Part9-支持 return statement
+
+TODO
+
+语法规则修改：
+
+```g4
+statement:
+	variable
+	// ...
+	| returnStatement
+    // ...
+    | expressionStatement;
+returnStatement:
+	'return' expression	# ReturnWithValue
+	| 'return'			# ReturnVoid;
+```
+
+1. 如果采用原作者项目的语法规则，允许只有一条语句的函数作为隐式`return`语句，那么`returnStatement`优先级必须高于`expressionStatement`，否则有二义性。这里我没有采用原作者项目的语法规则，仍然要求`return`语句必须以`return`开头，因为目前我的语法规则的歧义已经太多了😂。
+2. `ReturnWithValue`的优先级必须高于`ReturnVoid`，否则`return x`会被优先解释为`ReturnVoid`加`expressionStatement`。
 
 ## 参考资料
 

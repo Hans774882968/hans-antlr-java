@@ -9,6 +9,7 @@ import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
+import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Mod;
 import com.example.hans_antlr4.domain.expression.Multiplication;
@@ -94,6 +95,10 @@ public class ExpressionGenerator implements Opcodes {
         } else {
             mv.visitLdcInsn(TypeResolver.getValueFromString(stringValue, type));
         }
+    }
+
+    public void generate(EmptyExpression emptyExpression) {
+
     }
 
     public void generate(UnaryPositive expression) {

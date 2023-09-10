@@ -15,10 +15,13 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
 
 public class TypeResolver {
-    public static Type getFromTypeName(HansAntlrParser.TypeContext typeContext) {
+    public static Type getFromTypeContext(HansAntlrParser.TypeContext typeContext) {
         if (typeContext == null)
             return BuiltInType.VOID;
-        String typeName = typeContext.getText();
+        return getFromTypeName(typeContext.getText());
+    }
+
+    public static Type getFromTypeName(String typeName) {
         Optional<? extends Type> buildInType = BuiltInType.getBuiltInType(typeName);
         if (buildInType.isPresent())
             return buildInType.get();

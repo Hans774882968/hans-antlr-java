@@ -3,6 +3,7 @@ package com.example.hans_antlr4.data_processor;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
+import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
@@ -10,6 +11,11 @@ import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.statement.Statement;
 
+/*
+ * 1. setParent
+ * 2. setBelongStatement
+ * 3. processSubExpressionTree
+ */
 public class ExpressionTreeProcessor {
     public void processExpressionTree(Unary unary, Expression parent, Statement belongStatement) {
         if (unary == null) {
@@ -85,5 +91,13 @@ public class ExpressionTreeProcessor {
         functionCall.getArguments().forEach(arg -> {
             arg.processSubExpressionTree(this, functionCall, belongStatement);
         });
+    }
+
+    public void processExpressionTree(EmptyExpression emptyExpression, Expression parent, Statement belongStatement) {
+        if (emptyExpression == null) {
+            return;
+        }
+        emptyExpression.setParent(parent);
+        emptyExpression.setBelongStatement(belongStatement);
     }
 }

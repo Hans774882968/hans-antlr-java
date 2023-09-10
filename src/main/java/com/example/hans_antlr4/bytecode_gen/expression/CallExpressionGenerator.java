@@ -19,7 +19,9 @@ public class CallExpressionGenerator implements Opcodes {
     public void generate(FunctionCall functionCall) {
         List<Expression> parameters = functionCall.getArguments();
         parameters.forEach(param -> param.accept(parent));
-        String ownerDescriptor = functionCall.getOwner().getInternalName();
+        String ownerDescriptor = functionCall.getOwner() == null || functionCall.getOwner().getName() == null
+                ? ""
+                : functionCall.getOwner().getInternalName();
         String functionName = functionCall.getSignature().getName();
         String methodDescriptor = DescriptorFactory.getMethodDescriptor(functionCall.getSignature());
         mv.visitMethodInsn(INVOKESTATIC, ownerDescriptor, functionName, methodDescriptor, false);

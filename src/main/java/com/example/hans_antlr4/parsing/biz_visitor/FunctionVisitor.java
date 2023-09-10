@@ -40,7 +40,7 @@ public class FunctionVisitor extends HansAntlrBaseVisitor<Function> {
 
     private Type getReturnType(HansAntlrParser.FunctionContext functionDeclarationContext) {
         TypeContext typeCtx = functionDeclarationContext.functionDeclaration().type();
-        return TypeResolver.getFromTypeName(typeCtx);
+        return TypeResolver.getFromTypeContext(typeCtx);
     }
 
     private List<Parameter> getParameters(HansAntlrParser.FunctionContext functionDeclarationContext) {
@@ -51,7 +51,7 @@ public class FunctionVisitor extends HansAntlrBaseVisitor<Function> {
                 ? new ArrayList<>()
                 : paramsCtx.functionParameter().stream()
                         .map(paramCtx -> new Parameter(
-                                TypeResolver.getFromTypeName(paramCtx.type()),
+                                TypeResolver.getFromTypeContext(paramCtx.type()),
                                 paramCtx.Identifier().getText()))
                         .peek(param -> scope.addLocalVariable(new LocalVariable(param.getName(), param.getType())))
                         .collect(Collectors.toList());

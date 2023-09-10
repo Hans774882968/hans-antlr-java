@@ -5,6 +5,7 @@ import java.util.List;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
+import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
@@ -16,10 +17,12 @@ import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
+import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -174,5 +177,17 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         StandardForStatement standardForStatement = new StandardForStatement(
                 forInit, shouldEndLoopExpression, forUpdate, statement, newScope);
         return standardForStatement;
+    }
+
+    @Override
+    public ReturnStatement visitReturnVoid(HansAntlrParser.ReturnVoidContext ctx) {
+        return new ReturnStatement(new EmptyExpression(BuiltInType.VOID));
+    }
+
+    @Override
+    public ReturnStatement visitReturnWithValue(HansAntlrParser.ReturnWithValueContext ctx) {
+        final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+        final Expression expression = ctx.expression().accept(expressionVisitor);
+        return new ReturnStatement(expression);
     }
 }

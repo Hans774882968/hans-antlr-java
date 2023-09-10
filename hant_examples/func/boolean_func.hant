@@ -1,0 +1,29 @@
+boolean isIn(int v, int l, int r) {
+    if v < l return false
+    if v > r return false
+    return true
+}
+
+string getRedOrBlueText(string s, boolean isRed) {
+    if isRed {
+        return "\033[31m" + s + "\033[0m"
+    }
+    return "\033[34m" + s + "\033[0m"
+}
+
+string getRedOrBlueText(boolean s, boolean isRed) {
+    return getRedOrBlueText(s + "", isRed)
+}
+
+string getRedOrBlueText(int s, boolean isRed) {
+    return getRedOrBlueText("" + s, isRed)
+}
+
+void main(string[] args) {
+    for var i = 0; i < 10; i += 2 {
+        if isIn(i, 3, 6) {
+            print getRedOrBlueText(i, (i >> 1) % 2 > 0)
+        }
+        print getRedOrBlueText(isIn(i, 3, 6), (i >> 1) % 2 == 0)
+    }
+}

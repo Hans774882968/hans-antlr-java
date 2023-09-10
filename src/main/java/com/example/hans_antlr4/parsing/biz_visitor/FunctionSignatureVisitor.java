@@ -21,10 +21,10 @@ public class FunctionSignatureVisitor extends HansAntlrBaseVisitor<FunctionSigna
                 ? new ArrayList<>()
                 : paramsCtx.functionParameter().stream()
                         .map(paramCtx -> new Parameter(
-                                TypeResolver.getFromTypeName(paramCtx.type()),
+                                TypeResolver.getFromTypeContext(paramCtx.type()),
                                 paramCtx.Identifier().getText()))
                         .collect(Collectors.toList());
-        Type returnType = TypeResolver.getFromTypeName(ctx.type());
+        Type returnType = TypeResolver.getFromTypeContext(ctx.type());
         return new FunctionSignature(functionName, parameters, returnType);
     }
 }

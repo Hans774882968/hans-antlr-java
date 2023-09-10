@@ -34,14 +34,18 @@ block: '{' statements '}';
 statement:
 	variable
 	| print
-	| expressionStatement
+	| returnStatement
 	| block
 	| ifStatement
 	| rangedForStatement
 	| standardForStatement
 	| breakStatement
-	| continueStatement;
+	| continueStatement
+	| expressionStatement;
 variable: VARIABLE Identifier EQUALS expression;
+returnStatement:
+	'return' expression	# ReturnWithValue
+	| 'return'			# ReturnVoid;
 expressionStatement: expression;
 ifStatement:
 	'if' ('(')? expression (')')? trueStatement = statement (

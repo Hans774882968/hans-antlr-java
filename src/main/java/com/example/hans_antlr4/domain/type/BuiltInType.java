@@ -14,7 +14,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum BuiltInType implements Type {
-    BOOLEAN("bool", boolean.class, "Z", TypeSpecificOpcodes.INT, Double.NaN), INT("int", int.class, "I",
+    BOOLEAN("boolean", boolean.class, "Z", TypeSpecificOpcodes.INT, Double.NaN), INT("int", int.class, "I",
             TypeSpecificOpcodes.INT,
             30d), CHAR("char", char.class, "C", TypeSpecificOpcodes.INT, Double.NaN), BYTE("byte", byte.class, "B",
                     TypeSpecificOpcodes.INT, 10d), SHORT("short", short.class, "S", TypeSpecificOpcodes.INT, 20d), LONG(
@@ -22,7 +22,7 @@ public enum BuiltInType implements Type {
                             40d), FLOAT("float", float.class, "F", TypeSpecificOpcodes.FLOAT, 50d), DOUBLE("double",
                                     double.class, "D", TypeSpecificOpcodes.DOUBLE, 60d), STRING("string", String.class,
                                             "Ljava/lang/String;", TypeSpecificOpcodes.OBJECT, 70d), BOOLEAN_ARR(
-                                                    "bool[]", boolean[].class, "[B", TypeSpecificOpcodes.OBJECT,
+                                                    "boolean[]", boolean[].class, "[B", TypeSpecificOpcodes.OBJECT,
                                                     Double.NaN), INT_ARR("int[]", int[].class, "[I",
                                                             TypeSpecificOpcodes.OBJECT, Double.NaN), CHAR_ARR("char[]",
                                                                     char[].class, "[C", TypeSpecificOpcodes.OBJECT,
@@ -57,7 +57,7 @@ public enum BuiltInType implements Type {
                                                                                                                                     "void",
                                                                                                                                     void.class,
                                                                                                                                     "V",
-                                                                                                                                    TypeSpecificOpcodes.OBJECT,
+                                                                                                                                    TypeSpecificOpcodes.VOID,
                                                                                                                                     Double.NaN);
 
     private String name;

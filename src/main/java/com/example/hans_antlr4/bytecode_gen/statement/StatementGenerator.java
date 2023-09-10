@@ -10,6 +10,7 @@ import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
+import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
@@ -31,8 +32,8 @@ public class StatementGenerator {
         new VariableDeclarationStatementGenerator(mv, scope).generate(variableDeclaration);
     }
 
-    public void generate(ExpressionStatement expressionStatement) {
-        new ExpressionStatementGenerator(mv, scope).generate(expressionStatement);
+    public void generate(ReturnStatement returnStatement) {
+        new ReturnStatementGenerator(mv, scope).generate(returnStatement);
     }
 
     public void generate(Block block) {
@@ -66,5 +67,9 @@ public class StatementGenerator {
     public void generate(StandardForStatement standardForStatement) {
         StandardForStatementGenerator standardForStatementGenerator = new StandardForStatementGenerator(mv);
         standardForStatementGenerator.generate(standardForStatement);
+    }
+
+    public void generate(ExpressionStatement expressionStatement) {
+        new ExpressionStatementGenerator(mv, scope).generate(expressionStatement);
     }
 }

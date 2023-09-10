@@ -1,10 +1,22 @@
 // 支持重载
-void printOrangeStr(long v) {
-    print "\033[33m" + v + "\033[0m"
+string getOrangeStr(int v) {
+    return "\033[33m" + v + "\033[0m"
 }
 
-void printOrangeStr(string s) {
-    print "\033[33m" + s + "\033[0m"
+string getOrangeStr(long v) {
+    return "\033[33m" + v + "\033[0m"
+}
+
+string getOrangeStr(string s) {
+    return "\033[33m" + s + "\033[0m"
+}
+
+string getRedStr(long v) {
+    return "\033[31m" + v + "\033[0m"
+}
+
+string getRedStr(string s) {
+    return "\033[31m" + s + "\033[0m"
 }
 
 void printAdd() {
@@ -35,17 +47,17 @@ void printAdd(int a, int b, int c) {
     print a + b + c
 }
 
-void printQPow(long a, long b, int mod) {
+long qPow(long a, long b, int mod) {
     var res = 1L
     for ; b > 0; b >>= 1 {
         if (b & 1) > 0 res = res * a % mod
         a *= a
         a %= mod
     }
-    printOrangeStr(res)
+    return res
 }
 
-void printDivSum(long n) {
+string getDivSum(long n) {
     var ans = 0l
     var mx = 0l
     var mod = 998244353
@@ -55,7 +67,54 @@ void printDivSum(long n) {
         if mx < (R - L + 1) * (n / L) mx = (R - L + 1) * (n / L)
         L = R + 1
     }
-    print "整除分块 mx = " + mx + ", ans = " + ans
+    return "整除分块 mx = " + mx + ", ans = " + ans
+}
+
+int gcd(int a, int b) {
+    if b == 0 return a
+    return gcd(b, a % b)
+}
+
+long fac(int a) {
+    if a <= 0 return 1L
+    return fac(a - 1) * a
+}
+
+void qPowDemo(int n) {
+    var a = 2L
+    var b = 3
+    var mod = 998244353
+    var tot = 0L
+    for b: 0 to n {
+        tot += qPow(a, 1L * b, mod)
+    }
+    print "tot = " + getRedStr(tot)
+    print getOrangeStr("b = " + b)
+}
+
+void facDemo() {
+    var tot = 0l
+    for i: 0 to 10 {
+        tot = fac(i) + tot
+    }
+    // 4037914 20922789888000
+    print getRedStr("fac demo " + tot + " " + fac(16))
+}
+
+void returnVoidTest(int v) {
+    if v < 0 {
+        print v + " < 0"
+        return
+    }
+    if v > 0 {
+        print v + " > 0"
+        return
+    }
+    print "v = 0"
+}
+
+void voidFn() {
+
 }
 
 void main(string[] args) {
@@ -68,16 +127,20 @@ void main(string[] args) {
     printAdd(12, 13)
     printAdd(12, 13, 14)
 
-    var a = 2L
-    var b = 3
-    var mod = 998244353
-    for b: 0 to 4 {
-        printQPow(a, 1L * b, mod)
-    }
+    qPowDemo(4)
 
-    printOrangeStr("b = " + b)
+    print getRedStr(getDivSum(50000L)) // 548725
+    print getOrangeStr(getDivSum(10000000L)) // 162725364
+    print getRedStr(getDivSum(100000000000L)) // 767147441
 
-    printDivSum(50000L) // 548725
-    printDivSum(10000000L) // 162725364
-    printDivSum(100000000000L) // 767147441
+    print gcd(2 * 3 * 5 * 7, 9 * 5) // 15
+    print gcd(4 * 3 * 5 * 7, 2 * 5 * 7 * 11) // 70
+
+    facDemo()
+
+    returnVoidTest(-10)
+    voidFn()
+    returnVoidTest(0)
+    voidFn()
+    returnVoidTest(-10)
 }
