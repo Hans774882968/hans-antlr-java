@@ -6,13 +6,14 @@
 
 近几天我看到一个项目叫[Creating JVM language](https://juejin.cn/post/6844903671679942663)，目标是开发一门编译到JVM字节码的语言。在此我打算跟着这个项目做一遍，以学习：
 
-1. 使用antlr4生成Lexer和Parser的代码。
-2. 使用`ASM`，并熟悉大量JVM字节码指令。
-3. 使用`JUnit + Mockito`保证项目质量。
+1. 使用antlr4生成Lexer和Parser的代码。借助IDEA ASM Bytecode Viewer插件解决开发过程中可能遇到的二义性问题。
+2. 深入讨论了**隐式类型转换**等高级话题及其实现方案，并最终落地。
+3. 使用`ASM`，并熟悉大量JVM字节码指令。
+4. 使用`JUnit + Mockito`保证项目质量。使用`system-stubs`实现黑盒测试。
 
-为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。另外，我修复了原作者项目的一些问题，在此列举：
+为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。在此过程中，我会**额外实现许多`Enkel`没有的语法特性**，相信这些特性的实现过程对编程萌新们而言是很有价值的。另外，我修复了原作者项目的一些问题，在此列举：
 
-1. 原作者给出的规则`STRING: '"' .* '"';`是贪婪模式，会导致`"1"\n"2"`这个例子只匹配到一个字符串。我把它改成了非贪婪模式`STRING: '"' .*? '"';`。
+1. 原作者给出的字符串的词法规则`STRING: '"' .* '"';`是贪婪模式，会导致`"1"\n"2"`这个例子只匹配到一个字符串。我把它改成了非贪婪模式`STRING: '"' .*? '"';`。为了支持Java的转义字符用法，我借鉴[Java9语法规则的antlr描述](https://github.com/antlr/grammars-v4/blob/master/java/java9/Java9Lexer.g4)再次升级了字符串的词法规则。
 2. 加法和减法、乘法和除法的运算优先级不相同，导致`3 - 1 + 2`算出0，而非4。见本文《Part8：1-支持算数运算》一节。
 3. 原作者的`if`语句后跟的statement只有为块语句时才新建了作用域，我进行了修复。
 4. 原作者项目存在变量shadow问题，我进行了修复，详见《原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复》一节。
@@ -23,8 +24,11 @@
 目前支持的语言特性：
 
 - 定义变量：`var foo = 123`。
-- 输出到控制台：`print expression`。
-- 完整的表达式支持。相比于C语言仅三目运算符、逗号表达式不支持。
+- 输出到控制台。`print expression`可输出一行，`print -n expr`不输出换行符。
+- 字符串支持Java的转义字符。比如`print "\033[31m红色字符串\033[0m"`可输出红色字符串。
+- 完整的表达式支持。相比于C语言仅三目运算符、逗号表达式不支持。另外，新增了`**`和`**=`运算符，方便地进行乘方运算。与Java相同，字符串可与所有类型相加。
+- 支持`int, long, float, double, boolean, string`类型。和Java一样，立即数支持类型后缀，比如`1d`表示`double`类型的1。表达式支持**隐式类型转换**，类型提升优先级为：`int < long < float < double`。
+- 支持定义方法。`hant`中，方法是语法糖，它们将被编译到隐藏的`public class`中，修饰符为`public static`。
 
 环境：
 - Windows10
@@ -2405,7 +2409,9 @@ OR: '|';
 
 ### 支持一元运算符
 
-新增`unary`文件夹和一元运算符相关的类。继承关系：`UnaryNegative, UnaryPositive, UnaryTilde -> Unary`。
+TODO: 为`boolean`类型引入`!`运算符。
+
+因为目前只支持`int`和`string`，所以本次改动只新增`+ - ~`这3个一元运算符。新增`unary`文件夹和一元运算符相关的类。继承关系：`UnaryNegative, UnaryPositive, UnaryTilde -> Unary`。
 
 ```java
 @Getter
@@ -4050,7 +4056,24 @@ public enum TypeSpecificOpcodes {
 
 和原项目不同，我对于大部分未定义的指令都给了魔数`-1`。因为`ASM`发现输入的指令号为`-1`时一定会抛出异常，这样我就能发现我的代码存在漏洞，所以我认为原项目全部给0（即`NOP`）会掩盖问题，并不是最好的选择。
 
-接下来改造`BuiltinType`，添加类型相关的方法：
+在项目最早期，为了支持`int`和`string`类型，我们就引入了`BuiltinType`。代码大致如下：
+
+```java
+@AllArgsConstructor
+@Getter
+public enum BuiltInType implements Type {
+    BOOLEAN("boolean", boolean.class, "Z"),
+    INT("int", int.class, "I"),
+    STRING("string", String.class, "Ljava/lang/String;"),
+    VOID("void", void.class, "V");
+
+    private String name;
+    private Class<?> typeClass;
+    private String descriptor;
+}
+```
+
+其中的`name`属性很重要，`hant`代码中的类型字符串（比如函数签名`int bc(int v)`）需要通过`name`找到对应的`BuiltinType`枚举值。接下来改造`BuiltinType`，添加类型相关的方法：
 
 ```java
 @AllArgsConstructor
@@ -4078,6 +4101,15 @@ public enum BuiltInType implements Type {
         return opcodes.getDup();
     }
 }
+```
+
+`BuiltinType`枚举的`opcodes`基本上都和其类型对应，只有`BuiltinType.BOOLEAN`是例外。`BuiltinType.BOOLEAN`的`opcodes`是`TypeSpecificOpcodes.INT`。
+
+```java
+BOOLEAN("boolean", boolean.class, "Z", TypeSpecificOpcodes.INT),
+INT("int", int.class, "I", TypeSpecificOpcodes.INT),
+STRING("string", String.class, "Ljava/lang/String;", TypeSpecificOpcodes.OBJECT),
+// 其他的省略
 ```
 
 于是generator可以这么使用：`mv.visitInsn(expression.getType().getAndOpcode());`。
@@ -4992,7 +5024,67 @@ for (var y = 1.5; y > -1.5; y -= stp) {
 
 ## Part7-支持方法
 
-TODO: 函数重载、return statement已支持。
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/440b692c67dd66d8b9fac46cb750121e1cc43be6...main)
+
+### 期望的`hant`程序结构
+
+目前`hant`还未支持方法和面向对象，程序仅由若干条语句组成。但我希望`hant`类似于`cpp`，由函数、类定义和全局变量定义这几种要素组成。并且必须提供`void main(string[] args)`。这个目标和`Enkel`差别很大，并且对于Java这门纯粹面向对象的语言来说需要一些技巧才能实现。我的想法是，`function, variable`分别作为隐藏的`public class`的静态方法和静态字段。但这样你会发现，自定义的类不能访问全局变量，我觉得这无伤大雅，因为在自定义类中访问全局变量本来就是反模式。
+
+我对`hant`程序结构的目标可以用`antlr`描述：
+
+```g4
+compilationUnit: (functions | classDeclaration | variable) EOF;
+```
+
+因此本次程序的根规则改造如下：
+
+```g4
+compilationUnit: functions EOF;
+```
+
+### 支持函数定义和调用需要修改的语法规则
+
+要点：
+
+1. `funcCall`优先级必须高于`variableReference`，否则`foo(1)`会被优先解释为`foo`和表达式`(1)`。
+2. 之前`hant`不支持加分号，现在将`statements`规则调整为允许加或不加分号。原因在下一节《函数调用语法规则引入的二义性问题》讲解。
+
+```g4
+compilationUnit: functions EOF;
+
+functions: function*;
+function: functionDeclaration block;
+functionDeclaration: (type)? functionName '(' functionParameterList? ')';
+functionName: Identifier;
+functionParameterList:
+	functionParameter (',' functionParameter)*;
+functionParameter: type Identifier;
+type: primitiveType | classType;
+primitiveType:
+	'boolean' ('[' ']')*
+	| 'string' ('[' ']')*
+	| 'char' ('[' ']')*
+	| 'byte' ('[' ']')*
+	| 'short' ('[' ']')*
+	| 'int' ('[' ']')*
+	| 'long' ('[' ']')*
+	| 'float' ('[' ']')*
+	| 'double' ('[' ']')*
+	| 'void' ('[' ']')*;
+classType: qualifiedName ('[' ']')*;
+qualifiedName: Identifier ('.' Identifier)*;
+
+statements: (statement ';'?)*;
+
+expression:
+	funcCall										# FunctionCall
+	| variableReference								# VarReference
+    // ...
+    ;
+
+funcCall: functionName '(' argumentList ')';
+argumentList: expression? (',' expression)*;
+```
 
 ### 函数调用语法规则引入的二义性问题
 
@@ -5032,9 +5124,285 @@ simple_stmts: simple_stmt (';' simple_stmt)* ';'? NEWLINE;
 statements: (statement ';'?)*;
 ```
 
-## Part9-支持 return statement
+### 对程序入口和`bytecode_gen`部分入口的改造
 
-TODO
+我们已经很长时间没有关注`bytecode_gen`的入口了。回顾一下，`bytecode_gen`部分的入口是`src/main/java/com/example/hans_antlr4/bytecode_gen/CompilationUnit.java`。当时入口消费了`List<Statement> instructionsQueue`，把所有语句的字节码都加入了对用户透明的`main`方法。现在我们改造成所有的方法默认均为静态，都加入对用户透明的`public class`。
+
+```java
+@Data
+@AllArgsConstructor
+public class CompilationUnit implements Opcodes {
+    private List<Function> functions;
+
+    public byte[] generateBytecode(String publicClassName) {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        // version, access, name, signature, base class, interfaces
+        cw.visit(52, ACC_PUBLIC + ACC_SUPER, publicClassName, null, "java/lang/Object", null);
+
+        functions.forEach(function -> new MethodGenerator(cw).generate(function));
+
+        cw.visitEnd();
+        return cw.toByteArray();
+    }
+}
+```
+
+入口Visitor`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\CompilationUnitVisitor.java`也需要相应做出调整。
+
+```java
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = false)
+@Data
+public class CompilationUnitVisitor extends HansAntlrBaseVisitor<CompilationUnit> {
+    private String publicClassName;
+
+    @Override
+    public CompilationUnit visitCompilationUnit(HansAntlrParser.CompilationUnitContext ctx) {
+        Scope scope = new Scope(new MetaData(publicClassName));
+        // 在读取所有函数前，要预先读取函数签名
+        FunctionSignatureVisitor functionSignatureVisitor = new FunctionSignatureVisitor();
+        ctx.functions().function().stream()
+                .map(method -> method.functionDeclaration().accept(functionSignatureVisitor))
+                .peek(scope::addSignature)
+                .collect(Collectors.toList());
+        List<Function> methods = ctx.functions().function().stream()
+                .map(method -> method.accept(new FunctionVisitor(scope)))
+                .collect(Collectors.toList());
+        return new CompilationUnit(methods);
+    }
+}
+```
+
+1. 之前定义的作用域是`new Scope(new MetaData(null))`，但现在需要使用到`public class`的类名信息，所以需要把`publicClassName`传入。这个类名最终会在负责描述函数调用的`CallExpressionVisitor`处消费：`return new FunctionCall(new ClassType(scope.getClassName()), signature, arguments);`。
+2. 你可能会好奇，为什么需要先读取函数签名信息，再遍历整个方法？[原作者项目的blog](https://juejin.cn/post/6844903671684136967)已经给出了解释。程序自上而下遍历函数，但遍历到的函数调用语句所调用的函数可能是在下方定义的，如果不用一个数据结构存储函数签名信息就找不到函数定义。
+
+### Visitor部分
+
+我们先梳理沟通visitor部分和字节码生成部分的数据结构。
+
+`Function`数据结构只需要记录函数签名和函数体。
+
+```java
+@AllArgsConstructor
+@Getter
+public class Function {
+    private FunctionSignature functionSignature;
+    private Block body;
+}
+```
+
+函数签名由函数名、形参列表和返回值类型组成。
+
+```java
+@AllArgsConstructor
+@Getter
+public class FunctionSignature {
+    private final String name;
+    private final List<Parameter> parameters;
+    private final Type returnType;
+
+    public List<Parameter> getParameters() {
+        return Collections.unmodifiableList(parameters);
+    }
+}
+```
+
+`Parameter`目前只需要记录变量名和变量类型，所以不需要继承任何类。
+
+```java
+@AllArgsConstructor
+@Getter
+public class Parameter {
+    private Type type;
+    private String name;
+}
+```
+
+`FunctionVisitor`提取其他信息的代码都比较常规，只讲下如何提取类型信息。以返回值类型为例：
+
+```java
+private Type getReturnType(HansAntlrParser.FunctionContext functionDeclarationContext) {
+    TypeContext typeCtx = functionDeclarationContext.functionDeclaration().type();
+    return TypeResolver.getFromTypeContext(typeCtx);
+}
+```
+
+`TypeResolver.getFromTypeContext`的功能是根据源代码的类型字符串，比如`int, string`映射到`BuiltinType`或`ClassType`。
+
+```java
+public class TypeResolver {
+    public static Type getFromTypeContext(HansAntlrParser.TypeContext typeContext) {
+        if (typeContext == null)
+            return BuiltInType.VOID;
+        return getFromTypeName(typeContext.getText());
+    }
+
+    public static Type getFromTypeName(String typeName) {
+        Optional<? extends Type> buildInType = BuiltInType.getBuiltInType(typeName);
+        if (buildInType.isPresent())
+            return buildInType.get();
+        return new ClassType(typeName);
+    }
+}
+```
+
+我们用`BuiltInType.getBuiltInType`尝试匹配内置类型，如果匹配失败我们就认为这个类型是自定义类型，返回`ClassType`对象。
+
+```java
+public static Optional<BuiltInType> getBuiltInType(String typeName) {
+    return Arrays.stream(BuiltInType.values())
+            .filter(type -> type.getName().equals(typeName))
+            .findFirst();
+}
+```
+
+`FunctionSignatureVisitor`所做的事是`FunctionVisitor`的子集，在此省略。
+
+接下来看函数调用部分的visitor：`src\main\java\com\example\hans_antlr4\parsing\biz_visitor\CallExpressionVisitor.java`。我们需要根据函数名和实参类型列表来匹配函数签名。因此我们引入了`FunctionCall`类和`scope.getSignature`工具方法。
+
+因为后续要支持构造函数调用等其他调用，所以我们抽象出了`Call`抽象类。显然`Call`是一种表达式，所以有继承链`FunctionCall -> Call -> Expression`。
+
+```java
+public abstract class Call extends Expression {
+    public Call(Type type, Expression parent, Statement belongStatement) {
+        super(type, parent, belongStatement);
+    }
+}
+
+@Getter
+public class FunctionCall extends Call {
+    private final Type owner;
+    private final FunctionSignature signature;
+    private final List<Expression> arguments;
+
+    public FunctionCall(Type owner, FunctionSignature signature, List<Expression> arguments) {
+        super(signature.getReturnType(), null, null);
+        this.owner = owner;
+        this.signature = signature;
+        this.arguments = arguments;
+    }
+    // accept, processSubExpressionTree 等方法和其他表达式类一样，在此省略
+}
+```
+
+`scope.getSignature`根据函数名和实参类型列表来匹配函数签名，代码就不贴了。
+
+`CallExpressionVisitor`目前的完整代码如下：
+
+```java
+@AllArgsConstructor
+public class CallExpressionVisitor extends HansAntlrBaseVisitor<Call> {
+    private Scope scope;
+    private ExpressionVisitor parent;
+
+    @Override
+    public Call visitFunctionCall(HansAntlrParser.FunctionCallContext ctx) {
+        String funName = ctx.funcCall().functionName().getText();
+
+        List<ExpressionContext> expressionContexts = ctx.funcCall().argumentList().expression();
+        List<Expression> arguments = expressionContexts.stream().map(expressionContext -> {
+            return expressionContext.accept(parent);
+        }).collect(Collectors.toList());
+
+        List<Type> argTypes = arguments.stream().map(arg -> {
+            return arg.getType();
+        }).collect(Collectors.toList());
+        int sourceLine = ctx.getStart().getLine();
+        FunctionSignature signature = scope.getSignature(funName, argTypes, sourceLine);
+
+        return new FunctionCall(new ClassType(scope.getClassName()), signature, arguments);
+    }
+}
+```
+
+### `bytecode_gen`部分
+
+方法生成部分：`MethodGenerator`主要做的事：
+
+1. 为隐藏的`public class`定义静态方法：调用`classWriter.visitMethod`。`visitMethod`入参：`int access, String name, String descriptor, String signature, String[] exceptions`，其他4个都简单，下文讲解`descriptor`如何获取。
+2. 生成函数体。最后要判定源代码最后一行不是return statement的情况，这种情况下函数体生成的逻辑不能自己产生return指令，但Java的方法要求通过return指令跳出函数，所以需要在此额外加一条return指令。对应的实现代码：`appendReturnIfLastStatementIsNotReturn`。
+
+`descriptor`是方法描述符，在[JVM官方文档，参考链接10](https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3)讲得很清楚了。举例：
+
+1. `boolean f(int l, long r)`对应`(IJ)Z`。
+2. `Object m(int i, double d, Thread t)`对应`(IDLjava/lang/Thread;)Ljava/lang/Object;`。
+
+我们按JVM规范实现一遍即可，[传送门](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/utils/DescriptorFactory.java)。
+
+```java
+public class DescriptorFactory {
+    public static String getMethodDescriptor(FunctionSignature signature) {
+        Collection<Parameter> parameters = signature.getParameters();
+        Type returnType = signature.getReturnType();
+        return getMethodDescriptor(parameters, returnType);
+    }
+
+    private static String getMethodDescriptor(Collection<Parameter> parameters, Type returnType) {
+        String parametersDescriptor = parameters.stream()
+                .map(parameter -> parameter.getType().getDescriptor())
+                .collect(Collectors.joining("", "(", ")"));
+        String returnDescriptor = returnType.getDescriptor();
+        return parametersDescriptor + returnDescriptor;
+    }
+}
+```
+
+方法调用部分：`CallExpressionGenerator`。目前只生成了静态方法调用指令，后续需要再调整。`visitMethodInsn`需要的参数：`int opcode, String owner, String name, String descriptor, boolean isInterface`。
+
+1. `opcode`：目前写死`INVOKESTATIC`。
+2. `owner`：从`FunctionCall`取`owner`字段，再调用。
+3. `name`：函数名。
+4. `descriptor`：方法描述符，和`MethodGenerator`同理，调用`DescriptorFactory.getMethodDescriptor`获取。
+5. `isInterface`：目前写死`false`。
+
+```java
+@AllArgsConstructor
+public class CallExpressionGenerator implements Opcodes {
+    private ExpressionGenerator parent;
+    private MethodVisitor mv;
+
+    public void generate(FunctionCall functionCall) {
+        List<Expression> parameters = functionCall.getArguments();
+        parameters.forEach(param -> param.accept(parent));
+        String ownerDescriptor = functionCall.getOwner() == null || functionCall.getOwner().getName() == null
+                ? ""
+                : functionCall.getOwner().getInternalName();
+        String functionName = functionCall.getSignature().getName();
+        String methodDescriptor = DescriptorFactory.getMethodDescriptor(functionCall.getSignature());
+        mv.visitMethodInsn(INVOKESTATIC, ownerDescriptor, functionName, methodDescriptor, false);
+    }
+}
+```
+
+### 效果
+
+[`hant_examples/func/func.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/func/func.hant)
+
+```hant
+void printAdd(int a) {
+    print 114510L + a
+}
+
+void main(string[] args) {
+    printAdd(5)
+}
+```
+
+反编译结果：
+
+```java
+public class func {
+    public static void printAdd(int var0) {
+        System.out.println(114510L + (long)var0);
+    }
+
+    public static void main(String[] var0) {
+        printAdd(5);
+    }
+}
+```
+
+## Part9-支持 return statement
 
 语法规则修改：
 
@@ -5053,6 +5421,91 @@ returnStatement:
 1. 如果采用原作者项目的语法规则，允许只有一条语句的函数作为隐式`return`语句，那么`returnStatement`优先级必须高于`expressionStatement`，否则有二义性。这里我没有采用原作者项目的语法规则，仍然要求`return`语句必须以`return`开头，因为目前我的语法规则的歧义已经太多了😂。
 2. `ReturnWithValue`的优先级必须高于`ReturnVoid`，否则`return x`会被优先解释为`ReturnVoid`加`expressionStatement`。
 
+新增`src\main\java\com\example\hans_antlr4\domain\statement\ReturnStatement.java`：
+
+```java
+@AllArgsConstructor
+@Getter
+public class ReturnStatement extends Statement {
+    private final Expression expression;
+    // accept processSubStatementTree 等方法和其他语句类一样，省略
+}
+```
+
+visitor改动：
+
+```java
+@Override
+public ReturnStatement visitReturnVoid(HansAntlrParser.ReturnVoidContext ctx) {
+    return new ReturnStatement(new EmptyExpression(BuiltInType.VOID));
+}
+
+@Override
+public ReturnStatement visitReturnWithValue(HansAntlrParser.ReturnWithValueContext ctx) {
+    final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+    final Expression expression = ctx.expression().accept(expressionVisitor);
+    return new ReturnStatement(expression);
+}
+```
+
+对于return void的情况，没有传入`null`，而是传入了本次新增的`EmptyExpression`。
+
+```java
+@Getter
+public class EmptyExpression extends Expression {
+    public EmptyExpression(Type type) {
+        super(type, null, null);
+    }
+    // accept processSubExpressionTree 等方法省略
+}
+```
+
+return语句对应的指令很简单，保证栈顶类型正确后，调用对应类型的return指令即可。
+
+```java
+public class ReturnStatementGenerator {
+    private MethodVisitor mv;
+    private ExpressionGenerator expressionGenerator;
+
+    public ReturnStatementGenerator(MethodVisitor mv, Scope scope) {
+        this.mv = mv;
+        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+    }
+
+    public void generate(ReturnStatement returnStatement) {
+        Expression expression = returnStatement.getExpression();
+        Type type = expression.getType();
+        expression.accept(expressionGenerator);
+        mv.visitInsn(type.getReturnOpcode());
+    }
+}
+```
+
+相关`.hant`测试代码：
+
+1. [`hant_examples\func\boolean_func.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/func/boolean_func.hant)
+2. [`hant_examples\func\func_in_expr.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/func/func_in_expr.hant)
+3. [`hant_examples\func\func.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/func/func.hant)
+
+```hant
+int gcd(int a, int b) {
+    if b == 0 return a
+    return gcd(b, a % b)
+}
+```
+
+反编译结果：
+
+```java
+public static int gcd(int var0, int var1) {
+    return var1 - 0 != 0 ? gcd(var1, var0 % var1) : var0;
+}
+```
+
+## Part15-支持new关键字
+
+TODO
+
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html
@@ -5064,3 +5517,4 @@ returnStatement:
 7. `jcommander`必选参数未提供时如何自动输出帮助信息：https://github.com/cbeust/jcommander/issues/337
 8. `logback`运行时修改日志级别：https://www.baeldung.com/logback
 9. 字符串拼接的底层原理：https://juejin.cn/post/7182872058743750715
+10. JVM官方文档，方法描述符：https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3

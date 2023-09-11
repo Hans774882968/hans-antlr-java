@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.domain.expression.call;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
@@ -35,5 +36,23 @@ public class FunctionCall extends Call {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (!(o instanceof FunctionCall)) {
+            return false;
+        }
+        FunctionCall functionCall = (FunctionCall) o;
+        return Objects.equals(owner, functionCall.owner)
+                && Objects.equals(signature, functionCall.signature)
+                && Objects.equals(arguments, functionCall.arguments);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(owner, signature, arguments);
     }
 }

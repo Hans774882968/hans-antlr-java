@@ -84,4 +84,86 @@ public class BooleanRelevantFunctionsTest implements Opcodes {
         inOrder1.verify(mvs[1]).visitMaxs(eq(-1), eq(-1));
         inOrder1.verify(mvs[1]).visitEnd();
     }
+
+    @Test
+    public void hasBooleanParamFunction() {
+        MethodVisitor mv = TestUtils.mockGenerateOneFunction(
+                "string getRedOrBlueText(string s, boolean isRed) { if isRed return \"\\033[31m\" + s + \"\\033[0m\" return \"\\033[34m\" + s + \"\\033[0m\" }");
+
+        InOrder inOrder = inOrder(mv);
+        inOrder.verify(mv).visitCode();
+
+        inOrder.verify(mv).visitVarInsn(eq(ILOAD), eq(1));
+        inOrder.verify(mv).visitJumpInsn(eq(IFNE), isA(Label.class));
+        inOrder.verify(mv).visitJumpInsn(eq(GOTO), isA(Label.class));
+
+        inOrder.verify(mv).visitTypeInsn(eq(NEW), eq("java/lang/StringBuilder"));
+        inOrder.verify(mv).visitInsn(eq(DUP));
+        inOrder.verify(mv).visitMethodInsn(
+                eq(INVOKESPECIAL),
+                eq("java/lang/StringBuilder"),
+                eq("<init>"),
+                eq("()V"),
+                eq(false));
+
+        inOrder.verify(mv).visitTypeInsn(eq(NEW), eq("java/lang/StringBuilder"));
+        inOrder.verify(mv).visitInsn(eq(DUP));
+        inOrder.verify(mv).visitMethodInsn(
+                eq(INVOKESPECIAL),
+                eq("java/lang/StringBuilder"),
+                eq("<init>"),
+                eq("()V"),
+                eq(false));
+
+        inOrder.verify(mv).visitLdcInsn(eq("\u001b[31m"));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv).visitVarInsn(eq(ALOAD), eq(0));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("toString"),
+                eq("()Ljava/lang/String;"), eq(false));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+
+        inOrder.verify(mv).visitLdcInsn(eq("\u001b[0m"));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("toString"),
+                eq("()Ljava/lang/String;"), eq(false));
+
+        inOrder.verify(mv).visitInsn(eq(ARETURN));
+
+        // line 2
+        inOrder.verify(mv).visitTypeInsn(eq(NEW), eq("java/lang/StringBuilder"));
+        inOrder.verify(mv).visitInsn(eq(DUP));
+        inOrder.verify(mv).visitMethodInsn(
+                eq(INVOKESPECIAL),
+                eq("java/lang/StringBuilder"),
+                eq("<init>"),
+                eq("()V"),
+                eq(false));
+
+        inOrder.verify(mv).visitLdcInsn(eq("\u001b[34m"));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv).visitVarInsn(eq(ALOAD), eq(0));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("toString"),
+                eq("()Ljava/lang/String;"), eq(false));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+
+        inOrder.verify(mv).visitLdcInsn(eq("\u001b[0m"));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
+                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("toString"),
+                eq("()Ljava/lang/String;"), eq(false));
+
+        inOrder.verify(mv).visitInsn(eq(ARETURN));
+
+        inOrder.verify(mv).visitMaxs(eq(-1), eq(-1));
+        inOrder.verify(mv).visitEnd();
+    }
 }
