@@ -7,6 +7,7 @@ import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
+import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.EmptyExpression;
@@ -23,6 +24,7 @@ import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
+import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
@@ -64,6 +66,22 @@ public class ExpressionGenerator implements Opcodes {
         LocalVariable localVariable = scope.getLocalVariable(varName);
         Type type = localVariable.getType();
         mv.visitVarInsn(type.getLoadVariableOpcode(), index);
+    }
+
+    public void generate(ClassFieldReference classFieldReference) {
+        classFieldReference.getFieldReferenceRecords().forEach(fieldReferenceRecord -> {
+            Type owner = fieldReferenceRecord.getOwner();
+            String ownerDescriptor = owner == null || owner.getName() == null
+                    ? ""
+                    : owner.getInternalName();
+            String name = fieldReferenceRecord.getFieldName();
+            String descriptor = fieldReferenceRecord.getFieldType().getDescriptor();
+            if (fieldReferenceRecord.isStatic()) {
+                mv.visitFieldInsn(GETSTATIC, ownerDescriptor, name, descriptor);
+            } else {
+                mv.visitFieldInsn(GETFIELD, ownerDescriptor, name, descriptor);
+            }
+        });
     }
 
     public void generate(Value value) {
@@ -207,6 +225,10 @@ public class ExpressionGenerator implements Opcodes {
 
     public void generate(FunctionCall functionCall) {
         callExpressionGenerator.generate(functionCall);
+    }
+
+    public void generate(ConstructorCall constructorCall) {
+        callExpressionGenerator.generate(constructorCall);
     }
 
     // 递归，直到走到 generate(VarReference varReference) or generate(Value value)

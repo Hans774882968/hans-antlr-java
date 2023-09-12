@@ -66,20 +66,23 @@ breakStatement: 'break';
 continueStatement: 'continue';
 
 expression:
-	funcCall										# FunctionCall
-	| variableReference								# VarReference
-	| value											# ValueExpr
-	| '(' expression ')'							# BRACKET
-	| UNARY = ('+' | '-' | '~') expression			# UNARY
-	| expression POW expression						# POW
-	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
-	| expression ADDITIVE = ('+' | '-') expression	# ADDITIVE
-	| expression SHIFT expression					# SHIFT
-	| expression RELATIONAL expression				# RELATIONAL
-	| expression EQUALITY expression				# EQUALITY
-	| expression AND expression						# AND
-	| expression XOR expression						# XOR
-	| expression OR expression						# OR
+	functionName '(' argumentList ')'							# FunctionCall
+	| owner = expression '.' functionName '(' argumentList ')'	# FunctionCall
+	| 'new' qualifiedName '(' argumentList ')'					# ConstructorCall
+	| expression '.' Identifier									# ClazzFieldReference
+	| variableReference											# VarReference
+	| value														# ValueExpr
+	| '(' expression ')'										# BRACKET
+	| UNARY = ('+' | '-' | '~') expression						# UNARY
+	| expression POW expression									# POW
+	| expression MULTIPLICATIVE expression						# MULTIPLICATIVE
+	| expression ADDITIVE = ('+' | '-') expression				# ADDITIVE
+	| expression SHIFT expression								# SHIFT
+	| expression RELATIONAL expression							# RELATIONAL
+	| expression EQUALITY expression							# EQUALITY
+	| expression AND expression									# AND
+	| expression XOR expression									# XOR
+	| expression OR expression									# OR
 	| <assoc = right> variableReference AssignmentOperator = (
 		'='
 		| '**='
@@ -96,7 +99,6 @@ expression:
 		| '|='
 	) expression # ASSIGNMENT;
 variableReference: Identifier;
-funcCall: functionName '(' argumentList ')';
 argumentList: expression? (',' expression)*;
 
 print: PRINT (printArg = '-n')? expression;
@@ -122,7 +124,7 @@ NUMBER:
 	| HexIntegerLiteral
 	| OctalIntegerLiteral
 	| BinaryIntegerLiteral;
-IntegerOrDecimalLiteral: [0-9.]+ [lLfFdD]?;
+IntegerOrDecimalLiteral: ([0-9] | [0-9]+ '.'? [0-9]+) [lLfFdD]?;
 HexIntegerLiteral: '0' [xX] HexDigit+ [lL]?;
 OctalIntegerLiteral: '0' [oO] [0-7]+ [lL]?;
 BinaryIntegerLiteral: '0' [bB] [01]+ [lL]?;

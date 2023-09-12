@@ -1,10 +1,13 @@
 package com.example.hans_antlr4.parsing.biz_visitor;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.call.Call;
+import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.scope.FunctionSignature;
 import com.example.hans_antlr4.domain.scope.Scope;
@@ -22,20 +25,41 @@ public class CallExpressionVisitor extends HansAntlrBaseVisitor<Call> {
     private ExpressionVisitor parent;
 
     @Override
-    public Call visitFunctionCall(HansAntlrParser.FunctionCallContext ctx) {
-        String funName = ctx.funcCall().functionName().getText();
+    public FunctionCall visitFunctionCall(HansAntlrParser.FunctionCallContext ctx) {
+        String funName = ctx.functionName().getText();
 
-        List<ExpressionContext> expressionContexts = ctx.funcCall().argumentList().expression();
-        List<Expression> arguments = expressionContexts.stream().map(expressionContext -> {
-            return expressionContext.accept(parent);
-        }).collect(Collectors.toList());
+        List<Expression> arguments = getArgumentsForCall(ctx.argumentList());
 
         List<Type> argTypes = arguments.stream().map(arg -> {
             return arg.getType();
         }).collect(Collectors.toList());
         int sourceLine = ctx.getStart().getLine();
-        FunctionSignature signature = scope.getSignature(funName, argTypes, sourceLine);
 
-        return new FunctionCall(new ClassType(scope.getClassName()), signature, arguments);
+        boolean ownerIsExplicit = ctx.owner != null;
+        if (ownerIsExplicit) {
+            Expression owner = ctx.owner.accept(parent);
+            FunctionSignature signature = scope.getMethodCallSignature(
+                    Optional.of(owner.getType()), funName, argTypes, sourceLine);
+            return new FunctionCall(owner, signature, arguments);
+        }
+
+        FunctionSignature signature = scope.getMethodCallSignature(funName, argTypes, sourceLine);
+        Expression owner = new EmptyExpression(new ClassType(scope.getClassName()));
+        return new FunctionCall(owner, signature, arguments);
+    }
+
+    @Override
+    public ConstructorCall visitConstructorCall(HansAntlrParser.ConstructorCallContext ctx) {
+        String className = ctx.qualifiedName().getText();
+        List<Expression> arguments = getArgumentsForCall(ctx.argumentList());
+        return new ConstructorCall(className, arguments);
+    }
+
+    private List<Expression> getArgumentsForCall(HansAntlrParser.ArgumentListContext ctx) {
+        List<ExpressionContext> expressionContexts = ctx.expression();
+        List<Expression> arguments = expressionContexts.stream().map(expressionContext -> {
+            return expressionContext.accept(parent);
+        }).collect(Collectors.toList());
+        return arguments;
     }
 }

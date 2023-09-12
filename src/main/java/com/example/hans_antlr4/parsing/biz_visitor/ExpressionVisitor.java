@@ -1,11 +1,17 @@
 package com.example.hans_antlr4.parsing.biz_visitor;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Additive;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
+import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.Division;
 import com.example.hans_antlr4.domain.expression.Expression;
@@ -22,6 +28,7 @@ import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
+import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
@@ -30,6 +37,7 @@ import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.global.ArithmeticSign;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.global.CompareSign;
+import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
@@ -52,6 +60,92 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
     public ExpressionVisitor(Scope scope) {
         this.scope = scope;
         this.callExpressionVisitor = new CallExpressionVisitor(scope, this);
+    }
+
+    private int getFindFieldStartIndex(String[] identifiers, String classFieldString) {
+        String curClassQualifiedName = "";
+        int findFieldStartIndex = -1;
+        for (int i = 0; i < identifiers.length; i++) {
+            String identifier = identifiers[i];
+            curClassQualifiedName += identifier;
+            try {
+                Class.forName(curClassQualifiedName);
+                findFieldStartIndex = i + 1;
+                break;
+            } catch (ClassNotFoundException e) {
+                curClassQualifiedName += ".";
+            }
+        }
+        if (findFieldStartIndex == -1) {
+            throw new RuntimeException("Definition of class " + classFieldString + " not found");
+        }
+        return findFieldStartIndex;
+    }
+
+    private String getClassQualifiedName(String[] identifiers, int classNameEndIndex) {
+        String classQualifiedName = identifiers[0];
+        for (int i = 1; i < classNameEndIndex; i++) {
+            classQualifiedName += "." + identifiers[i];
+        }
+        return classQualifiedName;
+    }
+
+    @Override
+    public ClassFieldReference visitClazzFieldReference(HansAntlrParser.ClazzFieldReferenceContext ctx) {
+        String classFieldString = ctx.getText();
+        String[] identifiers = classFieldString.split("\\.");
+
+        int findFieldStartIndex = getFindFieldStartIndex(identifiers, classFieldString);
+        String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
+
+        Class<?> currentOwnerClass = null;
+        try {
+            currentOwnerClass = Class.forName(classQualifiedName);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+        List<FieldReferenceRecord> fieldReferenceRecords = new ArrayList<>();
+
+        for (int i = findFieldStartIndex; i < identifiers.length; i++) {
+            final String identifier = identifiers[i];
+            Field field = null;
+            try {
+                if (currentOwnerClass == null) {
+                    int sourceLine = ctx.getStart().getLine();
+                    throw new ClassNotFoundException(
+                            "There is a ClassNotFoundException while trying to parse "
+                                    + classFieldString + " at line" + sourceLine);
+                }
+                field = currentOwnerClass.getField(identifier);
+            } catch (NoSuchFieldException | SecurityException | ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+
+            try {
+                if (field == null) {
+                    int sourceLine = ctx.getStart().getLine();
+                    throw new NoSuchFieldException(
+                            "Field " + identifier + " was not found in \""
+                                    + (currentOwnerClass == null ? "" : currentOwnerClass.getCanonicalName())
+                                    + "\" at line " + sourceLine);
+                }
+                boolean isStatic = Modifier.isStatic(field.getModifiers());
+                final Type currentOwnerType = TypeResolver.getFromJavaLangClass(currentOwnerClass);
+                Class<?> fieldClass = field.getType();
+                Type fieldType = TypeResolver.getFromJavaLangClass(fieldClass);
+                fieldReferenceRecords.add(new FieldReferenceRecord(
+                        isStatic, currentOwnerType, identifier, fieldType));
+
+                currentOwnerClass = fieldClass;
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
+        }
+
+        return new ClassFieldReference(classQualifiedName, fieldReferenceRecords);
     }
 
     @Override
@@ -267,6 +361,11 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
 
     @Override
     public FunctionCall visitFunctionCall(HansAntlrParser.FunctionCallContext ctx) {
-        return (FunctionCall) callExpressionVisitor.visitFunctionCall(ctx);
+        return (FunctionCall) ctx.accept(callExpressionVisitor);
+    }
+
+    @Override
+    public ConstructorCall visitConstructorCall(HansAntlrParser.ConstructorCallContext ctx) {
+        return (ConstructorCall) ctx.accept(callExpressionVisitor);
     }
 }

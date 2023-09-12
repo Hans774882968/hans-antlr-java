@@ -290,6 +290,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitADDITIVE(HansAntlrParser.ADDITIVEContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code ClazzFieldReference}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitClazzFieldReference(HansAntlrParser.ClazzFieldReferenceContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code SHIFT}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -390,6 +400,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitFunctionCall(HansAntlrParser.FunctionCallContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code ConstructorCall}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitConstructorCall(HansAntlrParser.ConstructorCallContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code UNARY}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -407,15 +427,6 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx);
-
-	/**
-	 * Visit a parse tree produced by {@link HansAntlrParser#funcCall}.
-	 * 
-	 * @param ctx
-	 *            the parse tree
-	 * @return the visitor result
-	 */
-	T visitFuncCall(HansAntlrParser.FuncCallContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#argumentList}.

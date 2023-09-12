@@ -1,0 +1,60 @@
+double mn(double v1, double v2, double v3) {
+    return java.lang.Math.min(v1, java.lang.Math.min(v2, v3))
+}
+
+void mathDemo() {
+    for i: 29 to 31 {
+        print java.lang.Math.max(i, 30)
+    }
+    print mn(1.5, 1.2 + 0.4, 0.5 ** 2)
+    print java.lang.Math.max(12, 30) + java.lang.Math.log(4d) // 31.38629436111989
+    print "Math.log(2 * Math.E) = " + java.lang.Math.log(2 * java.lang.Math.E) // 1.6931471805599452
+}
+
+void wrapClassDemo() {
+    print java.lang.Integer.valueOf(0xf3f)
+    print java.lang.Long.valueOf(0xf3f4f5f6f7L)
+    print java.lang.Float.valueOf(2.4f)
+    print java.lang.Double.valueOf(-3.5)
+}
+
+void printfDemo() {
+    java.lang.System.out.printf("abc\n")
+    java.lang.System.out.printf("abc %S = %s\n", "Name", "ZhangSan")
+    var pi = 3.1415926535
+    // 20 138248474720 -2.430000 -3.14 1.145
+    java.lang.System.out.printf(
+        "%d %d %f %.2f %.3f\n",
+        java.lang.Integer.valueOf(0x14),
+        java.lang.Long.valueOf(0x2030405060L),
+        java.lang.Float.valueOf(-2.43f),
+        java.lang.Double.valueOf(-pi),
+        java.lang.Double.valueOf(java.lang.Math.log(java.lang.Math.PI)))
+
+    // java.lang.System.out.printf("%d", 123); // TODO: 目前不支持自动装箱
+}
+
+void staticFieldInLibDemo() {
+    var i0 = java.lang.Integer.MAX_VALUE
+    print i0 + " " + java.lang.Integer.valueOf(-i0).toString() // 2147483647 -2147483647
+    var l1 = java.lang.Long.MAX_VALUE
+    print l1
+    var d2 = java.lang.Double.NaN
+    print d2
+    var l3 = java.lang.System.currentTimeMillis()
+    print l3
+
+    var in = java.lang.System.in.toString()
+    print in
+    var out = java.lang.System.out
+    print out.toString()
+    var err = java.lang.System.err.toString()
+    print err
+}
+
+void main(string[] args) {
+    mathDemo()
+    wrapClassDemo()
+    printfDemo()
+    staticFieldInLibDemo()
+}

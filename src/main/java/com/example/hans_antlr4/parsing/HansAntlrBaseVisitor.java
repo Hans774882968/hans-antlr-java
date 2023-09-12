@@ -414,6 +414,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitClazzFieldReference(HansAntlrParser.ClazzFieldReferenceContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitSHIFT(HansAntlrParser.SHIFTContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -544,6 +557,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitConstructorCall(HansAntlrParser.ConstructorCallContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitUNARY(HansAntlrParser.UNARYContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -558,19 +584,6 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx) {
-		return visitChildren(ctx);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.
-	 * </p>
-	 */
-	@Override
-	public T visitFuncCall(HansAntlrParser.FuncCallContext ctx) {
 		return visitChildren(ctx);
 	}
 

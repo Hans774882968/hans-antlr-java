@@ -7,6 +7,7 @@ import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
+import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 
@@ -29,7 +30,8 @@ public class PrintStatementGenerator implements Opcodes {
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
         expression.accept(expressionGenerator);
         Type type = expression.getType();
-        String descriptor = "(" + type.getDescriptor() + ")V"; // such as "(Ljava/lang/String;)V"
+        String descriptor = "(" + (type instanceof BuiltInType ? type.getDescriptor()
+                : new ClassType("java.lang.Object").getDescriptor()) + ")V"; // such as "(Ljava/lang/String;)V"
         ClassType owner = new ClassType("java.io.PrintStream");
         String fieldDescriptor = owner.getInternalName(); // "java/io/PrintStream"
         String printMethodName = printStatement.isShouldNotPrintLine() ? "print" : "println";

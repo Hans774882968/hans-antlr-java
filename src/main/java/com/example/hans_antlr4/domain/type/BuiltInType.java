@@ -58,7 +58,12 @@ public enum BuiltInType implements Type {
                                                                                                                                     void.class,
                                                                                                                                     "V",
                                                                                                                                     TypeSpecificOpcodes.VOID,
-                                                                                                                                    Double.NaN);
+                                                                                                                                    Double.NaN), OBJECT_ARR(
+                                                                                                                                            "java.lang.Object[]",
+                                                                                                                                            Object[].class,
+                                                                                                                                            "[Ljava/lang/Object;",
+                                                                                                                                            TypeSpecificOpcodes.OBJECT,
+                                                                                                                                            Double.NaN);
 
     private String name;
     private Class<?> typeClass;
@@ -147,6 +152,35 @@ public enum BuiltInType implements Type {
     @Override
     public boolean isNumericTypes() {
         return TypeChecker.isNumericTypes(this);
+    }
+
+    @Override
+    public Type getWrapperClassOrThis() {
+        if (this == BuiltInType.BYTE) {
+            return new ClassType("java.lang.Byte");
+        }
+        if (this == BuiltInType.SHORT) {
+            return new ClassType("java.lang.Short");
+        }
+        if (this == BuiltInType.INT) {
+            return new ClassType("java.lang.Integer");
+        }
+        if (this == BuiltInType.LONG) {
+            return new ClassType("java.lang.Long");
+        }
+        if (this == BuiltInType.FLOAT) {
+            return new ClassType("java.lang.Float");
+        }
+        if (this == BuiltInType.DOUBLE) {
+            return new ClassType("java.lang.Double");
+        }
+        if (this == BuiltInType.BOOLEAN) {
+            return new ClassType("java.lang.Boolean");
+        }
+        if (this == BuiltInType.CHAR) {
+            return new ClassType("java.lang.Character");
+        }
+        return this;
     }
 
     @Override

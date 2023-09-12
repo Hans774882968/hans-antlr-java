@@ -2,11 +2,13 @@ package com.example.hans_antlr4.data_processor;
 
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
+import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
+import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.statement.Statement;
@@ -82,6 +84,17 @@ public class ExpressionTreeProcessor {
         varReference.setBelongStatement(belongStatement);
     }
 
+    public void processExpressionTree(
+            ClassFieldReference classFieldReference,
+            Expression parent,
+            Statement belongStatement) {
+        if (classFieldReference == null) {
+            return;
+        }
+        classFieldReference.setParent(parent);
+        classFieldReference.setBelongStatement(belongStatement);
+    }
+
     public void processExpressionTree(FunctionCall functionCall, Expression parent, Statement belongStatement) {
         if (functionCall == null) {
             return;
@@ -99,5 +112,16 @@ public class ExpressionTreeProcessor {
         }
         emptyExpression.setParent(parent);
         emptyExpression.setBelongStatement(belongStatement);
+    }
+
+    public void processExpressionTree(ConstructorCall constructorCall, Expression parent, Statement belongStatement) {
+        if (constructorCall == null) {
+            return;
+        }
+        constructorCall.setParent(parent);
+        constructorCall.setBelongStatement(belongStatement);
+        constructorCall.getArguments().forEach(arg -> {
+            arg.processSubExpressionTree(this, constructorCall, belongStatement);
+        });
     }
 }

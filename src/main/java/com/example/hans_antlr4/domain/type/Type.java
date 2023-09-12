@@ -11,6 +11,8 @@ public interface Type {
 
     Double getPriority();
 
+    Type getWrapperClassOrThis();
+
     boolean isNumericTypes();
 
     int getToHigherPriorityNumericTypeOpcode(Type targetType);

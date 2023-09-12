@@ -28,6 +28,10 @@ public class TypeResolver {
         return new ClassType(typeName);
     }
 
+    public static Type getFromJavaLangClass(Class<?> clazz) {
+        return getFromTypeName(clazz.getCanonicalName());
+    }
+
     public static Type getFromValue(String value) {
         if (StringUtils.isEmpty(value)) {
             return BuiltInType.VOID;

@@ -15,16 +15,18 @@ public class DescriptorFactoryTest {
     @Test
     public void returnVoidFunction() {
         Assert.assertEquals("()V", DescriptorFactory.getMethodDescriptor(
-                new FunctionSignature("voidFn", new ArrayList<>(), BuiltInType.VOID)));
+                new FunctionSignature(true, "voidFn", new ArrayList<>(), BuiltInType.VOID)));
         Assert.assertEquals("(Ljava/lang/String;)V", DescriptorFactory.getMethodDescriptor(
-                new FunctionSignature("voidFn",
-                        Arrays.asList(new Parameter(BuiltInType.STRING, "s")), BuiltInType.VOID)));
+                new FunctionSignature(true, "voidFn",
+                        Arrays.asList(new Parameter(BuiltInType.STRING, "s")),
+                        BuiltInType.VOID)));
     }
 
     @Test
     public void primitiveTypeFunction() {
         Assert.assertEquals("(IJ)Z", DescriptorFactory.getMethodDescriptor(
                 new FunctionSignature(
+                        true,
                         "f",
                         Arrays.asList(
                                 new Parameter(BuiltInType.INT, "l"),

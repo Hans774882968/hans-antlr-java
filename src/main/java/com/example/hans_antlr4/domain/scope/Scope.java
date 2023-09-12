@@ -3,8 +3,10 @@ package com.example.hans_antlr4.domain.scope;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.example.hans_antlr4.domain.global.MetaData;
+import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.exception.LocalVariableNotFoundException;
 import com.example.hans_antlr4.exception.func.MethodSignatureNotFoundException;
@@ -65,31 +67,35 @@ public class Scope {
         return metaData.getClassName();
     }
 
+    public Type getClassType() {
+        String className = getClassName();
+        return new ClassType(className);
+    }
+
     public void addSignature(FunctionSignature signature) {
         functionSignatures.add(signature);
     }
 
     // 支持重载功能
-    public FunctionSignature getSignature(String methodName, List<Type> argTypes, int sourceLine) {
+    public FunctionSignature getMethodCallSignature(String methodName, List<Type> argTypes, int sourceLine) {
         return functionSignatures.stream()
-                .filter(signature -> {
-                    if (!signature.getName().equals(methodName)) {
-                        return false;
-                    }
-                    if (signature.getParameters().size() != argTypes.size()) {
-                        return false;
-                    }
-                    for (int i = 0; i < argTypes.size(); i++) {
-                        Type paramType = signature.getParameters().get(i).getType();
-                        Type argType = argTypes.get(i);
-                        if (paramType != argType) {
-                            return false;
-                        }
-                    }
-                    return true;
-                })
+                .filter(signature -> signature.matches(methodName, argTypes, sourceLine))
                 .findFirst()
                 .orElseThrow(() -> new MethodSignatureNotFoundException(this, methodName, sourceLine));
+    }
+
+    public FunctionSignature getMethodCallSignature(
+            Optional<Type> owner,
+            String methodName,
+            List<Type> argTypes,
+            int sourceLine) {
+        boolean isDifferentThanCurrentClass = owner.isPresent() && !owner.get().equals(getClassType());
+        if (isDifferentThanCurrentClass) {
+            return new ClassPathScope()
+                    .getMethodSignature(owner.get(), methodName, argTypes)
+                    .orElseThrow(() -> new MethodSignatureNotFoundException(this, methodName, sourceLine));
+        }
+        return getMethodCallSignature(methodName, argTypes, sourceLine);
     }
 
     @Override

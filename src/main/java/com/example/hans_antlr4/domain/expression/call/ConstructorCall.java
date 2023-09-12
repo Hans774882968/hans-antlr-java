@@ -1,27 +1,31 @@
 package com.example.hans_antlr4.domain.expression.call;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
-import com.example.hans_antlr4.domain.scope.FunctionSignature;
 import com.example.hans_antlr4.domain.statement.Statement;
+import com.example.hans_antlr4.domain.type.ClassType;
 
 import lombok.Getter;
 
-@Getter
-public class FunctionCall extends Call {
-    private final Expression owner;
-    private final FunctionSignature signature;
-    private final List<Expression> arguments;
+import java.util.Objects;
 
-    public FunctionCall(Expression owner, FunctionSignature signature, List<Expression> arguments) {
-        super(signature.getReturnType(), null, null);
-        this.owner = owner;
-        this.signature = signature;
+@Getter
+public class ConstructorCall extends Call {
+    private final List<Expression> arguments;
+    private final String identifier;
+
+    public ConstructorCall(String identifier) {
+        this(identifier, Collections.emptyList());
+    }
+
+    public ConstructorCall(String className, List<Expression> arguments) {
+        super(new ClassType(className), null, null);
         this.arguments = arguments;
+        this.identifier = getType().getName();
     }
 
     @Override
@@ -41,17 +45,17 @@ public class FunctionCall extends Call {
     public boolean equals(Object o) {
         if (o == this)
             return true;
-        if (!(o instanceof FunctionCall)) {
+        if (!(o instanceof ConstructorCall)) {
             return false;
         }
-        FunctionCall functionCall = (FunctionCall) o;
-        return Objects.equals(owner, functionCall.owner)
-                && Objects.equals(signature, functionCall.signature)
-                && Objects.equals(arguments, functionCall.arguments);
+        ConstructorCall constructorCall = (ConstructorCall) o;
+        return Objects.equals(arguments, constructorCall.arguments)
+                && Objects.equals(getType(), constructorCall.getType())
+                && Objects.equals(identifier, constructorCall.identifier);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(owner, signature, arguments);
+        return Objects.hash(arguments, getType(), identifier);
     }
 }

@@ -5404,6 +5404,8 @@ public class func {
 
 ## Part9-支持 return statement
 
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/commit/2c558889f5bcaf74bc278516343d2c634d65b77d)
+
 语法规则修改：
 
 ```g4

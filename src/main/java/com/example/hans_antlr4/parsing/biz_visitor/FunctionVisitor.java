@@ -30,7 +30,7 @@ public class FunctionVisitor extends HansAntlrBaseVisitor<Function> {
         Type returnType = getReturnType(ctx);
         List<Parameter> params = getParameters(ctx);
         Block body = getBody(ctx);
-        FunctionSignature functionSignature = new FunctionSignature(name, params, returnType);
+        FunctionSignature functionSignature = new FunctionSignature(true, name, params, returnType);
         return new Function(functionSignature, body);
     }
 

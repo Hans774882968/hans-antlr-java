@@ -44,6 +44,11 @@ public class ClassType implements Type {
     }
 
     @Override
+    public Type getWrapperClassOrThis() {
+        return this;
+    }
+
+    @Override
     public int getToHigherPriorityNumericTypeOpcode(Type targetType) {
         return Const.INVALID_OPCODE;
     }

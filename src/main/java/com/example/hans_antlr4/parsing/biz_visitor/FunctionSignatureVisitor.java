@@ -25,6 +25,6 @@ public class FunctionSignatureVisitor extends HansAntlrBaseVisitor<FunctionSigna
                                 paramCtx.Identifier().getText()))
                         .collect(Collectors.toList());
         Type returnType = TypeResolver.getFromTypeContext(ctx.type());
-        return new FunctionSignature(functionName, parameters, returnType);
+        return new FunctionSignature(true, functionName, parameters, returnType);
     }
 }
