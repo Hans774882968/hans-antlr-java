@@ -20,7 +20,7 @@ public class PrintStatement extends Statement {
 
     public PrintStatement(Expression expression, String printArg) {
         this.expression = expression;
-        this.shouldNotPrintLine = printArg.equals("-n");
+        this.shouldNotPrintLine = printArg.equals("\\n");
     }
 
     @Override

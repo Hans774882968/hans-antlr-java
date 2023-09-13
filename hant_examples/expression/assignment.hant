@@ -1,4 +1,12 @@
+void printStatementAmbiguity() {
+    var n = 42
+    print \n -n
+    print -n
+}
+
 void main(string[] args) {
+    printStatementAmbiguity()
+
     var x = 1
     var y = 2
     var z = 3
@@ -47,11 +55,11 @@ void main(string[] args) {
         print x // strstr1.23
         print "低优先级赋值给高优先级："
         y = 4 << 1 ^ 3
-        print -n y + " " // 11.0
+        print \n y + " " // 11.0
         y = 3L << 1
-        print -n y + " " // 6.0
+        print \n y + " " // 6.0
         y = 7 / 2f
-        print -n y + " " // 3.5
+        print \n y + " " // 3.5
         y = 4.2 + 0.7
         print y // 4.9
         var z = 1L

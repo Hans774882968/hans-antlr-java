@@ -24,7 +24,7 @@
 目前支持的语言特性：
 
 - 定义变量：`var foo = 123`。
-- 输出到控制台。`print expression`可输出一行，`print -n expr`不输出换行符。
+- 输出到控制台。`print expression`可输出一行，`print \n expr`不输出换行符。
 - 字符串支持Java的转义字符。比如`print "\033[31m红色字符串\033[0m"`可输出红色字符串。
 - 完整的表达式支持。相比于C语言仅三目运算符、逗号表达式不支持。另外，新增了`**`和`**=`运算符，方便地进行乘方运算。与Java相同，字符串可与所有类型相加。
 - 支持`int, long, float, double, boolean, string`类型。和Java一样，立即数支持类型后缀，比如`1d`表示`double`类型的1。表达式支持**隐式类型转换**，类型提升优先级为：`int < long < float < double`。
@@ -4953,12 +4953,12 @@ public static boolean assignmentLhsTypeAndRhsAreCompatible(
 
 ## print语句支持换行与不换行
 
-借鉴`Linux Shell`的设计，我们约定`print -n "foo"`表示不需要换行，`print "foo"`表示需要换行，与原本行为一致。
+借鉴`Linux Shell`的设计，我们约定`print \n "foo"`表示不需要换行，`print "foo"`表示需要换行，与原本行为一致。为什么是“\n”呢？因为`print -n`、`print <-n`等都可以被认为是有效的表达式，都有歧义。
 
 修改文法：
 
 ```g4
-print: PRINT (printArg = '-n')? expression;
+print: PRINT (printArg = '\\n')? expression;
 ```
 
 修改`PrintStatement`：
@@ -4976,7 +4976,7 @@ public class PrintStatement extends Statement {
 
     public PrintStatement(Expression expression, String printArg) {
         this.expression = expression;
-        this.shouldNotPrintLine = printArg.equals("-n");
+        this.shouldNotPrintLine = printArg.equals("\\n");
     }
 
     // 其他方法省略
@@ -5015,8 +5015,8 @@ for (var y = 1.5; y > -1.5; y -= stp) {
     var halfStp = stp / 2
     for (var x = -1.5; x < 1.5; x += halfStp) {
         var a = x ** 2 + y ** 2 - 1
-        if (a ** 3 - x * x * y ** 3 <= 0) print -n "*"
-        else print -n " "
+        if (a ** 3 - x * x * y ** 3 <= 0) print \n "*"
+        else print \n " "
     }
     print ""
 }

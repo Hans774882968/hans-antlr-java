@@ -101,7 +101,7 @@ expression:
 variableReference: Identifier;
 argumentList: expression? (',' expression)*;
 
-print: PRINT (printArg = '-n')? expression;
+print: PRINT (printArg = '\\n')? expression;
 
 value: NUMBER | STRING | BOOL;
 

@@ -9,12 +9,12 @@ int lowbit(int x) {
 
 int bitDemo(int x, int n) {
     for var tmp = x; tmp <= n; tmp += lowbit(tmp) {
-        print -n tmp + " "
+        print \n tmp + " "
     }
     print ""
     var ret = 0
     for ; x > 0; x = x - lowbit(x) - (ret += 1) + ret {
-        print -n x + " "
+        print \n x + " "
     }
     print ""
     ret ret
