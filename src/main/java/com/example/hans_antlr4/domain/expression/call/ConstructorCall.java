@@ -17,15 +17,17 @@ import java.util.Objects;
 public class ConstructorCall extends Call {
     private final List<Expression> arguments;
     private final String identifier;
+    private final int sourceLine;
 
-    public ConstructorCall(String identifier) {
-        this(identifier, Collections.emptyList());
+    public ConstructorCall(String identifier, int sourceLine) {
+        this(identifier, Collections.emptyList(), sourceLine);
     }
 
-    public ConstructorCall(String className, List<Expression> arguments) {
+    public ConstructorCall(String className, List<Expression> arguments, int sourceLine) {
         super(new ClassType(className), null, null);
         this.arguments = arguments;
         this.identifier = getType().getName();
+        this.sourceLine = sourceLine;
     }
 
     @Override

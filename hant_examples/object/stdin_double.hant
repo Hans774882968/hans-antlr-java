@@ -1,0 +1,18 @@
+void main(string[] args) {
+    print "请输入数字："
+    var sc = new java.util.Scanner(java.lang.System.in)
+
+    var sum = 0d
+    var m = 0
+
+    for (; sc.hasNextDouble();) {
+        var x = sc.nextDouble()
+        m = 1 + m
+        sum += x
+    }
+
+    print (m + "个数的和为" + sum)
+    print (m + "个数的平均值是" + sum / m)
+
+    sc.close();
+}

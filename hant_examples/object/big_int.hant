@@ -1,0 +1,33 @@
+void bigIntDemo() {
+    // TODO: 参数传递也要支持隐式类型转换。 java.math.BigInteger.valueOf 目前只能传 long
+    var s = "-1"
+    for i: 1 to 30 s += "0"
+    var a = new java.math.BigInteger(s + "233")
+    var b = java.math.BigInteger.valueOf(456L)
+    var tmpA = a
+    a = tmpA.add(b)
+    print a // -999999999999999999999999999999777
+    a = tmpA.mod(b)
+    java.lang.System.out.printf("%s\n", a) // 63
+    var two100 = java.math.BigInteger.valueOf(2L).pow(100)
+    // 1267650600228229401496703205376 31
+    java.lang.System.out.printf("%s %d\n", two100, two100.toString().length())
+}
+
+void bigDecimalDemo() {
+    var doubleDecimal1 = new java.math.BigDecimal(21.111111);
+    var doubleDecimal2 = new java.math.BigDecimal(java.lang.Double.toString(21.111111))
+    var strDecimal = new java.math.BigDecimal("21.111111");
+    // 21.11111100000000107002051663585007190704345703125 21.111111 21.111111
+    java.lang.System.out.printf("%s %s %s\n", doubleDecimal1, doubleDecimal2, strDecimal)
+    var tmpStrDecimal = strDecimal
+    strDecimal = strDecimal.add(doubleDecimal1)
+    print strDecimal // 42.222222 + 后面省略
+    strDecimal = strDecimal.remainder(doubleDecimal2)
+    print strDecimal // 1.0700205（后面省略）E-15
+}
+
+void main(string[] args) {
+    bigIntDemo()
+    bigDecimalDemo()
+}

@@ -1,0 +1,9 @@
+void main(string[] args) {
+    var fName = "hant_examples/type/bitwise_invalid_type.hant"
+    var inp = new java.io.FileInputStream(fName)
+    print "file '" + fName + "' size: " + inp.available()
+    var bytes = inp.readAllBytes()
+    var data = new java.lang.String(bytes)
+    print data
+    inp.close()
+}

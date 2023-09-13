@@ -15,10 +15,10 @@ import lombok.Getter;
 @Getter
 public enum BuiltInType implements Type {
     BOOLEAN("boolean", boolean.class, "Z", TypeSpecificOpcodes.INT, Double.NaN), INT("int", int.class, "I",
-            TypeSpecificOpcodes.INT,
-            30d), CHAR("char", char.class, "C", TypeSpecificOpcodes.INT, Double.NaN), BYTE("byte", byte.class, "B",
-                    TypeSpecificOpcodes.INT, 10d), SHORT("short", short.class, "S", TypeSpecificOpcodes.INT, 20d), LONG(
-                            "long", long.class, "J", TypeSpecificOpcodes.LONG,
+            TypeSpecificOpcodes.INT, 30d), CHAR("char", char.class, "C", TypeSpecificOpcodes.INT, Double.NaN), BYTE(
+                    "byte", byte.class, "B", TypeSpecificOpcodes.INT,
+                    10d), SHORT("short", short.class, "S", TypeSpecificOpcodes.INT, 20d), LONG("long", long.class, "J",
+                            TypeSpecificOpcodes.LONG,
                             40d), FLOAT("float", float.class, "F", TypeSpecificOpcodes.FLOAT, 50d), DOUBLE("double",
                                     double.class, "D", TypeSpecificOpcodes.DOUBLE, 60d), STRING("string", String.class,
                                             "Ljava/lang/String;", TypeSpecificOpcodes.OBJECT, 70d), BOOLEAN_ARR(
@@ -146,7 +146,7 @@ public enum BuiltInType implements Type {
 
     @Override
     public String getInternalName() {
-        return getDescriptor();
+        return opcodes == TypeSpecificOpcodes.OBJECT ? typeClass.getName().replace(".", "/") : getDescriptor();
     }
 
     @Override

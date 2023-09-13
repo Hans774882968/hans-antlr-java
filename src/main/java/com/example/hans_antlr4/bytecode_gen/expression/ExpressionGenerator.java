@@ -3,6 +3,7 @@ package com.example.hans_antlr4.bytecode_gen.expression;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.bytecode_gen.InsnUtil;
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
@@ -89,27 +90,7 @@ public class ExpressionGenerator implements Opcodes {
         String stringValue = value.getValue();
         if (type == BuiltInType.INT) {
             int intValue = (int) TypeResolver.getValueFromString(stringValue, type);
-            if (intValue == -1) {
-                mv.visitInsn(ICONST_M1);
-            } else if (intValue == 0) {
-                mv.visitInsn(ICONST_0);
-            } else if (intValue == 1) {
-                mv.visitInsn(ICONST_1);
-            } else if (intValue == 2) {
-                mv.visitInsn(ICONST_2);
-            } else if (intValue == 3) {
-                mv.visitInsn(ICONST_3);
-            } else if (intValue == 4) {
-                mv.visitInsn(ICONST_4);
-            } else if (intValue == 5) {
-                mv.visitInsn(ICONST_5);
-            } else if (Byte.MIN_VALUE <= intValue && intValue <= Byte.MAX_VALUE) {
-                mv.visitIntInsn(BIPUSH, intValue);
-            } else if (Short.MIN_VALUE <= intValue && intValue <= Short.MAX_VALUE) {
-                mv.visitIntInsn(SIPUSH, intValue);
-            } else {
-                mv.visitLdcInsn(intValue);
-            }
+            InsnUtil.generateIntInsn(mv, intValue);
         } else {
             mv.visitLdcInsn(TypeResolver.getValueFromString(stringValue, type));
         }

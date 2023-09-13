@@ -1,11 +1,13 @@
 package com.example.hans_antlr4.domain.scope;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
 import com.example.hans_antlr4.domain.type.Type;
@@ -52,6 +54,18 @@ public class ClassPathScope {
 
             Method method = getMatchingAccessibleMethod(methodOwnerClass, methodName, params);
             return Optional.of(ReflectionObjectToSignatureMapper.fromMethod(method));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<FunctionSignature> getConstructorSignature(String className, List<Type> arguments) {
+        try {
+            Class<?> methodOwnerClass = Class.forName(className);
+            Class<?>[] params = getParsedParamsFromArguments(methodOwnerClass, arguments);
+
+            Constructor<?> constructor = ConstructorUtils.getMatchingAccessibleConstructor(methodOwnerClass, params);
+            return Optional.of(ReflectionObjectToSignatureMapper.fromConstructor(constructor));
         } catch (Exception e) {
             return Optional.empty();
         }

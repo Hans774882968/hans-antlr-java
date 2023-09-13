@@ -32,7 +32,7 @@ public class TypeChecker {
             if (isNumericTypes(rhsType)) {
                 return isNumericTypes(lhsType);
             }
-            return lhsType == rhsType;
+            return lhsType.equals(rhsType);
         }
         if (arithmeticSign.isBitwiseSign()) {
             return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
@@ -51,13 +51,13 @@ public class TypeChecker {
             if (lhsType == BuiltInType.STRING) {
                 return true;
             }
-            return lhsType == rhsType;
+            return lhsType.equals(rhsType);
         }
         if (assignmentSign == AssignmentSign.ASSIGN) {
             if (isNumericTypes(lhsType)) {
                 return isNumericTypes(rhsType) && lhsType.getPriority().compareTo(rhsType.getPriority()) >= 0;
             }
-            return lhsType == rhsType;
+            return lhsType.equals(rhsType);
         }
         if (assignmentSign.isBitwiseSign()) {
             return isIntegerTypes(lhsType) && isIntegerTypes(rhsType);
@@ -69,7 +69,7 @@ public class TypeChecker {
         if (isNumericTypes(lhsType) && isNumericTypes(rhsType)) {
             return true;
         }
-        return lhsType == rhsType;
+        return lhsType.equals(rhsType);
     }
 
     public static boolean isLegalShiftType(Type leftType, Type rightType) {

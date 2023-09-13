@@ -55,7 +55,7 @@ public class ClassType implements Type {
 
     @Override
     public int getToHigherPriorityNumericTypeOpcode(Type targetType, boolean silent) {
-        return Const.INVALID_OPCODE;
+        return silent ? Opcodes.NOP : Const.INVALID_OPCODE;
     }
 
     @Override

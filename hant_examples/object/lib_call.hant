@@ -19,8 +19,8 @@ void wrapClassDemo() {
 }
 
 void printfDemo() {
-    java.lang.System.out.printf("abc\n")
-    java.lang.System.out.printf("abc %S = %s\n", "Name", "ZhangSan")
+    java.lang.System.out.printf("printfDemo\n")
+    java.lang.System.out.printf("printfDemo %S = %s\n", "Name", "ZhangSan")
     var pi = 3.1415926535
     // 20 138248474720 -2.430000 -3.14 1.145
     java.lang.System.out.printf(
@@ -31,10 +31,11 @@ void printfDemo() {
         java.lang.Double.valueOf(-pi),
         java.lang.Double.valueOf(java.lang.Math.log(java.lang.Math.PI)))
 
-    // java.lang.System.out.printf("%d", 123); // TODO: 目前不支持自动装箱
+    java.lang.System.out.printf("%d\n", 123)
 }
 
 void staticFieldInLibDemo() {
+    print "----- staticFieldInLibDemo -----"
     var i0 = java.lang.Integer.MAX_VALUE
     print i0 + " " + java.lang.Integer.valueOf(-i0).toString() // 2147483647 -2147483647
     var l1 = java.lang.Long.MAX_VALUE
@@ -52,9 +53,80 @@ void staticFieldInLibDemo() {
     print err
 }
 
+void dateDemo() {
+    print "----- dateDemo -----"
+    // Thu Sep 14 00:45:58 CST 2023
+    print new java.util.Date()
+    java.lang.System.out.printf("%s\n", new java.util.Date().toString())
+    var ft = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+    var sevenDayAgo = new java.util.Date(java.lang.System.currentTimeMillis() - 1000 * 7 * 86400)
+    java.lang.System.out.printf(
+        "%s %s\n",
+        ft.format(new java.util.Date()),
+        ft.format(sevenDayAgo)) // 2023-09-14 12:45:58 2023-09-07 12:45:58
+}
+
+string stringDemo() {
+    print "----- stringDemo -----"
+    var s = "acmer".toUpperCase()
+    print s
+
+    print new java.lang.String("acer").toUpperCase()
+
+    return ("hc".toLowerCase() + "tf").toLowerCase()
+}
+
+void randomDemo() {
+    print "----- randomDemo -----"
+    var r = new java.util.Random()
+    var i0 = r.nextInt(10)
+    java.lang.System.out.printf("%d, ", i0)
+    var l1 = r.nextLong()
+    java.lang.System.out.printf("%d, %d, ", l1, r.nextLong())
+    var f2 = r.nextFloat()
+    java.lang.System.out.printf("%f, ", f2)
+    var d3 = r.nextDouble()
+    java.lang.System.out.printf("%.3f, ", d3)
+    var b4 = r.nextBoolean()
+    java.lang.System.out.printf("%b\n", b4)
+}
+
+// 以一种特殊的方式实现了图灵完备
+void listDemo(int n) {
+    print "----- listDemo -----"
+    var a = new java.util.ArrayList()
+    for i: 1 to n >> 1 {
+        a.add(java.lang.Integer.valueOf(10 * i))
+    }
+    for var i = (n >> 1) + 1; i <= n; i += 1 {
+        a.add(java.lang.Integer.valueOf(10 * i))
+    }
+    print \n "a.size() = " + a.size()
+    var sum = 0
+    for var i = 0; i < a.size(); i += 1 {
+        var v = java.lang.Integer.parseInt(a.get(i).toString())
+        java.lang.System.out.printf(" a[%d] = %d", i, v)
+        sum += v
+    }
+    java.lang.System.out.printf(" sum = " + sum + "\n")
+}
+
+void listDemo2d() {
+    print "----- listDemo2d -----"
+    var a = new java.util.ArrayList()
+    a.add(new java.util.ArrayList())
+    // a.get(0).add(java.lang.Integer.valueOf(123)) // TODO: 目前无法实现二维数组
+    print a.get(0)
+}
+
 void main(string[] args) {
     mathDemo()
     wrapClassDemo()
     printfDemo()
     staticFieldInLibDemo()
+    dateDemo()
+    print stringDemo()
+    randomDemo()
+    listDemo(10)
+    listDemo2d()
 }

@@ -52,7 +52,8 @@ public class CallExpressionVisitor extends HansAntlrBaseVisitor<Call> {
     public ConstructorCall visitConstructorCall(HansAntlrParser.ConstructorCallContext ctx) {
         String className = ctx.qualifiedName().getText();
         List<Expression> arguments = getArgumentsForCall(ctx.argumentList());
-        return new ConstructorCall(className, arguments);
+        int sourceLine = ctx.getStart().getLine();
+        return new ConstructorCall(className, arguments, sourceLine);
     }
 
     private List<Expression> getArgumentsForCall(HansAntlrParser.ArgumentListContext ctx) {

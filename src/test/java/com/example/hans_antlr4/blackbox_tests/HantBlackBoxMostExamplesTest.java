@@ -17,13 +17,15 @@ import com.example.hans_antlr4.TestUtils;
 public class HantBlackBoxMostExamplesTest {
     @Test
     public void runMostExamples() throws IOException {
+        // 跳过期望编译不能通过的文件和需要用户输入的文件
         List<String> excludedFiles = Arrays.asList(
                 "hant_examples\\for\\outside_loop_break.hant",
                 "hant_examples\\for\\outside_loop_continue.hant",
                 "hant_examples\\type\\arithmetic_invalid_type.hant",
                 "hant_examples\\type\\bitwise_invalid_type.hant",
                 "hant_examples\\type\\incompatible.hant",
-                "hant_examples\\type\\shift_invalid_type.hant");
+                "hant_examples\\type\\shift_invalid_type.hant",
+                "hant_examples\\object\\stdin_double.hant");
 
         Path path = Paths.get("hant_examples");
         Files.walkFileTree(path, new FileVisitor<Path>() {

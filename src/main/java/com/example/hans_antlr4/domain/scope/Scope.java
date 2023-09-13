@@ -98,6 +98,19 @@ public class Scope {
         return getMethodCallSignature(methodName, argTypes, sourceLine);
     }
 
+    public FunctionSignature getConstructorCallSignature(
+            String className,
+            List<Type> argTypes,
+            int sourceLine) {
+        boolean isDifferentThanCurrentClass = !className.equals(getClassName());
+        if (isDifferentThanCurrentClass) {
+            return new ClassPathScope()
+                    .getConstructorSignature(className, argTypes)
+                    .orElseThrow(() -> new MethodSignatureNotFoundException(this, className, sourceLine));
+        }
+        return getMethodCallSignature(Optional.empty(), getClassName(), argTypes, sourceLine);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this)
