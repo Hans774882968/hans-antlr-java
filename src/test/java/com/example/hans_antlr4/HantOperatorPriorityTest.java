@@ -25,6 +25,7 @@ import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.exception.assignment.IllegalAssignmentLhsType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantOperatorPriorityTest {
@@ -158,7 +159,9 @@ public class HantOperatorPriorityTest {
                         x, AssignmentSign.ASSIGN, new Addition(
                                 new Value(BuiltInType.INT, "4"),
                                 new AssignmentExpression(x, AssignmentSign.ADD,
-                                        new Value(BuiltInType.LONG, "3")))));
+                                        new Value(BuiltInType.LONG, "3"), 0)),
+                        0),
+                0);
         ExpressionStatement expressionStatement = new ExpressionStatement(expression);
         Assert.assertEquals(expressionStatement, statement);
     }
@@ -168,7 +171,10 @@ public class HantOperatorPriorityTest {
         String code1 = "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + (tmpL |= tmpL ^= tmpL &= 0x3f1)";
         String code2 = "var tmpL = 0xfcL\nvar tmpF = 2.34f\ntmpF *= tmpF + tmpL |= tmpL ^= tmpL &= 0x3f1";
         Statement statement1 = TestUtils.getLastStatementFromCode(code1);
-        Statement statement2 = TestUtils.getLastStatementFromCode(code2);
+        Assert.assertThrows(IllegalAssignmentLhsType.class, () -> {
+            TestUtils.getLastStatementFromCode(code2);
+        });
+        // Statement statement2 = TestUtils.getLastStatementFromCode(code2);
         LocalVariable tmpF = new LocalVariable("tmpF", BuiltInType.FLOAT);
         LocalVariable tmpL = new LocalVariable("tmpL", BuiltInType.LONG);
         Expression expression = new AssignmentExpression(
@@ -181,10 +187,14 @@ public class HantOperatorPriorityTest {
                                                 tmpL,
                                                 AssignmentSign.AND,
                                                 new Value(BuiltInType.INT,
-                                                        "0x3f1"))))));
+                                                        "0x3f1"),
+                                                0),
+                                        0),
+                                0)),
+                0);
         ExpressionStatement expressionStatement = new ExpressionStatement(expression);
         Assert.assertEquals(expressionStatement, statement1);
-        Assert.assertEquals(expressionStatement, statement2);
-        Assert.assertEquals(statement1, statement2);
+        // Assert.assertEquals(expressionStatement, statement2);
+        // Assert.assertEquals(statement1, statement2);
     }
 }

@@ -4056,7 +4056,7 @@ public enum TypeSpecificOpcodes {
 
 和原项目不同，我对于大部分未定义的指令都给了魔数`-1`。因为`ASM`发现输入的指令号为`-1`时一定会抛出异常，这样我就能发现我的代码存在漏洞，所以我认为原项目全部给0（即`NOP`）会掩盖问题，并不是最好的选择。
 
-在项目最早期，为了支持`int`和`string`类型，我们就引入了`BuiltinType`。代码大致如下：
+在项目最早期，为了支持`int`和`string`类型，我们就引入了`BuiltInType`。代码大致如下：
 
 ```java
 @AllArgsConstructor
@@ -4073,7 +4073,7 @@ public enum BuiltInType implements Type {
 }
 ```
 
-其中的`name`属性很重要，`hant`代码中的类型字符串（比如函数签名`int bc(int v)`）需要通过`name`找到对应的`BuiltinType`枚举值。接下来改造`BuiltinType`，添加类型相关的方法：
+其中的`name`属性很重要，`hant`代码中的类型字符串（比如函数签名`int bc(int v)`）需要通过`name`找到对应的`BuiltInType`枚举值。接下来改造`BuiltInType`，添加类型相关的方法：
 
 ```java
 @AllArgsConstructor
@@ -4103,7 +4103,7 @@ public enum BuiltInType implements Type {
 }
 ```
 
-`BuiltinType`枚举的`opcodes`基本上都和其类型对应，只有`BuiltinType.BOOLEAN`是例外。`BuiltinType.BOOLEAN`的`opcodes`是`TypeSpecificOpcodes.INT`。
+`BuiltInType`枚举的`opcodes`基本上都和其类型对应，只有`BuiltInType.BOOLEAN`是例外。`BuiltInType.BOOLEAN`的`opcodes`是`TypeSpecificOpcodes.INT`。
 
 ```java
 BOOLEAN("boolean", boolean.class, "Z", TypeSpecificOpcodes.INT),
@@ -4134,7 +4134,7 @@ public int getLocalVariableIndex(String varName) {
 }
 ```
 
-相应新增的`BuiltinType.slotUsage`：
+相应新增的`BuiltInType.slotUsage`：
 
 ```java
 @Override
@@ -4181,7 +4181,7 @@ public class type {
 
 为了实现方便，编译器的类型系统需要给出许多约定和约束。上文已经介绍了一条约束，就是所有表达式的类型都可以推断。这一节就是要实现表达式的类型推断。我们已经知道，Java数值类型的隐式类型转换有优先级：`int < long < float < double`，这是类型优先级升高的路径。而类型优先级降低的路径需要由强制类型转换来实现。为了实现方便，本项目只实现前半部分，即只提供类型优先级升高的路径，不实现强制类型转换。
 
-所以我们需要给`BuiltinType`提供数值类型的优先级：
+所以我们需要给`BuiltInType`提供数值类型的优先级：
 
 ```java
 @AllArgsConstructor
@@ -4262,7 +4262,7 @@ L9
 
 结论：低优先级的类型需要先转换为高优先级的类型，再生成高优先级的类型的运算指令。
 
-所以我们需要给`BuiltinType`新增`getToHigherPriorityNumericTypeOpcode()`。
+所以我们需要给`BuiltInType`新增`getToHigherPriorityNumericTypeOpcode()`。
 
 ```java
 public enum BuiltInType implements Type {
@@ -5227,7 +5227,7 @@ private Type getReturnType(HansAntlrParser.FunctionContext functionDeclarationCo
 }
 ```
 
-`TypeResolver.getFromTypeContext`的功能是根据源代码的类型字符串，比如`int, string`映射到`BuiltinType`或`ClassType`。
+`TypeResolver.getFromTypeContext`的功能是根据源代码的类型字符串，比如`int, string`映射到`BuiltInType`或`ClassType`。
 
 ```java
 public class TypeResolver {

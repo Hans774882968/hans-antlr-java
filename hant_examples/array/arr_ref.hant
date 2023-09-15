@@ -1,0 +1,74 @@
+void oneDimension() {
+    print "----- oneDimension -----"
+    var a1 = new int[20]
+    print a1[0]
+    var a2 = new boolean[3]
+    print a2[2]
+    var a3 = new string[10]
+    print a3[9]
+}
+
+void multiDimension() {
+    print "----- multiDimension -----"
+    var a1 = new int[2][3]
+    print a1[1][2]
+    var a2 = new string[10][9]
+    print a2[9][8]
+    var a3 = new long[3][4][5][6]
+    print a3[0 + 1][0 | 2][0 ^ 3][4 >>> 1]
+}
+
+void assignToVar() {
+    print "----- assignToVar -----"
+    var a1 = new double[3][4][5]
+    var tmpA1 = a1[2][1]
+    print tmpA1[3]
+
+    var a2 = new double[4][5][6][7]
+    var tmpA2 = a2[3][1]
+    print tmpA2[4][2]
+    /* TODO: Caused by: java.lang.NoSuchMethodError: 'java.lang.StringBuilder java.lang.StringBuilder.append(double[][])'
+    double[] 也有这个问题
+    */
+    // print tmpA2 + " " + tmpA2[4]
+    print tmpA2.toString() + " " + tmpA2[4].toString() // [[D@4a3631f8 [D@6b58b9e9
+    var tmpS = ""
+    tmpS += tmpA2
+    tmpS += " "
+    tmpS += tmpA2[4]
+    print tmpS // 同上
+}
+
+float[][] foo1() {
+    return new float[3][4]
+}
+
+long foo2(long[][] arg) {
+    return arg[1][2]
+}
+
+/* TODO: solve bug here
+string[] foo3(string[][][] arg) {
+    return arg[2][3]
+}
+
+boolean foo4(boolean[] arg) {
+    return arg[1]
+}*/
+
+void returnArrayOrArrayParamDemo() {
+    print "----- returnArrayOrArrayParamDemo -----"
+    print foo1()
+    print foo1()[0]
+    print foo1()[0][1]
+    print foo2(new long[2][3])
+    // print foo3(new string[3][4][5])
+    // print foo4(new boolean[3])
+}
+
+void main(string[] args) {
+    oneDimension()
+    multiDimension()
+    assignToVar()
+    returnArrayOrArrayParamDemo()
+}

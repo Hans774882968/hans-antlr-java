@@ -113,6 +113,15 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitQualifiedName(HansAntlrParser.QualifiedNameContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#primitiveTypeName}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitPrimitiveTypeName(HansAntlrParser.PrimitiveTypeNameContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#statements}.
 	 * 
 	 * @param ctx
@@ -260,6 +269,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitRELATIONAL(HansAntlrParser.RELATIONALContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code ArrayDeclaration}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayDeclaration(HansAntlrParser.ArrayDeclarationContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code ValueExpr}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -308,6 +327,16 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitSHIFT(HansAntlrParser.SHIFTContext ctx);
+
+	/**
+	 * Visit a parse tree produced by the {@code ArrayAccess}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayAccess(HansAntlrParser.ArrayAccessContext ctx);
 
 	/**
 	 * Visit a parse tree produced by the {@code VarReference}
@@ -420,15 +449,6 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	T visitUNARY(HansAntlrParser.UNARYContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link HansAntlrParser#variableReference}.
-	 * 
-	 * @param ctx
-	 *            the parse tree
-	 * @return the visitor result
-	 */
-	T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx);
-
-	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#argumentList}.
 	 * 
 	 * @param ctx
@@ -436,6 +456,15 @@ public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitArgumentList(HansAntlrParser.ArgumentListContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#variableReference}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#print}.

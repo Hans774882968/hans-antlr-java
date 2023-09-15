@@ -4,8 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.example.hans_antlr4.TestUtils;
-import com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.IllegalShiftTypeException;
+import com.example.hans_antlr4.exception.assignment.AssignmentLhsAndRhsTypeIncompatibleException;
 
 public class TypeIncompatibleExceptionTest {
     @Test

@@ -123,12 +123,13 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final String iteratorVarName = rangedForConditionsContext.variableReference().getText();
         final Expression startExpr = rangedForConditionsContext.startExpr.accept(expressionVisitor);
         final StatementVisitor statementVisitor = new StatementVisitor(newScope);
+        final int sourceLine = ctx.getStart().getLine();
 
         Statement iteratorVariableStatement = null;
         if (newScope.localVariableExists(iteratorVarName)) {
             LocalVariable iteratorVar = newScope.getLocalVariable(iteratorVarName);
             iteratorVariableStatement = new ExpressionStatement(
-                    new AssignmentExpression(iteratorVar, AssignmentSign.ASSIGN, startExpr));
+                    new AssignmentExpression(iteratorVar, AssignmentSign.ASSIGN, startExpr, sourceLine));
         } else {
             newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
             iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);

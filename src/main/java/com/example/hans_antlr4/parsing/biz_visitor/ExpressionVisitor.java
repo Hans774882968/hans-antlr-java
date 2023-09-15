@@ -4,12 +4,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.Additive;
 import com.example.hans_antlr4.domain.expression.And;
+import com.example.hans_antlr4.domain.expression.ArrayAccess;
+import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
@@ -41,12 +45,13 @@ import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.domain.type.TypeChecker;
 import com.example.hans_antlr4.exception.ArithmeticExprLhsAndRhsTypeIncompatibleException;
-import com.example.hans_antlr4.exception.AssignmentLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.IllegalShiftTypeException;
+import com.example.hans_antlr4.exception.assignment.IllegalAssignmentLhsType;
 import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -60,6 +65,38 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
     public ExpressionVisitor(Scope scope) {
         this.scope = scope;
         this.callExpressionVisitor = new CallExpressionVisitor(scope, this);
+    }
+
+    @Override
+    public ArrayDeclaration visitArrayDeclaration(HansAntlrParser.ArrayDeclarationContext ctx) {
+        Type elementType = null;
+        if (ctx.primitiveTypeName() != null) {
+            Optional<BuiltInType> foundType = BuiltInType.getBuiltInType(ctx.primitiveTypeName().getText());
+            if (foundType.isPresent()) {
+                elementType = foundType.get();
+            }
+        } else if (ctx.qualifiedName() != null) {
+            elementType = new ClassType(ctx.qualifiedName().getText());
+        }
+        if (elementType == null) {
+            int sourceLine = ctx.getStart().getLine();
+            throw new RuntimeException("Can not get Array element type at line " + sourceLine);
+        }
+        List<Expression> dimensions = ctx.expression().stream().map(exp -> {
+            return exp.accept(this);
+        }).collect(Collectors.toList());
+        return new ArrayDeclaration(elementType, dimensions);
+    }
+
+    @Override
+    public ArrayAccess visitArrayAccess(HansAntlrParser.ArrayAccessContext ctx) {
+        Expression array = ctx.array.accept(this);
+        List<Expression> dimensions = new ArrayList<>();
+        for (int i = 1; i < ctx.expression().size(); i++) {
+            Expression dimension = ctx.expression(i).accept(this);
+            dimensions.add(dimension);
+        }
+        return new ArrayAccess(array, dimensions);
     }
 
     private int getFindFieldStartIndex(String[] identifiers, String classFieldString) {
@@ -345,18 +382,25 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
 
     @Override
     public AssignmentExpression visitASSIGNMENT(HansAntlrParser.ASSIGNMENTContext ctx) {
-        final String varName = ctx.variableReference().getText();
+        Expression leftHandSide = ctx.leftHandSide.accept(this);
         final String op = ctx.AssignmentOperator.getText();
         AssignmentSign assignmentSign = AssignmentSign.fromString(op);
-        Expression expression = ctx.expression().accept(this);
-        LocalVariable localVariable = scope.getLocalVariable(varName);
-        Type lhsType = localVariable.getType();
-        Type rhsType = expression.getType();
-        if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(assignmentSign, lhsType, rhsType)) {
-            int sourceLine = ctx.AssignmentOperator.getLine();
-            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, assignmentSign, sourceLine);
+        Expression expression = ctx.rightHandSide.accept(this);
+        int sourceLine = ctx.AssignmentOperator.getLine();
+        if (leftHandSide instanceof VarReference) {
+            String varName = ((VarReference) leftHandSide).getVarName();
+            LocalVariable localVariable = scope.getLocalVariable(varName);
+            return new AssignmentExpression(localVariable, assignmentSign, expression, sourceLine);
         }
-        return new AssignmentExpression(localVariable, assignmentSign, expression);
+        if (leftHandSide instanceof ClassFieldReference) {
+            ClassFieldReference classFieldReference = (ClassFieldReference) leftHandSide;
+            return new AssignmentExpression(classFieldReference, assignmentSign, expression, sourceLine);
+        }
+        if (leftHandSide instanceof ArrayAccess) {
+            ArrayAccess arrayAccess = (ArrayAccess) leftHandSide;
+            return new AssignmentExpression(arrayAccess, assignmentSign, expression, sourceLine);
+        }
+        throw new IllegalAssignmentLhsType(leftHandSide, sourceLine);
     }
 
     @Override

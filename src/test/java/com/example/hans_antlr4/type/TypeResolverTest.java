@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.utils.HantNumber;
 import com.example.hans_antlr4.utils.TypeResolver;
 
@@ -100,5 +101,23 @@ public class TypeResolverTest {
         Assert.assertEquals(1250999896321l, TypeResolver.getValueFromString("0x12345678901", BuiltInType.LONG));
         Assert.assertEquals(0L, TypeResolver.getValueFromString("0b0", BuiltInType.LONG));
         Assert.assertEquals(0l, TypeResolver.getValueFromString("0b00", BuiltInType.LONG));
+    }
+
+    @Test
+    public void testGetFromTypeName() {
+        Type double0Type = TypeResolver.getFromTypeName("double");
+        Assert.assertEquals("D", double0Type.getDescriptor());
+
+        Type double1Type = TypeResolver.getFromTypeName("double[]");
+        Assert.assertEquals("[D", double1Type.getDescriptor());
+
+        Type string1Type = TypeResolver.getFromTypeName("string[]");
+        Assert.assertEquals("[Ljava/lang/String;", string1Type.getDescriptor());
+
+        Type float2Type = TypeResolver.getFromTypeName("float[][]");
+        Assert.assertEquals("[[F", float2Type.getDescriptor());
+
+        Type string3Type = TypeResolver.getFromTypeName("string[][][]");
+        Assert.assertEquals("[[[Ljava/lang/String;", string3Type.getDescriptor());
     }
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.bytecode_gen.AssignmentUtil;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
@@ -34,28 +35,29 @@ public class AssignmentExpressionGenerator implements Opcodes {
 
     public void generate(AssignmentExpression assignmentExpression) {
         Expression currentExpression = assignmentExpression;
-        List<Integer> variableIndexes = new ArrayList<>();
         List<AssignmentSign> signs = new ArrayList<>();
         List<AssignmentExpression> assignmentExpressions = new ArrayList<>();
+        AssignmentUtil assignmentUtil = new AssignmentUtil(parent);
+
         while (currentExpression instanceof AssignmentExpression) {
             AssignmentExpression currentAssignmentExpression = (AssignmentExpression) currentExpression;
-            int index = parent.getScope().getLocalVariableIndex(currentAssignmentExpression.getVariable().getVarName());
-            variableIndexes.add(index);
             signs.add(currentAssignmentExpression.getSign());
             assignmentExpressions.add(currentAssignmentExpression);
             currentExpression = currentAssignmentExpression.getExpression();
         }
 
-        for (int i = 0; i < variableIndexes.size(); i++) {
+        for (int i = 0; i < assignmentExpressions.size(); i++) {
             AssignmentSign sign = signs.get(i);
-            int variableIndex = variableIndexes.get(i);
             AssignmentExpression currentAssignmentExpression = assignmentExpressions.get(i);
             Type lhsType = currentAssignmentExpression.getLhsType();
             Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
             if (sign == AssignmentSign.ASSIGN) {
                 continue;
             }
-            mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
+            if (currentAssignmentExpression.lhsIsVariable()) {
+                int variableIndex = assignmentUtil.getVariableIndexByAssignmentExpression(currentAssignmentExpression);
+                mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
+            }
             if (sign == AssignmentSign.POW) {
                 mv.visitInsn(lhsType.getToDoubleOpcode());
             } else if (!sign.isShiftSign()) {
@@ -65,11 +67,10 @@ public class AssignmentExpressionGenerator implements Opcodes {
 
         currentExpression.accept(parent);
 
-        for (int i = variableIndexes.size() - 1; i >= 0; i--) {
-            int variableIndex = variableIndexes.get(i);
+        for (int i = assignmentExpressions.size() - 1; i >= 0; i--) {
             AssignmentSign sign = signs.get(i);
             AssignmentExpression currentAssignmentExpression = assignmentExpressions.get(i);
-            Type lhsType = currentAssignmentExpression.getVariable().getType();
+            Type lhsType = currentAssignmentExpression.getLhsType();
             Type rhsType = currentAssignmentExpression.getRhsType();
 
             if (sign == AssignmentSign.ASSIGN) {
@@ -152,7 +153,11 @@ public class AssignmentExpressionGenerator implements Opcodes {
             if (i > 0 || (i == 0 && !assignmentExpression.notNecessaryToGenerateDupInstruction())) {
                 mv.visitInsn(lhsType.getDupOpcode());
             }
-            mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
+
+            if (currentAssignmentExpression.lhsIsVariable()) {
+                int variableIndex = assignmentUtil.getVariableIndexByAssignmentExpression(currentAssignmentExpression);
+                mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
+            }
         }
     }
 }

@@ -57,7 +57,7 @@ public class ExpressionProcessorTest {
         Value subtractionR = new Value(BuiltInType.INT, "2");
         Subtraction subtraction = new Subtraction(subtractionL, subtractionR);
         AssignmentExpression assignmentAdd = new AssignmentExpression(
-                new LocalVariable("x", BuiltInType.INT), AssignmentSign.ADD, subtraction);
+                new LocalVariable("x", BuiltInType.INT), AssignmentSign.ADD, subtraction, 0);
         UnaryTilde unaryTilde = new UnaryTilde(assignmentAdd);
         Addition addition = new Addition(pow, unaryTilde);
         PrintStatement mockStatement = new PrintStatement(addition);

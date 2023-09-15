@@ -6,10 +6,12 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.exception.InvalidHantNumberException;
+import com.example.hans_antlr4.exception.InvalidHantTypeNameException;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Floats;
@@ -23,9 +25,23 @@ public class TypeResolver {
 
     public static Type getFromTypeName(String typeName) {
         Optional<? extends Type> buildInType = BuiltInType.getBuiltInType(typeName);
-        if (buildInType.isPresent())
+        if (buildInType.isPresent()) {
             return buildInType.get();
-        return new ClassType(typeName);
+        }
+        if (!typeName.endsWith("[]")) {
+            return new ClassType(typeName);
+        }
+
+        int suffixIndex = typeName.indexOf("[");
+        String elementTypeName = typeName.substring(0, suffixIndex);
+        Type elementType = getFromTypeName(elementTypeName);
+        int dimension = (typeName.length() - suffixIndex) / 2;
+
+        if (!typeName.substring(suffixIndex).equals("[]".repeat(dimension))) {
+            throw new InvalidHantTypeNameException(typeName);
+        }
+
+        return new ArrayType(elementType, dimension);
     }
 
     public static Type getFromJavaLangClass(Class<?> clazz) {

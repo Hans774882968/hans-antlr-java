@@ -32,7 +32,7 @@ public class FunctionSignature {
         for (int i = 0; i < argTypes.size(); i++) {
             Type paramType = parameters.get(i).getType();
             Type argType = argTypes.get(i);
-            if (paramType != argType) {
+            if (!paramType.equals(argType)) {
                 return false;
             }
         }

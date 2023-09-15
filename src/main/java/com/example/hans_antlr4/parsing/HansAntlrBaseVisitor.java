@@ -167,6 +167,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitPrimitiveTypeName(HansAntlrParser.PrimitiveTypeNameContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitStatements(HansAntlrParser.StatementsContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -375,6 +388,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
+	public T visitArrayDeclaration(HansAntlrParser.ArrayDeclarationContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
 	public T visitValueExpr(HansAntlrParser.ValueExprContext ctx) {
 		return visitChildren(ctx);
 	}
@@ -428,6 +454,19 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 */
 	@Override
 	public T visitSHIFT(HansAntlrParser.SHIFTContext ctx) {
+		return visitChildren(ctx);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 * </p>
+	 */
+	@Override
+	public T visitArrayAccess(HansAntlrParser.ArrayAccessContext ctx) {
 		return visitChildren(ctx);
 	}
 
@@ -583,7 +622,7 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
-	public T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx) {
+	public T visitArgumentList(HansAntlrParser.ArgumentListContext ctx) {
 		return visitChildren(ctx);
 	}
 
@@ -596,7 +635,7 @@ public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> impleme
 	 * </p>
 	 */
 	@Override
-	public T visitArgumentList(HansAntlrParser.ArgumentListContext ctx) {
+	public T visitVariableReference(HansAntlrParser.VariableReferenceContext ctx) {
 		return visitChildren(ctx);
 	}
 

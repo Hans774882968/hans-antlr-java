@@ -3,26 +3,94 @@ package com.example.hans_antlr4.domain.expression;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.scope.AssignmentLhs;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.domain.type.TypeChecker;
+import com.example.hans_antlr4.exception.assignment.AssignmentLhsAndRhsTypeIncompatibleException;
 
 import lombok.Getter;
 import java.util.Objects;
 
 @Getter
 public class AssignmentExpression extends Expression {
-    private LocalVariable variable;
+    private AssignmentLhs lhs;
     private AssignmentSign sign;
     private Expression expression;
+    private int sourceLine;
 
-    public AssignmentExpression(LocalVariable variable, AssignmentSign sign, Expression expression) {
-        // AssignmentExpression 的类型为 LHS 类型，计算时左右侧入栈顶并转为 max 类型，计算完毕后把 max 类型转为 LHS 类型再赋值
+    // AssignmentExpression 的类型为 LHS 类型，计算时左右侧入栈顶并转为 max 类型，计算完毕后把 max 类型转为 LHS 类型再赋值
+    public AssignmentExpression(
+            LocalVariable variable,
+            AssignmentSign sign,
+            Expression expression,
+            int sourceLine) {
         super(variable.getType(), null, null);
-        this.variable = variable;
+        this.lhs = new AssignmentLhs(variable);
         this.sign = sign;
         this.expression = expression;
+        this.sourceLine = sourceLine;
+        typeCheck();
+    }
+
+    public AssignmentExpression(
+            ClassFieldReference classFieldReference,
+            AssignmentSign sign,
+            Expression expression,
+            int sourceLine) {
+        super(classFieldReference.getType(), null, null);
+        this.lhs = new AssignmentLhs(classFieldReference);
+        this.sign = sign;
+        this.expression = expression;
+        this.sourceLine = sourceLine;
+        typeCheck();
+    }
+
+    public AssignmentExpression(
+            ArrayAccess arrayAccess,
+            AssignmentSign sign,
+            Expression expression,
+            int sourceLine) {
+        super(arrayAccess.getType(), null, null);
+        this.lhs = new AssignmentLhs(arrayAccess);
+        this.sign = sign;
+        this.expression = expression;
+        this.sourceLine = sourceLine;
+        typeCheck();
+    }
+
+    public void typeCheck() {
+        Type lhsType = getLhsType();
+        Type rhsType = getRhsType();
+        if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(sign, lhsType, rhsType)) {
+            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sign, sourceLine);
+        }
+    }
+
+    public boolean lhsIsVariable() {
+        return lhs.getLocalVariable() != null;
+    }
+
+    public boolean lhsIsClassFieldReference() {
+        return lhs.getClassFieldReference() != null;
+    }
+
+    public boolean lhsIsArrayAccess() {
+        return lhs.getArrayAccess() != null;
+    }
+
+    public LocalVariable getLhsVariable() {
+        return lhs.getLocalVariable();
+    }
+
+    public ClassFieldReference getLhsClassFieldReference() {
+        return lhs.getClassFieldReference();
+    }
+
+    public ArrayAccess getLhsArrayAccess() {
+        return lhs.getArrayAccess();
     }
 
     public boolean notNecessaryToGenerateDupInstruction() {
@@ -34,7 +102,7 @@ public class AssignmentExpression extends Expression {
     }
 
     public Type getLhsType() {
-        return variable.getType();
+        return lhs.getType();
     }
 
     public Type getRhsType() {
@@ -70,13 +138,13 @@ public class AssignmentExpression extends Expression {
         }
         AssignmentExpression assignmentExpression = (AssignmentExpression) o;
         return Objects.equals(getType(), assignmentExpression.getType())
-                && Objects.equals(variable, assignmentExpression.variable)
+                && Objects.equals(lhs, assignmentExpression.lhs)
                 && Objects.equals(sign, assignmentExpression.sign)
                 && Objects.equals(expression, assignmentExpression.expression);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getType(), variable, sign, expression);
+        return Objects.hash(getType(), lhs, sign, expression);
     }
 }

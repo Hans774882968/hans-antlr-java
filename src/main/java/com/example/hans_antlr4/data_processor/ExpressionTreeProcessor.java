@@ -1,6 +1,8 @@
 package com.example.hans_antlr4.data_processor;
 
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
+import com.example.hans_antlr4.domain.expression.ArrayAccess;
+import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
@@ -122,6 +124,29 @@ public class ExpressionTreeProcessor {
         constructorCall.setBelongStatement(belongStatement);
         constructorCall.getArguments().forEach(arg -> {
             arg.processSubExpressionTree(this, constructorCall, belongStatement);
+        });
+    }
+
+    public void processExpressionTree(ArrayDeclaration arrayDeclaration, Expression parent, Statement belongStatement) {
+        if (arrayDeclaration == null) {
+            return;
+        }
+        arrayDeclaration.setParent(parent);
+        arrayDeclaration.setBelongStatement(belongStatement);
+        arrayDeclaration.getDimensions().forEach(dimension -> {
+            dimension.processSubExpressionTree(this, arrayDeclaration, belongStatement);
+        });
+    }
+
+    public void processExpressionTree(ArrayAccess arrayAccess, Expression parent, Statement belongStatement) {
+        if (arrayAccess == null) {
+            return;
+        }
+        arrayAccess.setParent(parent);
+        arrayAccess.setBelongStatement(belongStatement);
+        arrayAccess.getArray().processSubExpressionTree(this, arrayAccess, belongStatement);
+        arrayAccess.getDimensions().forEach(dimension -> {
+            dimension.processSubExpressionTree(this, arrayAccess, belongStatement);
         });
     }
 }

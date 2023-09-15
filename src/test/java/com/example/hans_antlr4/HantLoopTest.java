@@ -54,7 +54,8 @@ public class HantLoopTest implements Opcodes {
                     new AssignmentExpression(
                             new LocalVariable("i", BuiltInType.INT),
                             AssignmentSign.ASSIGN,
-                            new Value(BuiltInType.INT, "114512")));
+                            new Value(BuiltInType.INT, "114512"),
+                            0));
             Assert.assertEquals(expressionStatement, iteratorVariableStatement);
         });
     }

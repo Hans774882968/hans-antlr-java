@@ -7,6 +7,8 @@ import com.example.hans_antlr4.bytecode_gen.InsnUtil;
 import com.example.hans_antlr4.domain.expression.Addition;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
+import com.example.hans_antlr4.domain.expression.ArrayAccess;
+import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
@@ -49,6 +51,7 @@ public class ExpressionGenerator implements Opcodes {
     private StringAppendGenerator stringAppendGenerator;
     private ShiftExpressionGenerator shiftExpressionGenerator;
     private CallExpressionGenerator callExpressionGenerator;
+    private ArrayGenerator arrayGenerator;
 
     public ExpressionGenerator(MethodVisitor mv, Scope scope) {
         this.mv = mv;
@@ -58,6 +61,7 @@ public class ExpressionGenerator implements Opcodes {
         this.stringAppendGenerator = new StringAppendGenerator(this, mv);
         this.shiftExpressionGenerator = new ShiftExpressionGenerator(this, mv);
         this.callExpressionGenerator = new CallExpressionGenerator(this, mv);
+        this.arrayGenerator = new ArrayGenerator(this, mv);
     }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
@@ -83,6 +87,14 @@ public class ExpressionGenerator implements Opcodes {
                 mv.visitFieldInsn(GETFIELD, ownerDescriptor, name, descriptor);
             }
         });
+    }
+
+    public void generate(ArrayDeclaration arrayDeclaration) {
+        arrayGenerator.generate(arrayDeclaration);
+    }
+
+    public void generate(ArrayAccess arrayAccess) {
+        arrayGenerator.generate(arrayAccess);
     }
 
     public void generate(Value value) {

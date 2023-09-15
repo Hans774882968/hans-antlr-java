@@ -28,6 +28,17 @@ primitiveType:
 	| 'void' ('[' ']')*;
 classType: qualifiedName ('[' ']')*;
 qualifiedName: Identifier ('.' Identifier)*;
+primitiveTypeName:
+	'boolean'
+	| 'string'
+	| 'char'
+	| 'byte'
+	| 'short'
+	| 'int'
+	| 'long'
+	| 'float'
+	| 'double'
+	| 'void';
 
 statements: (statement ';'?)*;
 block: '{' statements '}';
@@ -69,21 +80,25 @@ expression:
 	functionName '(' argumentList ')'							# FunctionCall
 	| owner = expression '.' functionName '(' argumentList ')'	# FunctionCall
 	| 'new' qualifiedName '(' argumentList ')'					# ConstructorCall
-	| expression '.' Identifier									# ClazzFieldReference
-	| variableReference											# VarReference
-	| value														# ValueExpr
-	| '(' expression ')'										# BRACKET
-	| UNARY = ('+' | '-' | '~') expression						# UNARY
-	| expression POW expression									# POW
-	| expression MULTIPLICATIVE expression						# MULTIPLICATIVE
-	| expression ADDITIVE = ('+' | '-') expression				# ADDITIVE
-	| expression SHIFT expression								# SHIFT
-	| expression RELATIONAL expression							# RELATIONAL
-	| expression EQUALITY expression							# EQUALITY
-	| expression AND expression									# AND
-	| expression XOR expression									# XOR
-	| expression OR expression									# OR
-	| <assoc = right> variableReference AssignmentOperator = (
+	| 'new' (primitiveTypeName | qualifiedName) (
+		'[' expression ']'
+	)+												# ArrayDeclaration
+	| array = expression ('[' expression ']')+		# ArrayAccess
+	| expression '.' Identifier						# ClazzFieldReference
+	| variableReference								# VarReference
+	| value											# ValueExpr
+	| '(' expression ')'							# BRACKET
+	| UNARY = ('+' | '-' | '~') expression			# UNARY
+	| expression POW expression						# POW
+	| expression MULTIPLICATIVE expression			# MULTIPLICATIVE
+	| expression ADDITIVE = ('+' | '-') expression	# ADDITIVE
+	| expression SHIFT expression					# SHIFT
+	| expression RELATIONAL expression				# RELATIONAL
+	| expression EQUALITY expression				# EQUALITY
+	| expression AND expression						# AND
+	| expression XOR expression						# XOR
+	| expression OR expression						# OR
+	| <assoc = right> leftHandSide = expression AssignmentOperator = (
 		'='
 		| '**='
 		| '*='
@@ -97,9 +112,10 @@ expression:
 		| '&='
 		| '^='
 		| '|='
-	) expression # ASSIGNMENT;
-variableReference: Identifier;
+	) rightHandSide = expression # ASSIGNMENT;
 argumentList: expression? (',' expression)*;
+
+variableReference: Identifier;
 
 print: PRINT (printArg = '\\n')? expression;
 
