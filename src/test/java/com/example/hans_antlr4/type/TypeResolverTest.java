@@ -3,6 +3,7 @@ package com.example.hans_antlr4.type;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.utils.HantNumber;
@@ -107,6 +108,16 @@ public class TypeResolverTest {
     public void testGetFromTypeName() {
         Type double0Type = TypeResolver.getFromTypeName("double");
         Assert.assertEquals("D", double0Type.getDescriptor());
+        Type void0Type = TypeResolver.getFromTypeName("void");
+        Assert.assertEquals("V", void0Type.getDescriptor());
+        Type string0Type0 = TypeResolver.getFromTypeName("string");
+        Assert.assertEquals("Ljava/lang/String;", string0Type0.getDescriptor());
+        Type object0Type0 = TypeResolver.getFromTypeName("object");
+        Assert.assertEquals("Ljava/lang/Object;", object0Type0.getDescriptor());
+        Type string0Type1 = TypeResolver.getFromTypeName("java.lang.String");
+        Assert.assertEquals("Ljava/lang/String;", string0Type1.getDescriptor());
+        Type object0Type1 = TypeResolver.getFromTypeName("java.lang.Object");
+        Assert.assertEquals("Ljava/lang/Object;", object0Type1.getDescriptor());
 
         Type double1Type = TypeResolver.getFromTypeName("double[]");
         Assert.assertEquals("[D", double1Type.getDescriptor());
@@ -119,5 +130,18 @@ public class TypeResolverTest {
 
         Type string3Type = TypeResolver.getFromTypeName("string[][][]");
         Assert.assertEquals("[[[Ljava/lang/String;", string3Type.getDescriptor());
+    }
+
+    @Test
+    public void testIsPrimitive() {
+        Assert.assertTrue(BuiltInType.INT.getTypeClass().isPrimitive());
+        Assert.assertTrue(BuiltInType.CHAR.getTypeClass().isPrimitive());
+        Assert.assertTrue(BuiltInType.VOID.getTypeClass().isPrimitive());
+
+        Assert.assertFalse(BuiltInType.STRING.getTypeClass().isPrimitive());
+        Assert.assertFalse(new ArrayType(BuiltInType.INT, 1).getTypeClass().isPrimitive());
+        Assert.assertFalse(new ArrayType(BuiltInType.CHAR, 1).getTypeClass().isPrimitive());
+        Assert.assertFalse(new ArrayType(BuiltInType.STRING, 1).getTypeClass().isPrimitive());
+        Assert.assertFalse(new ArrayType(BuiltInType.FLOAT, 2).getTypeClass().isPrimitive());
     }
 }

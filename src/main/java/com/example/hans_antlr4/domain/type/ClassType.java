@@ -164,6 +164,11 @@ public class ClassType implements Type {
     }
 
     @Override
+    public int getLoadArrayItemOpcode() {
+        return Opcodes.AALOAD;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this)
             return true;

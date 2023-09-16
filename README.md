@@ -5508,6 +5508,20 @@ public static int gcd(int var0, int var1) {
 
 TODO
 
+## 支持数组定义和引用
+
+TODO
+
+### 效果：我们来写一段统计文件夹代码量的脚本吧！
+
+[传送门：`hant_examples/array/code_stat.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/array/code_stat.hant)
+
+![hant目前可以实现代码量统计](./README_assets/4-hant目前可以实现代码量统计.jpg)
+
+## 支持数组赋值
+
+TODO
+
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html

@@ -1,11 +1,5 @@
 package com.example.hans_antlr4.domain.type;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.example.hans_antlr4.domain.expression.EmptyExpression;
-import com.example.hans_antlr4.domain.expression.Expression;
-
 import lombok.Getter;
 
 import java.util.Objects;
@@ -15,29 +9,17 @@ import org.objectweb.asm.Opcodes;
 @Getter
 public class ArrayType implements Type {
     private Type elementType;
-    private List<Expression> dimensions;
+    private int dimension;
     private String descriptor;
+    public static ArrayType OBJECT_ARR = new ArrayType(BuiltInType.OBJECT, 1);
 
     public ArrayType(Type elementType, int dimension) {
         this.elementType = elementType;
-        List<Expression> tmpDimensions = new ArrayList<>();
-        for (int i = 0; i < dimension; i++) {
-            tmpDimensions.add(new EmptyExpression(BuiltInType.INT));
-        }
-        this.dimensions = tmpDimensions;
-        if (elementType instanceof ArrayType) {
+        this.dimension = dimension;
+        if (elementType instanceof ArrayType || dimension <= 0) {
             throw new RuntimeException("Invalid array type");
         }
-        setDescriptor(dimensions.size(), elementType.getDescriptor());
-    }
-
-    public ArrayType(Type elementType, List<Expression> dimensions) {
-        this.elementType = elementType;
-        this.dimensions = dimensions;
-        if (elementType instanceof ArrayType || dimensions == null || dimensions.isEmpty()) {
-            throw new RuntimeException("Invalid array type");
-        }
-        setDescriptor(dimensions.size(), elementType.getDescriptor());
+        setDescriptor(dimension, elementType.getDescriptor());
     }
 
     private void setDescriptor(int dimension, String elementDescriptor) {
@@ -45,20 +27,19 @@ public class ArrayType implements Type {
     }
 
     public static Type getDimensionReducedType(ArrayType array, int dimension) {
-        if (dimension > array.getDimensions().size()) {
+        if (dimension > array.getDimension()) {
             throw new RuntimeException("dimension " + dimension + " exceed the dimension of array " + array.getName());
         }
-        List<Expression> resultDimension = array.getDimensions().subList(dimension, array.getDimensions().size());
-        if (resultDimension.isEmpty()) {
+        if (dimension == array.getDimension()) {
             return array.elementType;
         }
-        return new ArrayType(array.elementType, resultDimension);
+        return new ArrayType(array.elementType, array.getDimension() - dimension);
     }
 
     @Override
     public Class<?> getTypeClass() {
         try {
-            return Class.forName(descriptor);
+            return Class.forName(getName());
         } catch (ClassNotFoundException e) {
             throw new RuntimeException();
         }
@@ -66,12 +47,12 @@ public class ArrayType implements Type {
 
     @Override
     public String getName() {
-        return descriptor;
+        return descriptor.replaceAll("/", ".");
     }
 
     @Override
     public String getInternalName() {
-        return descriptor;
+        return descriptor.replaceAll("/", ".");
     }
 
     @Override
@@ -207,7 +188,11 @@ public class ArrayType implements Type {
         throw new RuntimeException("Or operation not supported for array");
     }
 
-    // NOTICE: 和其他类型不一样，dimensions的表达式不需要相等，只需要维度相等
+    @Override
+    public int getLoadArrayItemOpcode() {
+        return Opcodes.AALOAD;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this)
@@ -217,12 +202,12 @@ public class ArrayType implements Type {
         }
         ArrayType arrayType = (ArrayType) o;
         return Objects.equals(elementType, arrayType.elementType)
-                && Objects.equals(dimensions.size(), arrayType.dimensions.size())
+                && dimension == arrayType.dimension
                 && Objects.equals(descriptor, arrayType.descriptor);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(elementType, dimensions.size(), descriptor);
+        return Objects.hash(elementType, dimension, descriptor);
     }
 }

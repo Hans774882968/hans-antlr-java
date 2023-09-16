@@ -34,6 +34,7 @@ import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
+import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -74,12 +75,22 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(ClassFieldReference classFieldReference) {
+        if (!classFieldReference.isStartsWithClass()) {
+            LocalVariable localVariable = classFieldReference.getStartVar();
+            int index = scope.getLocalVariableIndex(localVariable.getVarName());
+            int opcode = localVariable.getType().getLoadVariableOpcode();
+            mv.visitVarInsn(opcode, index);
+        }
         classFieldReference.getFieldReferenceRecords().forEach(fieldReferenceRecord -> {
             Type owner = fieldReferenceRecord.getOwner();
             String ownerDescriptor = owner == null || owner.getName() == null
                     ? ""
                     : owner.getInternalName();
             String name = fieldReferenceRecord.getFieldName();
+            if (owner instanceof ArrayType && name.equals("length")) {
+                mv.visitInsn(ARRAYLENGTH);
+                return;
+            }
             String descriptor = fieldReferenceRecord.getFieldType().getDescriptor();
             if (fieldReferenceRecord.isStatic()) {
                 mv.visitFieldInsn(GETSTATIC, ownerDescriptor, name, descriptor);

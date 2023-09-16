@@ -3,6 +3,7 @@ package com.example.hans_antlr4.domain.expression;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
+import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -14,18 +15,33 @@ import java.util.Objects;
 
 @Getter
 public class ClassFieldReference extends Expression {
-    private String qualifiedName;
+    private boolean startsWithClass;
+    private LocalVariable startVar; // 仅 startsWithClass = false 时有
     private List<FieldReferenceRecord> fieldReferenceRecords;
 
     public ClassFieldReference(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
         super(getReturnTypeInInit(qualifiedName, fieldReferenceRecords), null, null);
-        this.qualifiedName = qualifiedName;
+        this.startsWithClass = true;
+        this.fieldReferenceRecords = fieldReferenceRecords;
+    }
+
+    public ClassFieldReference(LocalVariable startVar, List<FieldReferenceRecord> fieldReferenceRecords) {
+        super(getReturnTypeInInitOrReportError(fieldReferenceRecords), null, null);
+        this.startsWithClass = false;
+        this.startVar = startVar;
         this.fieldReferenceRecords = fieldReferenceRecords;
     }
 
     private static Type getReturnTypeInInit(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
         if (fieldReferenceRecords.isEmpty()) {
             return new ClassType(qualifiedName);
+        }
+        return fieldReferenceRecords.get(fieldReferenceRecords.size() - 1).getFieldType();
+    }
+
+    private static Type getReturnTypeInInitOrReportError(List<FieldReferenceRecord> fieldReferenceRecords) {
+        if (fieldReferenceRecords.isEmpty()) {
+            throw new RuntimeException("Illegal field reference without class qualified name");
         }
         return fieldReferenceRecords.get(fieldReferenceRecords.size() - 1).getFieldType();
     }
@@ -52,12 +68,11 @@ public class ClassFieldReference extends Expression {
         }
         ClassFieldReference classFieldReference = (ClassFieldReference) o;
         return Objects.equals(getType(), classFieldReference.getType())
-                && Objects.equals(qualifiedName, classFieldReference.qualifiedName)
                 && Objects.equals(fieldReferenceRecords, classFieldReference.fieldReferenceRecords);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(qualifiedName, fieldReferenceRecords);
+        return Objects.hash(fieldReferenceRecords);
     }
 }

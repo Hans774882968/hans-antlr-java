@@ -24,6 +24,12 @@ public class TypeResolver {
     }
 
     public static Type getFromTypeName(String typeName) {
+        if (typeName.equals("java.lang.String")) {
+            return BuiltInType.STRING;
+        }
+        if (typeName.equals("java.lang.Object")) {
+            return BuiltInType.OBJECT;
+        }
         Optional<? extends Type> buildInType = BuiltInType.getBuiltInType(typeName);
         if (buildInType.isPresent()) {
             return buildInType.get();

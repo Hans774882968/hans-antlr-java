@@ -6,8 +6,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.example.hans_antlr4.domain.expression.EmptyExpression;
-import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.Parameter;
 import com.example.hans_antlr4.domain.scope.FunctionSignature;
 import com.example.hans_antlr4.domain.type.ArrayType;
@@ -27,10 +25,7 @@ public class FunctionSignatureTest {
     public void testFunctionSignatureMatch2() {
         List<Parameter> parameters = Arrays.asList(new Parameter(new ArrayType(BuiltInType.LONG, 2), "a"));
         FunctionSignature sign = new FunctionSignature(true, "f", parameters, BuiltInType.LONG);
-        List<Expression> dimensions = Arrays.asList(
-                new EmptyExpression(BuiltInType.LONG),
-                new EmptyExpression(BuiltInType.LONG));
-        List<Type> argTypes = Arrays.asList(new ArrayType(BuiltInType.LONG, dimensions));
+        List<Type> argTypes = Arrays.asList(new ArrayType(BuiltInType.LONG, 2));
         Assert.assertTrue(sign.matches("f", argTypes, 10));
     }
 }

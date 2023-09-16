@@ -44,6 +44,7 @@ import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
+import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -113,9 +114,6 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
                 curClassQualifiedName += ".";
             }
         }
-        if (findFieldStartIndex == -1) {
-            throw new RuntimeException("Definition of class " + classFieldString + " not found");
-        }
         return findFieldStartIndex;
     }
 
@@ -127,25 +125,41 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
         return classQualifiedName;
     }
 
+    private Class<?> getInitialOwnerClass(String[] identifiers, int findFieldStartIndex) {
+        if (findFieldStartIndex == -1) {
+            return scope.getLocalVariable(identifiers[0]).getType().getTypeClass();
+        }
+        String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
+        try {
+            Class<?> currentOwnerClass = Class.forName(classQualifiedName);
+            return currentOwnerClass;
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            System.exit(-1);
+            return null;
+        }
+    }
+
     @Override
     public ClassFieldReference visitClazzFieldReference(HansAntlrParser.ClazzFieldReferenceContext ctx) {
+        // TODO: 为了处理类似 java.lang.Integer.valueOf 的情况，目前的写法会导致 data.split("\n").length 不支持
         String classFieldString = ctx.getText();
         String[] identifiers = classFieldString.split("\\.");
 
         int findFieldStartIndex = getFindFieldStartIndex(identifiers, classFieldString);
-        String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
+        Class<?> currentOwnerClass = getInitialOwnerClass(identifiers, findFieldStartIndex);
 
-        Class<?> currentOwnerClass = null;
-        try {
-            currentOwnerClass = Class.forName(classQualifiedName);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
         List<FieldReferenceRecord> fieldReferenceRecords = new ArrayList<>();
 
-        for (int i = findFieldStartIndex; i < identifiers.length; i++) {
+        for (int i = findFieldStartIndex == -1 ? 1 : findFieldStartIndex; i < identifiers.length; i++) {
             final String identifier = identifiers[i];
+            final Type currentOwnerType = TypeResolver.getFromJavaLangClass(currentOwnerClass);
+            if (currentOwnerType instanceof ArrayType && identifier.equals("length")) {
+                fieldReferenceRecords.add(new FieldReferenceRecord(
+                        false, currentOwnerType, identifier, BuiltInType.INT));
+                continue;
+            }
+
             Field field = null;
             try {
                 if (currentOwnerClass == null) {
@@ -169,7 +183,6 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
                                     + "\" at line " + sourceLine);
                 }
                 boolean isStatic = Modifier.isStatic(field.getModifiers());
-                final Type currentOwnerType = TypeResolver.getFromJavaLangClass(currentOwnerClass);
                 Class<?> fieldClass = field.getType();
                 Type fieldType = TypeResolver.getFromJavaLangClass(fieldClass);
                 fieldReferenceRecords.add(new FieldReferenceRecord(
@@ -182,6 +195,11 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
             }
         }
 
+        if (findFieldStartIndex == -1) {
+            LocalVariable localVariable = scope.getLocalVariable(identifiers[0]);
+            return new ClassFieldReference(localVariable, fieldReferenceRecords);
+        }
+        String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
         return new ClassFieldReference(classQualifiedName, fieldReferenceRecords);
     }
 

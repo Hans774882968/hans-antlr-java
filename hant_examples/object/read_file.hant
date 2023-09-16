@@ -3,6 +3,13 @@ void main(string[] args) {
     var inp = new java.io.FileInputStream(fName)
     print "file '" + fName + "' size: " + inp.available()
     var bytes = inp.readAllBytes()
+    java.lang.System.out.printf(
+        "%d %c %c %c %c\n",
+        bytes.length,
+        bytes[0],
+        bytes[1],
+        bytes[2],
+        bytes[3])
     var data = new java.lang.String(bytes)
     print data
     inp.close()

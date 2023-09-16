@@ -1,0 +1,58 @@
+string getFileCount(java.io.File file) {
+    var fs = file.listFiles()
+    var tot = 0
+    var javaNum = 0
+    var hantNum = 0
+    for (var i = 0; i < fs.length; i += 1) {
+        var f = fs[i]
+        if (f.isDirectory()) {
+            var nextRes = getFileCount(f)
+            var arr = nextRes.split(",")
+            tot += java.lang.Integer.parseInt(arr[0])
+            javaNum += java.lang.Integer.parseInt(arr[1])
+            hantNum += java.lang.Integer.parseInt(arr[2])
+        }
+        if (f.isFile()) {
+            tot += 1
+            if (f.getPath().endsWith(".java")) javaNum += 1
+            if (f.getPath().endsWith(".hant")) hantNum += 1
+        }
+    }
+    return tot + "," + javaNum + "," + hantNum
+}
+
+string getLineCount(java.io.File file) {
+    var fs = file.listFiles()
+    var javaNum = 0
+    var hantNum = 0
+    for (var i = 0; i < fs.length; i += 1) {
+        var f = fs[i]
+        if (f.isDirectory()) {
+            var nextRes = getLineCount(f)
+            var arr = nextRes.split(",")
+            javaNum += java.lang.Integer.parseInt(arr[0])
+            hantNum += java.lang.Integer.parseInt(arr[1])
+        }
+        if (f.isFile()) {
+            var fName = f.getPath()
+            var inp = new java.io.FileInputStream(fName)
+            var bytes = inp.readAllBytes()
+            var data = new java.lang.String(bytes)
+            // var lineCount = data.split("\n").length // TODO: 目前不支持这种写法
+            var lines = data.split("\n")
+            var lineCount = lines.length
+            if (fName.endsWith(".java")) javaNum += lineCount
+            if (fName.endsWith(".hant")) hantNum += lineCount
+        }
+    }
+    return javaNum + "," + hantNum
+}
+
+void main(string[] args) {
+    var path = "."
+	var file = new java.io.File(path)
+    var ans1 = getFileCount(file)
+    print ans1 // 2906,158,36
+    var ans2 = getLineCount(file)
+    print ans2 // 15194,1982
+}

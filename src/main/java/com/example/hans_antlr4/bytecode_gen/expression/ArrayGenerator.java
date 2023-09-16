@@ -38,27 +38,8 @@ public class ArrayGenerator implements Opcodes {
             if (currentDimension.getType() == BuiltInType.LONG) {
                 mv.visitInsn(L2I);
             }
-            // TODO: 枚举所有可能情况
             if (i == sz - 1) {
-                if (resultType == BuiltInType.BOOLEAN) {
-                    mv.visitInsn(BALOAD);
-                } else if (resultType == BuiltInType.CHAR) {
-                    mv.visitInsn(CALOAD);
-                } else if (resultType == BuiltInType.SHORT) {
-                    mv.visitInsn(SALOAD);
-                } else if (resultType == BuiltInType.INT) {
-                    mv.visitInsn(IALOAD);
-                } else if (resultType == BuiltInType.LONG) {
-                    mv.visitInsn(LALOAD);
-                } else if (resultType == BuiltInType.FLOAT) {
-                    mv.visitInsn(FALOAD);
-                } else if (resultType == BuiltInType.DOUBLE) {
-                    mv.visitInsn(DALOAD);
-                } else if (resultType == BuiltInType.STRING) {
-                    mv.visitInsn(AALOAD);
-                } else {
-                    mv.visitInsn(AALOAD);
-                }
+                mv.visitInsn(resultType.getLoadArrayItemOpcode());
             } else {
                 mv.visitInsn(AALOAD);
             }

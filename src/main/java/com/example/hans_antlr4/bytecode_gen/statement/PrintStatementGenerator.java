@@ -25,13 +25,19 @@ public class PrintStatementGenerator implements Opcodes {
         this.expressionGenerator = new ExpressionGenerator(mv, scope);
     }
 
+    private String getPrintMethodDescriptor(Type type) {
+        if (!(type instanceof BuiltInType) || !type.getTypeClass().isPrimitive()) {
+            return "(" + new ClassType("java.lang.Object").getDescriptor() + ")V";
+        }
+        return "(" + type.getDescriptor() + ")V";
+    }
+
     public void generate(PrintStatement printStatement) {
         Expression expression = printStatement.getExpression();
         mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
         expression.accept(expressionGenerator);
         Type type = expression.getType();
-        String descriptor = "(" + (type instanceof BuiltInType ? type.getDescriptor()
-                : new ClassType("java.lang.Object").getDescriptor()) + ")V"; // such as "(Ljava/lang/String;)V"
+        String descriptor = getPrintMethodDescriptor(type); // such as "(Ljava/lang/String;)V"
         ClassType owner = new ClassType("java.io.PrintStream");
         String fieldDescriptor = owner.getInternalName(); // "java/io/PrintStream"
         String printMethodName = printStatement.isShouldNotPrintLine() ? "print" : "println";

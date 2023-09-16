@@ -69,7 +69,7 @@ void dateDemo() {
 string stringDemo() {
     print "----- stringDemo -----"
     var s = "acmer".toUpperCase()
-    print s
+    print s + " " + s.length()
 
     print new java.lang.String("acer").toUpperCase()
 

@@ -60,4 +60,6 @@ public interface Type {
     int getXorOpcode();
 
     int getOrOpcode();
+
+    int getLoadArrayItemOpcode();
 }

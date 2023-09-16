@@ -25,7 +25,7 @@ public class ArrayDeclaration extends Expression {
                 throw new RuntimeException("Array index type should be int or long, but got " + dimension.getType());
             }
         }
-        setType(new ArrayType(elementType, dimensions));
+        setType(new ArrayType(elementType, dimensions.size()));
         this.elementType = elementType;
         this.dimensions = dimensions;
     }

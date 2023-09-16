@@ -12,6 +12,7 @@ import com.example.hans_antlr4.domain.expression.Parameter;
 import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
 import com.example.hans_antlr4.domain.scope.FunctionSignature;
+import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -53,7 +54,7 @@ public class CallExpressionGenerator implements Opcodes {
     }
 
     public boolean generateObjectArrayInsnForVarArg(List<Parameter> parameters, List<Expression> arguments) {
-        if (parameters.isEmpty() || parameters.get(parameters.size() - 1).getType() != BuiltInType.OBJECT_ARR) {
+        if (parameters.isEmpty() || !parameters.get(parameters.size() - 1).getType().equals(ArrayType.OBJECT_ARR)) {
             return false;
         }
         for (int i = 0; i < parameters.size() - 1; i++) {

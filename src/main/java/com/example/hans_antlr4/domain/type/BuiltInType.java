@@ -15,55 +15,17 @@ import lombok.Getter;
 @Getter
 public enum BuiltInType implements Type {
     BOOLEAN("boolean", boolean.class, "Z", TypeSpecificOpcodes.INT, Double.NaN), INT("int", int.class, "I",
-            TypeSpecificOpcodes.INT, 30d), CHAR("char", char.class, "C", TypeSpecificOpcodes.INT, Double.NaN), BYTE(
-                    "byte", byte.class, "B", TypeSpecificOpcodes.INT,
-                    10d), SHORT("short", short.class, "S", TypeSpecificOpcodes.INT, 20d), LONG("long", long.class, "J",
-                            TypeSpecificOpcodes.LONG,
+            TypeSpecificOpcodes.INT,
+            30d), CHAR("char", char.class, "C", TypeSpecificOpcodes.INT, Double.NaN), BYTE("byte", byte.class, "B",
+                    TypeSpecificOpcodes.INT, 10d), SHORT("short", short.class, "S", TypeSpecificOpcodes.INT, 20d), LONG(
+                            "long", long.class, "J", TypeSpecificOpcodes.LONG,
                             40d), FLOAT("float", float.class, "F", TypeSpecificOpcodes.FLOAT, 50d), DOUBLE("double",
                                     double.class, "D", TypeSpecificOpcodes.DOUBLE, 60d), STRING("string", String.class,
-                                            "Ljava/lang/String;", TypeSpecificOpcodes.OBJECT, 70d), BOOLEAN_ARR(
-                                                    "boolean[]", boolean[].class, "[B", TypeSpecificOpcodes.OBJECT,
-                                                    Double.NaN), INT_ARR("int[]", int[].class, "[I",
-                                                            TypeSpecificOpcodes.OBJECT, Double.NaN), CHAR_ARR("char[]",
-                                                                    char[].class, "[C", TypeSpecificOpcodes.OBJECT,
-                                                                    Double.NaN), BYTE_ARR("byte[]", byte[].class, "[B",
-                                                                            TypeSpecificOpcodes.OBJECT,
-                                                                            Double.NaN), SHORT_ARR("short[]",
-                                                                                    short[].class, "[S",
-                                                                                    TypeSpecificOpcodes.OBJECT,
-                                                                                    Double.NaN), LONG_ARR("long[]",
-                                                                                            long[].class, "[J",
-                                                                                            TypeSpecificOpcodes.OBJECT,
-                                                                                            Double.NaN), FLOAT_ARR(
-                                                                                                    "float[]",
-                                                                                                    float[].class, "[F",
-                                                                                                    TypeSpecificOpcodes.OBJECT,
-                                                                                                    Double.NaN), DOUBLE_ARR(
-                                                                                                            "double[]",
-                                                                                                            double[].class,
-                                                                                                            "[D",
-                                                                                                            TypeSpecificOpcodes.OBJECT,
-                                                                                                            Double.NaN), STRING_ARR(
-                                                                                                                    "string[]",
-                                                                                                                    String[].class,
-                                                                                                                    "[Ljava/lang/String;",
-                                                                                                                    TypeSpecificOpcodes.OBJECT,
-                                                                                                                    Double.NaN), NONE(
-                                                                                                                            "",
-                                                                                                                            null,
-                                                                                                                            "",
-                                                                                                                            TypeSpecificOpcodes.OBJECT,
-                                                                                                                            Double.NaN), VOID(
-                                                                                                                                    "void",
-                                                                                                                                    void.class,
-                                                                                                                                    "V",
-                                                                                                                                    TypeSpecificOpcodes.VOID,
-                                                                                                                                    Double.NaN), OBJECT_ARR(
-                                                                                                                                            "java.lang.Object[]",
-                                                                                                                                            Object[].class,
-                                                                                                                                            "[Ljava/lang/Object;",
-                                                                                                                                            TypeSpecificOpcodes.OBJECT,
-                                                                                                                                            Double.NaN);
+                                            "Ljava/lang/String;", TypeSpecificOpcodes.OBJECT, 70d), OBJECT("object",
+                                                    Object.class, "Ljava/lang/Object;", TypeSpecificOpcodes.OBJECT,
+                                                    Double.NaN), NONE("", null, "", TypeSpecificOpcodes.OBJECT,
+                                                            Double.NaN), VOID("void", void.class, "V",
+                                                                    TypeSpecificOpcodes.VOID, Double.NaN);
 
     private String name;
     private Class<?> typeClass;
@@ -313,6 +275,28 @@ public enum BuiltInType implements Type {
     @Override
     public int getOrOpcode() {
         return opcodes.getOr();
+    }
+
+    @Override
+    public int getLoadArrayItemOpcode() {
+        if (this == BuiltInType.BOOLEAN) {
+            return Opcodes.BALOAD;
+        } else if (this == BuiltInType.BYTE) {
+            return Opcodes.BALOAD;
+        } else if (this == BuiltInType.CHAR) {
+            return Opcodes.CALOAD;
+        } else if (this == BuiltInType.SHORT) {
+            return Opcodes.SALOAD;
+        } else if (this == BuiltInType.INT) {
+            return Opcodes.IALOAD;
+        } else if (this == BuiltInType.LONG) {
+            return Opcodes.LALOAD;
+        } else if (this == BuiltInType.FLOAT) {
+            return Opcodes.FALOAD;
+        } else if (this == BuiltInType.DOUBLE) {
+            return Opcodes.DALOAD;
+        }
+        return Opcodes.AALOAD;
     }
 
     public static Optional<BuiltInType> getBuiltInType(String typeName) {

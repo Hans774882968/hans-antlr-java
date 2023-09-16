@@ -27,10 +27,11 @@ void assignToVar() {
     var a2 = new double[4][5][6][7]
     var tmpA2 = a2[3][1]
     print tmpA2[4][2]
-    /* TODO: Caused by: java.lang.NoSuchMethodError: 'java.lang.StringBuilder java.lang.StringBuilder.append(double[][])'
-    double[] 也有这个问题
+    /* TODO: 最好把字符串相加的实现方式换成和 += 一样的 makeConcatWithConstants
+    Caused by: java.lang.NoSuchMethodError: 'java.lang.StringBuilder java.lang.StringBuilder.append(double[][])'
+    double[] 也有这个问题。
+    print tmpA2 + " " + tmpA2[4]
     */
-    // print tmpA2 + " " + tmpA2[4]
     print tmpA2.toString() + " " + tmpA2[4].toString() // [[D@4a3631f8 [D@6b58b9e9
     var tmpS = ""
     tmpS += tmpA2
@@ -47,14 +48,13 @@ long foo2(long[][] arg) {
     return arg[1][2]
 }
 
-/* TODO: solve bug here
 string[] foo3(string[][][] arg) {
     return arg[2][3]
 }
 
 boolean foo4(boolean[] arg) {
     return arg[1]
-}*/
+}
 
 void returnArrayOrArrayParamDemo() {
     print "----- returnArrayOrArrayParamDemo -----"
@@ -62,11 +62,17 @@ void returnArrayOrArrayParamDemo() {
     print foo1()[0]
     print foo1()[0][1]
     print foo2(new long[2][3])
-    // print foo3(new string[3][4][5])
-    // print foo4(new boolean[3])
+    print foo3(new string[3][4][5])
+    print foo4(new boolean[3])
 }
 
 void main(string[] args) {
+    print "args.length = " + args.length
+    for var i = 0; i < args.length; i += 1 {
+        print \n args[i] + " "
+    }
+    print ""
+
     oneDimension()
     multiDimension()
     assignToVar()
