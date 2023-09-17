@@ -69,7 +69,7 @@ public class Scope {
 
     public Type getClassType() {
         String className = getClassName();
-        return new ClassType(className);
+        return ClassType.getTypeByQualifiedName(className);
     }
 
     public void addSignature(FunctionSignature signature) {

@@ -62,4 +62,8 @@ public interface Type {
     int getOrOpcode();
 
     int getLoadArrayItemOpcode();
+
+    int getStoreArrayItemOpcode();
+
+    int getDupX2Opcode();
 }

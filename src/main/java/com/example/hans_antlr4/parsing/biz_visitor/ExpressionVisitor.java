@@ -77,7 +77,7 @@ public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
                 elementType = foundType.get();
             }
         } else if (ctx.qualifiedName() != null) {
-            elementType = new ClassType(ctx.qualifiedName().getText());
+            elementType = ClassType.getTypeByQualifiedName(ctx.qualifiedName().getText());
         }
         if (elementType == null) {
             int sourceLine = ctx.getStart().getLine();

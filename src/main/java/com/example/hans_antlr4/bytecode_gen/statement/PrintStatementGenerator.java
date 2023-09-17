@@ -27,7 +27,7 @@ public class PrintStatementGenerator implements Opcodes {
 
     private String getPrintMethodDescriptor(Type type) {
         if (!(type instanceof BuiltInType) || !type.getTypeClass().isPrimitive()) {
-            return "(" + new ClassType("java.lang.Object").getDescriptor() + ")V";
+            return "(" + ClassType.getTypeByQualifiedName("java.lang.Object").getDescriptor() + ")V";
         }
         return "(" + type.getDescriptor() + ")V";
     }

@@ -35,7 +35,7 @@ public class TypeResolver {
             return buildInType.get();
         }
         if (!typeName.endsWith("[]")) {
-            return new ClassType(typeName);
+            return ClassType.getTypeByQualifiedName(typeName);
         }
 
         int suffixIndex = typeName.indexOf("[");

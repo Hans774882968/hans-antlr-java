@@ -34,7 +34,7 @@ public class ClassFieldReference extends Expression {
 
     private static Type getReturnTypeInInit(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
         if (fieldReferenceRecords.isEmpty()) {
-            return new ClassType(qualifiedName);
+            return ClassType.getTypeByQualifiedName(qualifiedName);
         }
         return fieldReferenceRecords.get(fieldReferenceRecords.size() - 1).getFieldType();
     }

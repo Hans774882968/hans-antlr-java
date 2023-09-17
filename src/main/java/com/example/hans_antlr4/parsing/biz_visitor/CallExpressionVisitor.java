@@ -44,7 +44,7 @@ public class CallExpressionVisitor extends HansAntlrBaseVisitor<Call> {
         }
 
         FunctionSignature signature = scope.getMethodCallSignature(funName, argTypes, sourceLine);
-        Expression owner = new EmptyExpression(new ClassType(scope.getClassName()));
+        Expression owner = new EmptyExpression(ClassType.getTypeByQualifiedName(scope.getClassName()));
         return new FunctionCall(owner, signature, arguments);
     }
 

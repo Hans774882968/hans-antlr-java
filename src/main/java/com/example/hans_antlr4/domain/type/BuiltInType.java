@@ -299,6 +299,33 @@ public enum BuiltInType implements Type {
         return Opcodes.AALOAD;
     }
 
+    @Override
+    public int getStoreArrayItemOpcode() {
+        if (this == BuiltInType.BOOLEAN) {
+            return Opcodes.BASTORE;
+        } else if (this == BuiltInType.BYTE) {
+            return Opcodes.BASTORE;
+        } else if (this == BuiltInType.CHAR) {
+            return Opcodes.CASTORE;
+        } else if (this == BuiltInType.SHORT) {
+            return Opcodes.SASTORE;
+        } else if (this == BuiltInType.INT) {
+            return Opcodes.IASTORE;
+        } else if (this == BuiltInType.LONG) {
+            return Opcodes.LASTORE;
+        } else if (this == BuiltInType.FLOAT) {
+            return Opcodes.FASTORE;
+        } else if (this == BuiltInType.DOUBLE) {
+            return Opcodes.DASTORE;
+        }
+        return Opcodes.AASTORE;
+    }
+
+    @Override
+    public int getDupX2Opcode() {
+        return opcodes.getDupX2();
+    }
+
     public static Optional<BuiltInType> getBuiltInType(String typeName) {
         return Arrays.stream(BuiltInType.values())
                 .filter(type -> type.getName().equals(typeName))

@@ -105,7 +105,7 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(ArrayAccess arrayAccess) {
-        arrayGenerator.generate(arrayAccess);
+        arrayGenerator.generate(arrayAccess, true);
     }
 
     public void generate(Value value) {

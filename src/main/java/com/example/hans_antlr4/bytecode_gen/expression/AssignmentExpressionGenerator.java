@@ -7,6 +7,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.bytecode_gen.AssignmentUtil;
+import com.example.hans_antlr4.domain.expression.ArrayAccess;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
@@ -14,12 +15,16 @@ import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
 
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
 public class AssignmentExpressionGenerator implements Opcodes {
     private ExpressionGenerator parent;
+    private ArrayGenerator arrayGenerator;
     private MethodVisitor mv;
+
+    public AssignmentExpressionGenerator(ExpressionGenerator parent, MethodVisitor mv) {
+        this.parent = parent;
+        this.mv = mv;
+        this.arrayGenerator = new ArrayGenerator(parent, mv);
+    }
 
     private void generateCastToHigherPriorityTypeInsn(Type type, Type targetType) {
         if (type.isNumericTypes() && targetType.isNumericTypes()) {
@@ -51,8 +56,16 @@ public class AssignmentExpressionGenerator implements Opcodes {
             AssignmentExpression currentAssignmentExpression = assignmentExpressions.get(i);
             Type lhsType = currentAssignmentExpression.getLhsType();
             Type maxPriorityNumericType = currentAssignmentExpression.getMaxPriorityNumericType();
+            if (currentAssignmentExpression.lhsIsArrayAccess()) {
+                arrayGenerator.generate(currentAssignmentExpression.getLhsArrayAccess(), false);
+            }
             if (sign == AssignmentSign.ASSIGN) {
                 continue;
+            }
+            if (currentAssignmentExpression.lhsIsArrayAccess()) {
+                mv.visitInsn(DUP2);
+                ArrayAccess arrayAccess = currentAssignmentExpression.getLhsArrayAccess();
+                mv.visitInsn(arrayAccess.getType().getLoadArrayItemOpcode());
             }
             if (currentAssignmentExpression.lhsIsVariable()) {
                 int variableIndex = assignmentUtil.getVariableIndexByAssignmentExpression(currentAssignmentExpression);
@@ -151,12 +164,18 @@ public class AssignmentExpressionGenerator implements Opcodes {
             }
 
             if (i > 0 || (i == 0 && !assignmentExpression.notNecessaryToGenerateDupInstruction())) {
-                mv.visitInsn(lhsType.getDupOpcode());
+                if (currentAssignmentExpression.lhsIsArrayAccess()) {
+                    mv.visitInsn(lhsType.getDupX2Opcode());
+                } else {
+                    mv.visitInsn(lhsType.getDupOpcode());
+                }
             }
 
             if (currentAssignmentExpression.lhsIsVariable()) {
                 int variableIndex = assignmentUtil.getVariableIndexByAssignmentExpression(currentAssignmentExpression);
                 mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
+            } else if (currentAssignmentExpression.lhsIsArrayAccess()) {
+                mv.visitInsn(lhsType.getStoreArrayItemOpcode());
             }
         }
     }

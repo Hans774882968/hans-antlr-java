@@ -27,7 +27,7 @@ public class ArrayGenerator implements Opcodes {
         mv.visitMultiANewArrayInsn(descriptor, dimensions.size());
     }
 
-    public void generate(ArrayAccess arrayAccess) {
+    public void generate(ArrayAccess arrayAccess, boolean generateLastInsn) {
         arrayAccess.getArray().accept(parent);
         Type resultType = arrayAccess.getType();
         int sz = arrayAccess.getDimensions().size();
@@ -39,7 +39,9 @@ public class ArrayGenerator implements Opcodes {
                 mv.visitInsn(L2I);
             }
             if (i == sz - 1) {
-                mv.visitInsn(resultType.getLoadArrayItemOpcode());
+                if (generateLastInsn) {
+                    mv.visitInsn(resultType.getLoadArrayItemOpcode());
+                }
             } else {
                 mv.visitInsn(AALOAD);
             }

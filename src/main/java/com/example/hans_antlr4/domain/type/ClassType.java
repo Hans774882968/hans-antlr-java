@@ -14,6 +14,19 @@ import lombok.Data;
 public class ClassType implements Type {
     private String name;
 
+    public static Type getTypeByQualifiedName(String qualifiedName) {
+        if (qualifiedName == null) {
+            return new ClassType("");
+        }
+        if (qualifiedName.equals("java.lang.String")) {
+            return BuiltInType.STRING;
+        }
+        if (qualifiedName.equals("java.lang.Object")) {
+            return BuiltInType.OBJECT;
+        }
+        return new ClassType(qualifiedName);
+    }
+
     @Override
     public Class<?> getTypeClass() {
         try {
@@ -166,6 +179,16 @@ public class ClassType implements Type {
     @Override
     public int getLoadArrayItemOpcode() {
         return Opcodes.AALOAD;
+    }
+
+    @Override
+    public int getStoreArrayItemOpcode() {
+        return Opcodes.AASTORE;
+    }
+
+    @Override
+    public int getDupX2Opcode() {
+        return Opcodes.DUP_X2;
     }
 
     @Override

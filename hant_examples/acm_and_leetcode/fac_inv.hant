@@ -1,0 +1,52 @@
+long qPow(long a, long b, long mod) {
+    var res = 1L
+    for ; b > 0; b >>= 1 {
+        if (b & 1) > 0 res = res * a % mod
+        a *= a
+        a %= mod
+    }
+    return res
+}
+
+long C(int a, int b, int mod, long[] fac, long[] ifac) {
+    if a < b return 0L // TODO: 返回值类型目前还不支持类型提升
+    return fac[a] * ifac[b] % mod * ifac[a - b] % mod
+}
+
+void testIfac(long[] fac, long[] ifac, int mod) {
+    // 必须为 true
+    for var i = ifac.length - 1; i >= ifac.length - 5; i -= 1 {
+        print \n fac[i] * ifac[i] % mod == 1
+    }
+    for var i = 4; i >= 0; i -= 1 {
+        print \n fac[i] * ifac[i] % mod == 1
+    }
+    print ""
+}
+
+void testC(long[] fac, long[] ifac, int mod) {
+    for i: 0 to 5 {
+        for j: 0 to i java.lang.System.out.printf("%d ", C(i, j, mod, fac, ifac))
+        print ""
+    }
+}
+
+void main(string[] args) {
+    var N = 100010
+    var mod = 998244353
+    var fac = new long[N]
+    fac[0] = 1
+    for var i = 1; i < N; i += 1 {
+        fac[i] = fac[i-1] * i % mod
+    }
+    print fac[N-1]
+    var ifac = new long[N]
+    ifac[N-1] = qPow(fac[N-1], mod - 2L, mod * 1L)
+    for i: N-2 to 0 {
+        ifac[i] = (i + 1) * ifac[i+1]
+        ifac[i] %= mod
+    }
+    print ifac[N-1]
+    testIfac(fac, ifac, mod)
+    testC(fac, ifac, mod)
+}

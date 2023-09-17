@@ -114,7 +114,7 @@ public class CallExpressionGenerator implements Opcodes {
                 argTypes,
                 constructorCall.getSourceLine());
 
-        String ownerDescriptor = new ClassType(signature.getName()).getInternalName();
+        String ownerDescriptor = ClassType.getTypeByQualifiedName(signature.getName()).getInternalName();
         mv.visitTypeInsn(NEW, ownerDescriptor);
         mv.visitInsn(DUP);
 

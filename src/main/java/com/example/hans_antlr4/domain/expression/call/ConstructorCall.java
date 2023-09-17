@@ -24,10 +24,21 @@ public class ConstructorCall extends Call {
     }
 
     public ConstructorCall(String className, List<Expression> arguments, int sourceLine) {
-        super(new ClassType(className), null, null);
+        super(ClassType.getTypeByQualifiedName(className), null, null);
         this.arguments = arguments;
-        this.identifier = getType().getName();
+        this.identifier = getIdentifierName();
         this.sourceLine = sourceLine;
+    }
+
+    private String getIdentifierName() {
+        String tmpName = getType().getName();
+        if (tmpName.equals("string")) {
+            return "java.lang.String";
+        }
+        if (tmpName.equals("object")) {
+            return "java.lang.Object";
+        }
+        return tmpName;
     }
 
     @Override

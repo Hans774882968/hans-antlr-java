@@ -194,6 +194,16 @@ public class ArrayType implements Type {
     }
 
     @Override
+    public int getStoreArrayItemOpcode() {
+        return Opcodes.AASTORE;
+    }
+
+    @Override
+    public int getDupX2Opcode() {
+        return Opcodes.DUP_X2;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this)
             return true;

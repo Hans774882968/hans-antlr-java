@@ -5173,7 +5173,7 @@ public class CompilationUnitVisitor extends HansAntlrBaseVisitor<CompilationUnit
 }
 ```
 
-1. 之前定义的作用域是`new Scope(new MetaData(null))`，但现在需要使用到`public class`的类名信息，所以需要把`publicClassName`传入。这个类名最终会在负责描述函数调用的`CallExpressionVisitor`处消费：`return new FunctionCall(new ClassType(scope.getClassName()), signature, arguments);`。
+1. 之前定义的作用域是`new Scope(new MetaData(null))`，但现在需要使用到`public class`的类名信息，所以需要把`publicClassName`传入。这个类名最终会在负责描述函数调用的`CallExpressionVisitor`处消费：`return new FunctionCall(ClassType.getTypeByQualifiedName(scope.getClassName()), signature, arguments);`。
 2. 你可能会好奇，为什么需要先读取函数签名信息，再遍历整个方法？[原作者项目的blog](https://juejin.cn/post/6844903671684136967)已经给出了解释。程序自上而下遍历函数，但遍历到的函数调用语句所调用的函数可能是在下方定义的，如果不用一个数据结构存储函数签名信息就找不到函数定义。
 
 ### Visitor部分
@@ -5241,7 +5241,7 @@ public class TypeResolver {
         Optional<? extends Type> buildInType = BuiltInType.getBuiltInType(typeName);
         if (buildInType.isPresent())
             return buildInType.get();
-        return new ClassType(typeName);
+        return ClassType.getTypeByQualifiedName(typeName);
     }
 }
 ```
@@ -5310,7 +5310,7 @@ public class CallExpressionVisitor extends HansAntlrBaseVisitor<Call> {
         int sourceLine = ctx.getStart().getLine();
         FunctionSignature signature = scope.getSignature(funName, argTypes, sourceLine);
 
-        return new FunctionCall(new ClassType(scope.getClassName()), signature, arguments);
+        return new FunctionCall(ClassType.getTypeByQualifiedName(scope.getClassName()), signature, arguments);
     }
 }
 ```
@@ -5507,6 +5507,23 @@ public static int gcd(int var0, int var1) {
 ## Part15-支持new关键字
 
 TODO
+
+### 偶然发现了工厂方法的一个应用场景
+
+这时我们发现我们有一个诉求：所有使用`new ClassType()`的场景，在遇到`new ClassType("java.lang.String")`或`new ClassType("java.lang.Object")`时，需要返回对应的内建类型`BuiltInType.STRING, BuiltInType.OBJECT`。因此我们可以写一个工具方法：
+
+```java
+// src\main\java\com\example\hans_antlr4\domain\type\ClassType.java
+public static Type getTypeByQualifiedName(String qualifiedName) {
+    if (qualifiedName.equals("java.lang.String")) {
+        return BuiltInType.STRING;
+    }
+    if (qualifiedName.equals("java.lang.Object")) {
+        return BuiltInType.OBJECT;
+    }
+    return new ClassType(qualifiedName);
+}
+```
 
 ## 支持数组定义和引用
 

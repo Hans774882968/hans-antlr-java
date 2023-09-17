@@ -1,0 +1,147 @@
+void printIntArr(int[] a) {
+    for i: 0 to a.length - 1 print \n a[i] + " "
+    print ""
+}
+
+void printLongArr(long[] a) {
+    for i: 0 to a.length - 1 print \n a[i] + " "
+    print ""
+}
+
+void printBoolArr(boolean[] a) {
+    for i: 0 to a.length - 1 print \n a[i] + " "
+    print ""
+}
+
+void int1d() {
+    var a = new int[10];
+    a[0] = 123
+    print a[0]
+    a[0] = 123 * a[0]
+    print a[0]
+    a[0] += 123
+    print a[0]
+    a[0] -= 252
+    print a[0] // 15000
+    a[3] = a[2] += a[1] = a[0] += 5000;
+    print a[0] + " " + a[1] + " " + a[2] + " " + a[3] // "20000" * 4
+    a[7] = a[6] = a[5] = a[4] = a[3] / 2000
+    printIntArr(a)
+}
+
+void long1d() {
+    print "----- long1d -----"
+    var a = new long[10]
+    a[0] = java.lang.Long.MAX_VALUE
+    a[1] += a[0]
+    a[3] += a[2] = a[1] >> 53
+    a[4] = a[5] ^= a[3] + 977
+    printLongArr(a)
+}
+
+void bool1d() {
+    print "----- bool1d -----"
+    var a = new boolean[10]
+    a[0] = true
+    printBoolArr(a)
+}
+
+void string1d() {
+    print "----- string1d -----"
+    var a = new string[10]
+    a[0] = "hello, "
+    a[0] += "world!"
+    print a[0]
+    a[2] = ""
+    a[2] += a[1] = a[0] + "!"
+    print a[2] // hello, world!!
+    a[4] = a[3] += a[2] + "!"
+    print a[4] // nullhello, world!!!
+}
+
+void int2d() {
+    print "----- int2d -----"
+    var a = new int[5][5]
+    a[0][0] = 100
+    print a[0][0]
+    a[0][0] -= 100
+    print a[0][0]
+    a[0][1] = a[0][0] |= 0xff
+    print a[0][0] + " " + a[0][1] // 255 255
+    a[1][1] = 1 + (a[1][1] = a[1][0] |= 0xff)
+    print a[1][0] + " " + a[1][1] // 255 256
+    a[1][1] ^= 1 + (a[1][1] = a[1][0] |= 0x101)
+    print a[1][0] + " " + a[1][1] // 511( = 255 | 257) 768( = 256 ^ 512)
+}
+
+void double3d() {
+    print "----- double3d -----"
+    var a = new double[5][6][7]
+    var tmp1 = a[0]
+    var tmp2 = a[0][0]
+    print tmp1.length + " " + tmp2.length // 6 7
+    // print a[0].length + " " + a[0][0].length // TODO: 待加强对字段读写的支持
+    a[0][0][0] = 3.5
+    print a[0][0][0] += 1.4 // 4.9
+    print a[0][0][1] += 1 + a[0][0][0] // 5.9
+    print a[0][0][1] %= (a[0][0][1] = 4) - 3 // 0.9
+}
+
+void string2d() {
+    print "----- string2d -----"
+    var s = new java.lang.String[4][5]
+    s[0][0] = "hello~"
+    print s[0][0]
+    var t = new string[4][5]
+    t[0][0] += s[0][0]
+    print t[0][0] // nullhello~
+    t[1][0] = ""
+    t[0][1] = ""
+    t[1][0] = (t[0][1] += s[0][0]) + "world"
+    print t[0][1] + " " + t[1][0] // hello~ hello~world
+}
+
+int[] fooInt() {
+    return new int[1]
+}
+
+void powSign() {
+    print "----- powSign -----"
+    var a = new int[10]
+    a[0] = 2
+    a[0] **= 3
+    print a[0]
+    var b = new double[3][3]
+    b[0][0] = 2
+    b[0][0] **= 4
+    print b[0][0]
+    var c = new long[2][5]
+    c[0][0] = 2
+    c[0][1] += c[0][0] **= 5.2
+    print c[0][1] // 36
+    c[0][3] += c[0][2] = c[0][1] **= 2
+    print c[0][1] + " " + c[0][2] + " " + c[0][3] // 1296( = 36 * 36)
+    c[0][4] = 2
+    c[0][4] **= c[0][3] - 1290
+    print c[0][4] // 64
+}
+
+void returnArrayInLeft() {
+    print "----- returnArrayInLeft -----"
+    print fooInt()[0] ^= 0x33 // 51
+    var tmpA = fooInt()
+    tmpA[0] = +-(tmpA[0] = tmpA[0] += 0x32)
+    print tmpA[0] // -50
+}
+
+void main(string[] args) {
+    int1d()
+    long1d()
+    bool1d()
+    string1d()
+    int2d()
+    double3d()
+    string2d()
+    powSign()
+    returnArrayInLeft()
+}
