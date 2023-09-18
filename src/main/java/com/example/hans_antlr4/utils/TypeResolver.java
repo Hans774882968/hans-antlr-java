@@ -80,6 +80,13 @@ public class TypeResolver {
                     }
                     throw new InvalidHantNumberException(BuiltInType.LONG, value);
                 }
+                // 为了避免16进制的歧义， byte 类型字面量类型后缀约定为“byte”的第2个字母
+                if (typeSuffix.toLowerCase().equals("y")) {
+                    if (HantNumber.isValidHantByte(pureNumber)) {
+                        return BuiltInType.BYTE;
+                    }
+                    throw new InvalidHantNumberException(BuiltInType.BYTE, value);
+                }
             }
             if (HantNumber.isValidHantInteger(pureNumber)) {
                 return BuiltInType.INT;
@@ -93,6 +100,19 @@ public class TypeResolver {
             return BuiltInType.BOOLEAN;
         }
         return BuiltInType.STRING;
+    }
+
+    private static Byte getByteValueFromString(String stringValue) {
+        if (HantNumber.mayBeHex(stringValue)) {
+            return Byte.valueOf(stringValue.substring(2), 16);
+        }
+        if (HantNumber.mayBeOctal(stringValue)) {
+            return Byte.valueOf(stringValue.substring(2), 8);
+        }
+        if (HantNumber.mayBeBinary(stringValue)) {
+            return Byte.valueOf(stringValue.substring(2), 2);
+        }
+        return Byte.valueOf(stringValue);
     }
 
     private static Integer getIntValueFromString(String stringValue) {
@@ -130,6 +150,9 @@ public class TypeResolver {
 
     // 约定：getValueFromString 调用时 stringValue 已经没有 typeSuffix
     public static Object getValueFromString(String stringValue, Type type) {
+        if (type == BuiltInType.BYTE) {
+            return getByteValueFromString(stringValue);
+        }
         if (type == BuiltInType.INT) {
             return getIntValueFromString(stringValue);
         }

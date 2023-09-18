@@ -48,6 +48,9 @@ public class ConditionalExpressionGenerator implements Opcodes {
         mv.visitInsn(lhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
         rightExpression.accept(parent);
         mv.visitInsn(rhsType.getToHigherPriorityNumericTypeOpcode(maxPriorityNumericType));
+        if (maxPriorityNumericType == BuiltInType.BYTE) {
+            mv.visitInsn(ISUB);
+        }
         if (maxPriorityNumericType == BuiltInType.INT) {
             mv.visitInsn(ISUB);
         }

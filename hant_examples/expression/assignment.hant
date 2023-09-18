@@ -4,6 +4,36 @@ void printStatementAmbiguity() {
     print -n
 }
 
+void byteDemo() {
+    var x = 0x14y
+    print x
+    for var i = 0y; i < 3; i += 1 {
+        var y = 0x7fy + i
+        print \n y; print \n " "
+    }
+    print ""
+    for var i = 0; i < 3; i += 1 {
+        var y = 0x7fy + i
+        print \n y; print \n " "
+    }
+    print ""
+    for var i = 0l; i < 3; i += 1 {
+        var y = 0x7fy - i
+        print \n y; print \n " "
+    }
+    print ""
+    for var i = 0f; i < 3; i += 1 {
+        var y = 0x7fy * i
+        print \n y; print \n " "
+    }
+    print ""
+    for var i = 1d; i <= 3; i += 1 {
+        var y = 0x7fy / i
+        print \n y; print \n " "
+    }
+    print ""
+}
+
 void main(string[] args) {
     printStatementAmbiguity()
 
@@ -176,4 +206,6 @@ void main(string[] args) {
         tmpF = (tmpF += tmpD + (tmpL = 0L + (tmpI -= 98L))) * tmpF
         print "tmpI = " + tmpI + ", tmpL = " + tmpL + ", tmpF = " + tmpF // tmpI = 2, tmpL = 2, tmpF = 16.0
     }
+
+    byteDemo()
 }

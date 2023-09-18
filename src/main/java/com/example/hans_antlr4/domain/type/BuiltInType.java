@@ -34,8 +34,18 @@ public enum BuiltInType implements Type {
     private Double priority;
     private static final HashMap<Type, HashMap<Type, Integer>> toHigherPriorityNumericTypeConvertMap = new HashMap<Type, HashMap<Type, Integer>>() {
         {
+            put(BYTE, new HashMap<Type, Integer>() {
+                {
+                    put(BYTE, Opcodes.NOP);
+                    put(INT, Opcodes.NOP);
+                    put(LONG, Opcodes.I2L);
+                    put(FLOAT, Opcodes.I2F);
+                    put(DOUBLE, Opcodes.I2D);
+                }
+            });
             put(INT, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.NOP);
                     put(LONG, Opcodes.I2L);
                     put(FLOAT, Opcodes.I2F);
@@ -44,6 +54,7 @@ public enum BuiltInType implements Type {
             });
             put(LONG, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.NOP);
                     put(LONG, Opcodes.NOP);
                     put(FLOAT, Opcodes.L2F);
@@ -52,6 +63,7 @@ public enum BuiltInType implements Type {
             });
             put(FLOAT, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.NOP);
                     put(LONG, Opcodes.NOP);
                     put(FLOAT, Opcodes.NOP);
@@ -60,6 +72,7 @@ public enum BuiltInType implements Type {
             });
             put(DOUBLE, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.NOP);
                     put(LONG, Opcodes.NOP);
                     put(FLOAT, Opcodes.NOP);
@@ -71,8 +84,18 @@ public enum BuiltInType implements Type {
 
     private static final HashMap<Type, HashMap<Type, Integer>> toOtherNumericTypeConvertMap = new HashMap<Type, HashMap<Type, Integer>>() {
         {
+            put(BYTE, new HashMap<Type, Integer>() {
+                {
+                    put(BYTE, Opcodes.NOP);
+                    put(INT, Opcodes.NOP);
+                    put(LONG, Opcodes.I2L);
+                    put(FLOAT, Opcodes.I2F);
+                    put(DOUBLE, Opcodes.I2D);
+                }
+            });
             put(INT, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.I2B);
                     put(INT, Opcodes.NOP);
                     put(LONG, Opcodes.I2L);
                     put(FLOAT, Opcodes.I2F);
@@ -81,6 +104,7 @@ public enum BuiltInType implements Type {
             });
             put(LONG, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.L2I);
                     put(LONG, Opcodes.NOP);
                     put(FLOAT, Opcodes.L2F);
@@ -89,6 +113,7 @@ public enum BuiltInType implements Type {
             });
             put(FLOAT, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.F2I);
                     put(LONG, Opcodes.F2L);
                     put(FLOAT, Opcodes.NOP);
@@ -97,6 +122,7 @@ public enum BuiltInType implements Type {
             });
             put(DOUBLE, new HashMap<Type, Integer>() {
                 {
+                    put(BYTE, Opcodes.NOP);
                     put(INT, Opcodes.D2I);
                     put(LONG, Opcodes.D2L);
                     put(FLOAT, Opcodes.D2F);

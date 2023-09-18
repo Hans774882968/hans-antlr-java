@@ -10,7 +10,7 @@ public class TypeChecker {
     }
 
     public static boolean isIntegerTypes(Type type) {
-        return type == BuiltInType.INT || type == BuiltInType.LONG;
+        return type == BuiltInType.BYTE || type == BuiltInType.INT || type == BuiltInType.LONG;
     }
 
     public static boolean isNumericTypes(Type type) {

@@ -1,3 +1,39 @@
+void byteDemo() {
+    print "----- byteDemo -----"
+    var x = 4y
+    java.lang.System.out.printf(
+        "%b %b %b %b\n",
+        x == 4y,
+        x == 4,
+        x == 4l,
+        x == 4.0
+    )
+    java.lang.System.out.printf(
+        "%b %b %b %b\n",
+        x != 5y,
+        x != 5,
+        x != 5l,
+        x != 4.1
+    )
+    java.lang.System.out.printf(
+        "%b %b %b %b\n",
+        x < 6y,
+        x < 6,
+        x < 6l,
+        x < 4.02
+    )
+    java.lang.System.out.printf(
+        "%b %b %b %b\n",
+        x >= 4y,
+        x >= 4,
+        x >= 4l,
+        x >= 4.0
+    )
+    if x <= 5 {
+        print "x <= 5"
+    }
+}
+
 void main(string[] args) {
     if 4 <= 4 {
         print "4 <= 4"
@@ -152,4 +188,6 @@ void main(string[] args) {
         var x6 = 4.4f >= 6.4 - 2
         print x6 // true
     }
+
+    byteDemo()
 }

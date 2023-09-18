@@ -140,10 +140,10 @@ NUMBER:
 	| HexIntegerLiteral
 	| OctalIntegerLiteral
 	| BinaryIntegerLiteral;
-IntegerOrDecimalLiteral: ([0-9] | [0-9]+ '.'? [0-9]+) [lLfFdD]?;
-HexIntegerLiteral: '0' [xX] HexDigit+ [lL]?;
-OctalIntegerLiteral: '0' [oO] [0-7]+ [lL]?;
-BinaryIntegerLiteral: '0' [bB] [01]+ [lL]?;
+IntegerOrDecimalLiteral: ([0-9] | [0-9]+ '.'? [0-9]+) [yYlLfFdD]?;
+HexIntegerLiteral: '0' [xX] HexDigit+ [yYlL]?;
+OctalIntegerLiteral: '0' [oO] [0-7]+ [yYlL]?;
+BinaryIntegerLiteral: '0' [bB] [01]+ [yYlL]?;
 BOOL: 'true' | 'false';
 
 // must be anything in quotes。注意，原作者给出的规则`STRING: '"' .* '"';`中的正则表达式是贪婪模式，我改成了非贪婪模式

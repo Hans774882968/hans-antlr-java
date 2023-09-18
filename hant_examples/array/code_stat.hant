@@ -21,14 +21,14 @@ string getFileCount(java.io.File file) {
     return tot + "," + javaNum + "," + hantNum
 }
 
-string getLineCount(java.io.File file) {
+string getLineCountMethod1(java.io.File file) {
     var fs = file.listFiles()
     var javaNum = 0
     var hantNum = 0
     for (var i = 0; i < fs.length; i += 1) {
         var f = fs[i]
         if (f.isDirectory()) {
-            var nextRes = getLineCount(f)
+            var nextRes = getLineCountMethod1(f)
             var arr = nextRes.split(",")
             javaNum += java.lang.Integer.parseInt(arr[0])
             hantNum += java.lang.Integer.parseInt(arr[1])
@@ -48,11 +48,43 @@ string getLineCount(java.io.File file) {
     return javaNum + "," + hantNum
 }
 
+string getLineCountMethod2(java.io.File file) {
+    var fs = file.listFiles()
+    var javaNum = 0
+    var hantNum = 0
+    for (var i = 0; i < fs.length; i += 1) {
+        var f = fs[i]
+        if (f.isDirectory()) {
+            var nextRes = getLineCountMethod2(f)
+            var arr = nextRes.split(",")
+            javaNum += java.lang.Integer.parseInt(arr[0])
+            hantNum += java.lang.Integer.parseInt(arr[1])
+        }
+        if (f.isFile()) {
+            var fName = f.getPath()
+            var inp = new java.io.FileInputStream(fName)
+            var bytes = inp.readAllBytes()
+            var data = new java.lang.String(bytes)
+            var lineCount = 1
+            for var i = 0; i < bytes.length; i += 1 {
+                if bytes[i] == 10y {
+                    lineCount += 1
+                }
+            }
+            if (fName.endsWith(".java")) javaNum += lineCount
+            if (fName.endsWith(".hant")) hantNum += lineCount
+        }
+    }
+    return javaNum + "," + hantNum
+}
+
 void main(string[] args) {
     var path = "."
 	var file = new java.io.File(path)
     var ans1 = getFileCount(file)
-    print ans1 // 2906,158,36
-    var ans2 = getLineCount(file)
-    print ans2 // 15194,1982
+    print ans1 // 2941,158,36
+    var ans2 = getLineCountMethod1(file)
+    print ans2 // 15269,2014
+    var ans3 = getLineCountMethod2(file)
+    print ans3 // 15419,2050 数据有差别，因为会有些大于1字节的字符的某个字节的值恰好是10
 }

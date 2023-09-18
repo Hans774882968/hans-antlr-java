@@ -29,6 +29,9 @@ public class HantNumber {
             }
             return value.substring(value.length() - 1);
         }
+        if (value.endsWith("y") || value.endsWith("Y")) {
+            return value.substring(value.length() - 1);
+        }
         return null;
     }
 
@@ -90,6 +93,26 @@ public class HantNumber {
         }
         if (mayBeBinary(value)) {
             return Longs.tryParse(value.substring(2), 2) != null;
+        }
+        return false;
+    }
+
+    public static boolean isValidHantByte(String value) {
+        if (Ints.tryParse(value) != null) {
+            int v = Ints.tryParse(value);
+            return Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE;
+        }
+        if (mayBeHex(value) && Ints.tryParse(value.substring(2), 16) != null) {
+            int v = Ints.tryParse(value.substring(2), 16);
+            return Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE;
+        }
+        if (mayBeOctal(value) && Ints.tryParse(value.substring(2), 8) != null) {
+            int v = Ints.tryParse(value.substring(2), 8);
+            return Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE;
+        }
+        if (mayBeBinary(value) && Ints.tryParse(value.substring(2), 2) != null) {
+            int v = Ints.tryParse(value.substring(2), 2);
+            return Byte.MIN_VALUE <= v && v <= Byte.MAX_VALUE;
         }
         return false;
     }

@@ -29,6 +29,9 @@ public class PrintStatementGenerator implements Opcodes {
         if (!(type instanceof BuiltInType) || !type.getTypeClass().isPrimitive()) {
             return "(" + ClassType.getTypeByQualifiedName("java.lang.Object").getDescriptor() + ")V";
         }
+        if (type == BuiltInType.BYTE) {
+            return "(I)V";
+        }
         return "(" + type.getDescriptor() + ")V";
     }
 

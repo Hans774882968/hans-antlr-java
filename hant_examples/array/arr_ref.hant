@@ -56,6 +56,10 @@ boolean foo4(boolean[] arg) {
     return arg[1]
 }
 
+byte[] foo5(byte[][] arg) {
+    return arg[0]
+}
+
 void returnArrayOrArrayParamDemo() {
     print "----- returnArrayOrArrayParamDemo -----"
     print foo1()
@@ -64,6 +68,7 @@ void returnArrayOrArrayParamDemo() {
     print foo2(new long[2][3])
     print foo3(new string[3][4][5])
     print foo4(new boolean[3])
+    print foo5(new byte[2][2])[0]
 }
 
 void main(string[] args) {
