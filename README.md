@@ -5504,7 +5504,15 @@ public static int gcd(int var0, int var1) {
 }
 ```
 
-## Part15-支持new关键字
+## Part17-支持类方法和实例方法的调用
+
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/1e84601eccd8172572614dbb2e0a5ae738642962...53e9df9d2e35d12d439c53b13dcb99cde2a81794)
+
+TODO
+
+## Part15-支持new关键字调用构造函数
+
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/commit/53e9df9d2e35d12d439c53b13dcb99cde2a81794)
 
 TODO
 
@@ -5527,6 +5535,8 @@ public static Type getTypeByQualifiedName(String qualifiedName) {
 
 ## 支持数组定义和引用
 
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/53e9df9d2e35d12d439c53b13dcb99cde2a81794...0fe20ff4a50a2caba37ac3c1e9bfa3f57a570e89)
+
 TODO
 
 ### 效果：我们来写一段统计文件夹代码量的脚本吧！
@@ -5536,6 +5546,8 @@ TODO
 ![hant目前可以实现代码量统计](./README_assets/4-hant目前可以实现代码量统计.jpg)
 
 ## 支持数组赋值
+
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/commit/21e0971f06dee97248ee7f3bf5b70e1f476d71ff)
 
 TODO
 

@@ -5,10 +5,10 @@ import java.util.stream.Collectors;
 
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
-import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
+import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 
-public class StatementsVisitor extends HansAntlrBaseVisitor<List<Statement>> {
+public class StatementsVisitor extends HansAntlrParserBaseVisitor<List<Statement>> {
     private Scope scope;
 
     public StatementsVisitor(Scope scope) {

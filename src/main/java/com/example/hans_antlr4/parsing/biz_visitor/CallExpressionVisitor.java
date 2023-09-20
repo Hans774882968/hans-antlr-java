@@ -13,14 +13,14 @@ import com.example.hans_antlr4.domain.scope.FunctionSignature;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
-import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
+import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class CallExpressionVisitor extends HansAntlrBaseVisitor<Call> {
+public class CallExpressionVisitor extends HansAntlrParserBaseVisitor<Call> {
     private Scope scope;
     private ExpressionVisitor parent;
 

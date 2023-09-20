@@ -53,13 +53,13 @@ import com.example.hans_antlr4.exception.ArithmeticExprLhsAndRhsTypeIncompatible
 import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.IllegalShiftTypeException;
 import com.example.hans_antlr4.exception.assignment.IllegalAssignmentLhsType;
-import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
+import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
 import com.example.hans_antlr4.utils.HantNumber;
 import com.example.hans_antlr4.utils.TypeResolver;
 
-public class ExpressionVisitor extends HansAntlrBaseVisitor<Expression> {
+public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
     private Scope scope;
     private CallExpressionVisitor callExpressionVisitor;
 

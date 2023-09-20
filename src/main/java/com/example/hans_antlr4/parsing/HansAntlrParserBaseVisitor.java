@@ -1,11 +1,11 @@
-// Generated from src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g4 by ANTLR 4.13.0
+// Generated from C:\java_project\hans-antlr-java\src\main\java\com\example\hans_antlr4\parsing\HansAntlrParser.g4 by ANTLR 4.13.0
 
 package com.example.hans_antlr4.parsing;
 
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
 /**
- * This class provides an empty implementation of {@link HansAntlrVisitor},
+ * This class provides an empty implementation of {@link HansAntlrParserVisitor},
  * which can be extended to create a visitor which only needs to handle a subset
  * of the available methods.
  *
@@ -14,7 +14,7 @@ import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
  *            operations with no return type.
  */
 @SuppressWarnings("CheckReturnValue")
-public class HansAntlrBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements HansAntlrVisitor<T> {
+public class HansAntlrParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements HansAntlrParserVisitor<T> {
 	/**
 	 * {@inheritDoc}
 	 *

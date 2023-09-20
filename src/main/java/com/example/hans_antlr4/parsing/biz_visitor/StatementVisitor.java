@@ -23,7 +23,7 @@ import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
 import com.example.hans_antlr4.domain.statement.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
-import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
+import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
 import com.example.hans_antlr4.parsing.HansAntlrParser.RangedForConditionsContext;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @Slf4j
-public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
+public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement> {
     private Scope scope;
 
     public StatementVisitor(Scope scope) {
@@ -64,7 +64,7 @@ public class StatementVisitor extends HansAntlrBaseVisitor<Statement> {
         final ExpressionContext expressionContext = ctx.expression();
         final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
         Expression expression = expressionContext.accept(expressionVisitor);
-        String printArg = ctx.printArg != null ? ctx.printArg.getText() : "";
+        String printArg = ctx.PrintArg() != null ? ctx.PrintArg().getText() : "";
         PrintStatement printStatement = new PrintStatement(expression, printArg);
         return printStatement;
     }

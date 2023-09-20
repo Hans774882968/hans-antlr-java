@@ -1,4 +1,4 @@
-// Generated from src\main\java\com\example\hans_antlr4\parsing\HansAntlr.g4 by ANTLR 4.13.0
+// Generated from C:\java_project\hans-antlr-java\src\main\java\com\example\hans_antlr4\parsing\HansAntlrParser.g4 by ANTLR 4.13.0
 
 package com.example.hans_antlr4.parsing;
 
@@ -12,7 +12,7 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  *            The return type of the visit operation. Use {@link Void} for
  *            operations with no return type.
  */
-public interface HansAntlrVisitor<T> extends ParseTreeVisitor<T> {
+public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#compilationUnit}.
 	 * 

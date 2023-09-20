@@ -11,13 +11,13 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.type.Type;
-import com.example.hans_antlr4.parsing.HansAntlrBaseVisitor;
+import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.FunctionParameterListContext;
 import com.example.hans_antlr4.parsing.HansAntlrParser.TypeContext;
 import com.example.hans_antlr4.utils.TypeResolver;
 
-public class FunctionVisitor extends HansAntlrBaseVisitor<Function> {
+public class FunctionVisitor extends HansAntlrParserBaseVisitor<Function> {
     private Scope scope;
 
     public FunctionVisitor(Scope scope) {
