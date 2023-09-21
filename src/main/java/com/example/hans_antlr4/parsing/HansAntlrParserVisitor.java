@@ -369,6 +369,16 @@ public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	T visitMULTIPLICATIVE(HansAntlrParser.MULTIPLICATIVEContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code TemplateLiteral}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitTemplateLiteral(HansAntlrParser.TemplateLiteralContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code EQUALITY}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -483,4 +493,22 @@ public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitValue(HansAntlrParser.ValueContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#templateStringLiteral}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitTemplateStringLiteral(HansAntlrParser.TemplateStringLiteralContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#templateStringAtom}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitTemplateStringAtom(HansAntlrParser.TemplateStringAtomContext ctx);
 }

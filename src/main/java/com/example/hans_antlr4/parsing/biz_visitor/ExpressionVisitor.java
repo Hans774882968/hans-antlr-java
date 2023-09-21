@@ -28,6 +28,7 @@ import com.example.hans_antlr4.domain.expression.Shift;
 import com.example.hans_antlr4.domain.expression.Shl;
 import com.example.hans_antlr4.domain.expression.Shr;
 import com.example.hans_antlr4.domain.expression.Subtraction;
+import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
@@ -62,10 +63,12 @@ import com.example.hans_antlr4.utils.TypeResolver;
 public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
     private Scope scope;
     private CallExpressionVisitor callExpressionVisitor;
+    private TemplateStringVisitor templateStringVisitor;
 
     public ExpressionVisitor(Scope scope) {
         this.scope = scope;
         this.callExpressionVisitor = new CallExpressionVisitor(scope, this);
+        this.templateStringVisitor = new TemplateStringVisitor(this);
     }
 
     @Override
@@ -217,6 +220,11 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         // 约定：getValueFromString 调用时已经没有 typeSuffix
         String pureNumber = HantNumber.getStringWithoutTypeSuffix(value);
         return new Value(type, pureNumber);
+    }
+
+    @Override
+    public TemplateString visitTemplateLiteral(HansAntlrParser.TemplateLiteralContext ctx) {
+        return ctx.templateStringLiteral().accept(templateStringVisitor);
     }
 
     @Override

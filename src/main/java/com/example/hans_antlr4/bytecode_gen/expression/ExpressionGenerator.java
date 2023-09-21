@@ -23,6 +23,7 @@ import com.example.hans_antlr4.domain.expression.Shift;
 import com.example.hans_antlr4.domain.expression.Shl;
 import com.example.hans_antlr4.domain.expression.Shr;
 import com.example.hans_antlr4.domain.expression.Subtraction;
+import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
@@ -117,6 +118,10 @@ public class ExpressionGenerator implements Opcodes {
         } else {
             mv.visitLdcInsn(TypeResolver.getValueFromString(stringValue, type));
         }
+    }
+
+    public void generate(TemplateString templateString) {
+        stringAppendGenerator.generate(templateString);
     }
 
     public void generate(EmptyExpression emptyExpression) {

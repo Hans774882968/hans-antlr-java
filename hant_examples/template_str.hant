@@ -1,0 +1,93 @@
+void types() {
+    print "----- types -----"
+    var a1 = `a1 = abc${1}def`
+    print a1
+    var int1 = 10
+    var a2 = `a2 = abc${a1 + int1}`
+    print a2
+    var tmpStr = `红色`
+    var a3 = `\033[31ma3 = ${
+        tmpStr + `字` + "符串"
+    }\033[0m`
+    print a3
+    var tmpL = 0x40L
+    var a4 = `a4 = ${tmpL + 36}`
+    print a4
+    var tmpF = 1.2f
+    var a56 = `a5 = ${tmpF},
+        a6 = ${java.lang.Math.PI}`
+    print a56
+    var tmpB = 10y
+    var a7 = `${tmpB} = a7`
+    print a7
+    var ft = new java.text.SimpleDateFormat(`yyyy-MM-dd hh:mm:ss`)
+    print `Current Date = ${ft.format(new java.util.Date())}.`
+}
+
+void cornerCases() {
+    print "----- cornerCases -----"
+    var a1 = ``
+    print `a1 = "${a1}"`
+    var a2 = (`acm` + "er").toUpperCase()
+    print a2
+    var a3 = `${114514}`
+    print a3
+    var a4 = `\``
+    print `a4 = ${a4}` // `
+    var a5 = `$\{`
+    print `a5 = ${a5}` // ${
+    var a6 = `\\`
+    print a6 // \
+    var a7 = `$`
+    print a7
+    var a8 = `$\{}`
+    print a8 // ${}
+    var a9 = `""`
+    print a9 // ""
+    var a10 = `''`
+    print a10
+    var a11 = `\"`
+    print a11 // "
+    var a12 = `{123}`
+    print `a12 = ${a12}` // {123}
+    print `$\{abc}`.equals("${abc}") // true
+}
+
+string concatJsonLine(int v) {
+    return `"age'${v}'": ${v << 2}`
+}
+
+void jsonDemo() {
+    print "----- jsonDemo -----"
+    var s = `{`
+    var n = 3
+    for i: 1 to n {
+        var comma = ""
+        if i < n comma = ", "
+        s = `${s}${
+            concatJsonLine(i)
+        }${comma}`
+    }
+    s = `${s}}`
+    print `s = ${s}`
+}
+
+void htmlDemo() {
+    print "----- htmlDemo -----"
+    var s = `<div class="div1">\n`
+    var n = 3
+    for i: 1 to n {
+        s += `    <ul class="ul${i}" onclick="alert(\`$\{ul${i}}\`)">
+        <li>li${i}</li>
+    </ul>\n`
+    }
+    s += "</div>"
+    print s // 举例： <ul class="ul3" onclick="alert(`${ul3}`)"><li>li3</li></ul>
+}
+
+void main(string[] args) {
+    types()
+    cornerCases()
+    jsonDemo()
+    htmlDemo()
+}

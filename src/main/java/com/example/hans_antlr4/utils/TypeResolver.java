@@ -181,4 +181,8 @@ public class TypeResolver {
         }
         throw new AssertionError("Objects not yet implemented!");
     }
+
+    public static String getTransformedStringInTemplateString(String templateString) {
+        return StringEscapeUtils.unescapeJava(templateString);
+    }
 }

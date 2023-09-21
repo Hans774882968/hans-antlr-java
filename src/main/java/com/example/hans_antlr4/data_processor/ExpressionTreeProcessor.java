@@ -8,6 +8,7 @@ import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
 import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
@@ -76,6 +77,17 @@ public class ExpressionTreeProcessor {
         }
         value.setParent(parent);
         value.setBelongStatement(belongStatement);
+    }
+
+    public void processExpressionTree(TemplateString templateString, Expression parent, Statement belongStatement) {
+        if (templateString == null) {
+            return;
+        }
+        templateString.setParent(parent);
+        templateString.setBelongStatement(belongStatement);
+        templateString.getExpressions().forEach(expression -> {
+            expression.processSubExpressionTree(this, templateString, belongStatement);
+        });
     }
 
     public void processExpressionTree(VarReference varReference, Expression parent, Statement belongStatement) {

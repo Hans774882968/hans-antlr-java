@@ -91,6 +91,7 @@ expression:
 	| expression Dot Identifier									# ClazzFieldReference
 	| variableReference											# VarReference
 	| value														# ValueExpr
+	| templateStringLiteral										# TemplateLiteral
 	| OpenParen expression CloseParen							# BRACKET
 	| UNARY = (Plus | Minus | BitNot) expression				# UNARY
 	| expression POW expression									# POW
@@ -121,6 +122,11 @@ argumentList: expression? (Comma expression)*;
 
 variableReference: Identifier;
 
-print: PRINT (PrintArg)? expression;
+print: PRINT PrintArg? expression;
 
 value: NUMBER | STRING | BOOL;
+
+templateStringLiteral: BackTick templateStringAtom* BackTick;
+templateStringAtom:
+	TemplateStringAtom
+	| TemplateStringStartExpression expression CloseBrace;

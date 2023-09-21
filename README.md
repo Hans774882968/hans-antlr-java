@@ -5551,6 +5551,323 @@ TODO
 
 TODO
 
+## 支持模板字符串
+
+我们知道JDK21才支持模板字符串，但对于编译到JVM的其他语言而言，模板字符串特性并没有那么难实现！本节我们就来实现JS风格的模板字符串。需求如下：
+
+1. 用反引号表示，并且和普通字符串一样可以调用`String`的方法，比如
+
+```js
+`abc`.toUpperCase()
+```
+
+2. 用`${}`包裹一个任意`hant`表达式。
+3. 支持多行。
+4. 支持转义字符，如`\n`、`\t`。特殊地，
+
+```js
+`"`
+`\"`
+`\\\"`
+`\\`
+`\``
+`$\{`
+`$\\{`
+```
+
+分别表示`"`、`"`、`\"`、`\`、一个反引号、`${`、`$\{`。
+
+### 准备工作：将现有文法拆分为`lexer`和`parser`
+
+我们首先参考[JS语法规则的antlr描述](https://github.com/antlr/grammars-v4/blob/master/javascript/javascript/JavaScriptParser.g4)。相关规则摘抄：
+
+`JavaScriptParser`：
+
+```g4
+templateStringLiteral
+    : BackTick templateStringAtom* BackTick
+    ;
+
+templateStringAtom
+    : TemplateStringAtom
+    | TemplateStringStartExpression singleExpression TemplateCloseBrace
+    ;
+```
+
+`JavaScriptLexer`：
+
+```g4
+OpenBrace:                      '{' {this.ProcessOpenBrace();};
+TemplateCloseBrace:             {this.IsInTemplateString()}? '}' -> popMode;
+CloseBrace:                     '}' {this.ProcessCloseBrace();};
+
+mode TEMPLATE;
+
+BackTickInside:                 '`' {this.DecreaseTemplateDepth();} -> type(BackTick), popMode;
+TemplateStringStartExpression:  '${' -> pushMode(DEFAULT_MODE);
+TemplateStringAtom:             ~[`];
+```
+
+词法规则用到了mode（[相关文档](https://datacadamia.com/antlr/mode)），后文分析将告诉你mode的引入是必需的。所以需要拆分出`src\main\java\com\example\hans_antlr4\parsing\HansAntlrLexer.g4`和`src\main\java\com\example\hans_antlr4\parsing\HansAntlrParser.g4`。
+
+拆分的改动虽不少，但关键点并不多：
+
+1. 把Parser的大多数的字符串常量都换成Lexer中对应的词法规则。
+2. 对于`expression`中一元运算符和加号、减号需要使用同样符号的情况：
+
+```g4
+expression:
+    // 其他省略
+    UNARY = (Plus | Minus | BitNot) expression
+    | expression ADDITIVE = (Plus | Minus) expression;
+```
+
+命令也需要做出改变。参考IDEA antlr插件给出的命令，我们编写的编译命令如下：
+
+```ps1
+antlr -visitor -no-listener -lib <the path of src\main\java\com\example\hans_antlr4\parsing> <the path of src\main\java\com\example\hans_antlr4\parsing\HansAntlrParser.g4> <the path of src\main\java\com\example\hans_antlr4\parsing\HansAntlrLexer.g4>
+```
+
+### 词法和语法规则实现
+
+[参考链接11](https://stackoverflow.com/questions/55727031/antlr-grammar-allow-whitespace-matching-only-in-template-string)分析了为什么词法规则的mode是必要的。我简单总结一下：mode用于屏蔽不需要的词法规则，如果实现模板字符串的时候不屏蔽大多数无关词法规则，比如：标识符名，那么因为antlr优先将字符串识别为最长匹配的规则，所以字符串很可能会被识别为标识符名等无关规则。
+
+我们不能照搬JS的规则，因为规则里插入了`{this.IsInTemplateString()}`等JS代码。于是我们写出了第一版规则：
+
+Parser：
+
+```g4
+templateStringLiteral: BackTick templateStringAtom* BackTick;
+templateStringAtom:
+	TemplateStringAtom
+	| TemplateStringStartExpression expression CloseBrace;
+```
+
+Lexer：
+
+```g4
+OpenBrace: '{' -> pushMode(DEFAULT_MODE);
+CloseBrace: '}' -> popMode;
+
+BackTick: '`' -> pushMode(TEMPLATE);
+
+mode TEMPLATE;
+
+BackTickInside: '`' -> type(BackTick), popMode;
+TemplateStringStartExpression: '${' -> pushMode(DEFAULT_MODE);
+TemplateStringAtom: ~[`\\] | TemplateStringEscapeSequence;
+fragment TemplateStringEscapeSequence:
+	'\\' 'u005c'? [btnfr`"'\\{]
+	| OctalEscape
+	| UnicodeEscape;
+```
+
+这里Parser规则照搬了JS的，Lexer规则则是自己写的。但如果右括号的个数大于`${`加左括号的总数，就会遇到`calling popMode on an empty stack`的报错。为了让报错更友好，[参考链接12](https://stackoverflow.com/questions/53504903/parse-string-antlr)为我们提供了两种解决方案：
+
+1. 引入`nesting`变量，统计栈是否已空，栈为空时不执行`popMode`。
+2. 引入`mode EMBEDDED;`，在模板字符串中遇到`${`以后转到`EMBEDDED`模式，于是需要将`DEFAULT_MODE`的词法规则都复制一份过去。
+
+我采用了方法1。
+
+另外，JS语法规则的antlr描述给出的
+
+```g4
+TemplateStringAtom: ~[`];
+```
+
+比较潦草，实测和JS字符串模板的特性不完全一致。我参考Java的字符串规则进行了少量修改，使之基本完美符合JS字符串模板的特性。
+
+最终的Parser同上。最终的Lexer：
+
+```g4
+lexer grammar HansAntlrLexer;
+
+@header {
+package com.example.hans_antlr4.parsing;
+}
+
+@members {
+    int nesting = 0;
+}
+
+// hant TOKENS
+OpenBrace:
+	'{' {
+	nesting++;
+	pushMode(DEFAULT_MODE);
+};
+CloseBrace:
+	'}' {
+    if (nesting > 0) {
+        nesting--;
+        popMode();
+    }
+};
+BackTick: '`' -> pushMode(TEMPLATE);
+
+mode TEMPLATE;
+
+BackTickInside: '`' -> type(BackTick), popMode;
+TemplateStringStartExpression:
+	'${' {
+	nesting++;
+	pushMode(DEFAULT_MODE);
+};
+TemplateStringAtom: ~[`\\] | TemplateStringEscapeSequence;
+fragment TemplateStringEscapeSequence:
+	'\\' 'u005c'? [btnfr`"'\\{]
+	| OctalEscape
+	| UnicodeEscape;
+```
+
+最后的注意点：因为内嵌了Java代码，所以IDEA antlr插件没法测模板字符串的规则，只能在实现完毕后进行测试。
+
+### 业务代码实现
+
+打开[AST Explorer](https://astexplorer.net/)，输入`Tip ${i}:`。我们看到：
+
+```json
+{
+    "type": "TemplateLiteral",
+    "expressions": [
+        {
+            "type": "Identifier",
+            "name": "i"
+        }
+    ],
+    "quasis": [
+        {
+            "type": "TemplateElement",
+            "value": {
+            "raw": "Tip ",
+            "cooked": "Tip "
+            },
+            "tail": false
+        },
+        {
+            "type": "TemplateElement",
+            "value": {
+            "raw": ":",
+            "cooked": ":"
+            },
+            "tail": true
+        }
+    ]
+}
+```
+
+我们很容易发现一条规律：划分出的字符串个数永远等于表达式个数加1。为了满足这条规律，如果以表达式开头或结尾，只需要在其前面或后面补充一个空字符串。因为语法规则每个元素是一个字符，不满足上述规律，所以我们在Visitor层适配一下，使得对象保存的字符串列表符合这条规律。
+
+[新增`TemplateString`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/domain/expression/TemplateString.java)：
+
+```java
+@Getter
+public class TemplateString extends Expression {
+    private List<String> strs;
+    private List<Expression> expressions;
+
+    public TemplateString(List<String> strs, List<Expression> expressions) {
+        super(BuiltInType.STRING, null, null);
+        this.strs = strs;
+        this.expressions = expressions;
+        if (strs.size() != expressions.size() + 1) {
+            throw new IllegalTemplateStringException(strs, expressions);
+        }
+    }
+    // ...
+}
+```
+
+[新增`TemplateStringVisitor`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/parsing/biz_visitor/TemplateStringVisitor.java)：
+
+```java
+@AllArgsConstructor
+public class TemplateStringVisitor extends HansAntlrParserBaseVisitor<TemplateString> {
+    private ExpressionVisitor parent;
+
+    @Override
+    public TemplateString visitTemplateStringLiteral(HansAntlrParser.TemplateStringLiteralContext ctx) {
+        List<String> strs = new ArrayList<>();
+        List<Expression> expressions = new ArrayList<>();
+        String curString = "";
+        List<TemplateStringAtomContext> atoms = ctx.templateStringAtom();
+        for (TemplateStringAtomContext atom : atoms) {
+            if (atom.TemplateStringAtom() != null) {
+                curString += atom.TemplateStringAtom().getText();
+                continue;
+            }
+            strs.add(curString);
+            curString = "";
+            if (atom.expression() != null) {
+                expressions.add(atom.expression().accept(parent));
+            }
+        }
+        strs.add(curString);
+        strs = strs.stream().map(s -> {
+            return TypeResolver.getTransformedStringInTemplateString(s);
+        }).collect(Collectors.toList());
+        return new TemplateString(strs, expressions);
+    }
+}
+```
+
+1. 适配上述规律的代码很浅显易懂。
+2. 对于获得的字符串，需要支持转义。用之前用过的`StringEscapeUtils.unescapeJava()`实现即可。
+
+Generator部分的实现也很简单。交替遍历`TemplateString`的字符串和表达式，依次入栈，再调用之前用过的`makeConcatWithConstants`方法进行拼接即可。`"\u0001"`的个数为`strs.size() * 2 - 1`。
+
+```java
+@AllArgsConstructor
+public class StringAppendGenerator implements Opcodes {
+    // 其他方法省略...
+    public void generate(TemplateString templateString) {
+        List<String> strs = templateString.getStrs();
+        List<Expression> expressions = templateString.getExpressions();
+        int sz = strs.size();
+        String descriptor = "(";
+        for (int i = 0; i < sz; i++) {
+            mv.visitLdcInsn(strs.get(i));
+            descriptor += BuiltInType.STRING.getDescriptor();
+            if (i == sz - 1) {
+                break;
+            }
+            expressions.get(i).accept(parent);
+            descriptor += expressions.get(i).getType().getDescriptor();
+        }
+        Handle handle = new Handle(
+                H_INVOKESTATIC,
+                org.objectweb.asm.Type.getInternalName(java.lang.invoke.StringConcatFactory.class),
+                "makeConcatWithConstants",
+                MethodType.methodType(
+                        CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class,
+                        String.class, Object[].class).toMethodDescriptorString(),
+                false);
+        descriptor += ")Ljava/lang/String;";
+        mv.visitInvokeDynamicInsn(
+                "makeConcatWithConstants", descriptor, handle,
+                new Object[] { "\u0001".repeat((sz << 1) - 1) });
+    }
+}
+```
+
+### 效果
+
+[相关单测用例：`src/test/java/com/example/hans_antlr4/TemplateStringTest.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/TemplateStringTest.java)。
+
+```hant
+string concatJsonLine(int v) {
+    return `"age'${v}'": ${v << 2}`
+}
+```
+
+的反编译效果：
+
+```java
+public static String concatJsonLine(int var0) {
+    return "\"age'" + var0 + "'\": " + (var0 << 2) + "";
+}
+```
+
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html
@@ -5563,3 +5880,5 @@ TODO
 8. `logback`运行时修改日志级别：https://www.baeldung.com/logback
 9. 字符串拼接的底层原理：https://juejin.cn/post/7182872058743750715
 10. JVM官方文档，方法描述符：https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3
+11. 如何用antlr实现模板字符串：https://stackoverflow.com/questions/55727031/antlr-grammar-allow-whitespace-matching-only-in-template-string
+12. 引入`nesting`变量解决`calling popMode on an empty stack`的问题：https://stackoverflow.com/questions/53504903/parse-string-antlr

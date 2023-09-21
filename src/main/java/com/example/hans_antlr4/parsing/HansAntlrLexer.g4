@@ -4,9 +4,23 @@ lexer grammar HansAntlrLexer;
 package com.example.hans_antlr4.parsing;
 }
 
+@members {
+    int nesting = 0;
+}
+
 // hant TOKENS
-OpenBrace: '{';
-CloseBrace: '}';
+OpenBrace:
+	'{' {
+	nesting++;
+	pushMode(DEFAULT_MODE);
+};
+CloseBrace:
+	'}' {
+    if (nesting > 0) {
+        nesting--;
+        popMode();
+    }
+};
 OpenBracket: '[';
 CloseBracket: ']';
 OpenParen: '(';
@@ -109,3 +123,19 @@ WS: [ \t\n\r]+ -> skip; // special TOKEN for skipping whitespaces
 // 支持注释
 COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
 LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
+
+BackTick: '`' -> pushMode(TEMPLATE);
+
+mode TEMPLATE;
+
+BackTickInside: '`' -> type(BackTick), popMode;
+TemplateStringStartExpression:
+	'${' {
+	nesting++;
+	pushMode(DEFAULT_MODE);
+};
+TemplateStringAtom: ~[`\\] | TemplateStringEscapeSequence;
+fragment TemplateStringEscapeSequence:
+	'\\' 'u005c'? [btnfr`"'\\{]
+	| OctalEscape
+	| UnicodeEscape;
