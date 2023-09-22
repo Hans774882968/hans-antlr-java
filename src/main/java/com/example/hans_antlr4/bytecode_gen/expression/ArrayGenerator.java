@@ -5,8 +5,10 @@ import java.util.List;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.bytecode_gen.InsnUtil;
 import com.example.hans_antlr4.domain.expression.ArrayAccess;
 import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
+import com.example.hans_antlr4.domain.expression.ArrayLiteral;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -17,6 +19,28 @@ import lombok.AllArgsConstructor;
 public class ArrayGenerator implements Opcodes {
     private ExpressionGenerator parent;
     private MethodVisitor mv;
+
+    public void generate(ArrayLiteral arrayLiteral) {
+        List<Expression> items = arrayLiteral.getItems();
+        // ArrayLiteral 构造函数保证 items 一定有至少一个元素
+        InsnUtil.generateIntInsn(mv, items.size());
+        Type elementType = items.get(0).getType();
+        if (elementType.getTypeClass().isPrimitive()) {
+            mv.visitIntInsn(NEWARRAY, elementType.getPrimitiveTypeOperand());
+        } else {
+            String internalName = elementType.getInternalName();
+            mv.visitTypeInsn(ANEWARRAY, internalName);
+        }
+
+        for (int i = 0; i < items.size(); i++) {
+            Expression item = items.get(i);
+            mv.visitInsn(DUP);
+            // mv.visitInsn(item.getType().getDupOpcode());
+            InsnUtil.generateIntInsn(mv, i);
+            item.accept(parent);
+            mv.visitInsn(item.getType().getStoreArrayItemOpcode());
+        }
+    }
 
     public void generate(ArrayDeclaration arrayDeclaration) {
         List<Expression> dimensions = arrayDeclaration.getDimensions();

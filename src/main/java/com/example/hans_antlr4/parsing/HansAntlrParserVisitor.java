@@ -349,6 +349,16 @@ public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	T visitVarReference(HansAntlrParser.VarReferenceContext ctx);
 
 	/**
+	 * Visit a parse tree produced by the {@code ArrLiteral}
+	 * labeled alternative in {@link HansAntlrParser#expression}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrLiteral(HansAntlrParser.ArrLiteralContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code BRACKET}
 	 * labeled alternative in {@link HansAntlrParser#expression}.
 	 * 
@@ -511,4 +521,13 @@ public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitTemplateStringAtom(HansAntlrParser.TemplateStringAtomContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#arrayLiteral}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayLiteral(HansAntlrParser.ArrayLiteralContext ctx);
 }

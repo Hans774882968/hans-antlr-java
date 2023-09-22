@@ -9,6 +9,7 @@ import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.ArrayAccess;
 import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
+import com.example.hans_antlr4.domain.expression.ArrayLiteral;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
@@ -122,6 +123,10 @@ public class ExpressionGenerator implements Opcodes {
 
     public void generate(TemplateString templateString) {
         stringAppendGenerator.generate(templateString);
+    }
+
+    public void generate(ArrayLiteral arrayLiteral) {
+        arrayGenerator.generate(arrayLiteral);
     }
 
     public void generate(EmptyExpression emptyExpression) {

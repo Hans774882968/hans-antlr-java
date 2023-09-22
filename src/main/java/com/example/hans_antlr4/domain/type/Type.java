@@ -66,4 +66,6 @@ public interface Type {
     int getStoreArrayItemOpcode();
 
     int getDupX2Opcode();
+
+    int getPrimitiveTypeOperand();
 }

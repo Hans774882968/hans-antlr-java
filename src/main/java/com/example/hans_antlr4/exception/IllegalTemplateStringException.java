@@ -9,4 +9,10 @@ public class IllegalTemplateStringException extends RuntimeException {
         super("strs.size() should be expressions.size() + 1, but got strs.size() = "
                 + strs.size() + ", expressions.size() = " + expressions.size());
     }
+
+    public IllegalTemplateStringException(List<String> strs, List<Expression> expressions, int sourceLine) {
+        super("strs.size() should be expressions.size() + 1, but got strs.size() = "
+                + strs.size() + ", expressions.size() = " + expressions.size()
+                + " at line " + sourceLine);
+    }
 }

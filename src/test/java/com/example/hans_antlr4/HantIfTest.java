@@ -6,62 +6,51 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import com.example.hans_antlr4.domain.expression.Addition;
-import com.example.hans_antlr4.domain.expression.ConditionalExpression;
-import com.example.hans_antlr4.domain.expression.Mod;
-import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
-import com.example.hans_antlr4.domain.global.CompareSign;
-import com.example.hans_antlr4.domain.global.MetaData;
-import com.example.hans_antlr4.domain.scope.Scope;
-import com.example.hans_antlr4.domain.statement.Block;
-import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
-import com.example.hans_antlr4.domain.statement.StatementAfterIf;
-import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class HantIfTest implements Opcodes {
     @Test
     public void relationalExpressionTest() throws MainMethodNotFoundInPublicClass {
-        Statement statement = TestUtils.getFirstStatementFromCode("if 20 % 12 <= 8 {}");
-        Scope scope = new Scope(new MetaData(null));
-        Scope newScope = new Scope(scope);
-        StatementAfterIf trueStatement = new StatementAfterIf(newScope, new Block(new ArrayList<>(), newScope));
-        IfStatement ifStatement = new IfStatement(
-                new ConditionalExpression(
-                        new Mod(new Value(BuiltInType.INT, "20"), new Value(BuiltInType.INT, "12")),
-                        new Value(BuiltInType.INT, "8"),
-                        CompareSign.LESS_OR_EQUAL),
-                trueStatement);
-        Assert.assertEquals(ifStatement, statement);
+        List<Statement> statements = TestUtils.getStatementsFromCode("if 20 % 12 <= 8 {}");
+        MethodVisitor mv = TestUtils.mockGenerateBytecode(statements);
+        InOrder inOrder = inOrder(mv);
+        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(20));
+        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(12));
+        inOrder.verify(mv).visitInsn(eq(IREM));
+        inOrder.verify(mv).visitInsn(eq(NOP));
+        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(8));
+        inOrder.verify(mv).visitInsn(eq(NOP));
+        inOrder.verify(mv).visitInsn(eq(ISUB));
+        inOrder.verify(mv).visitJumpInsn(eq(IFGT), isA(Label.class));
+        inOrder.verify(mv).visitJumpInsn(eq(GOTO), isA(Label.class));
     }
 
     @Test
     public void equalityExpressionTest() throws MainMethodNotFoundInPublicClass {
-        Statement statement = TestUtils.getFirstStatementFromCode("if 21 % 12 == -1 + 10 {}");
-        Scope scope = new Scope(new MetaData(null));
-        Scope newScope = new Scope(scope);
-        StatementAfterIf trueStatement = new StatementAfterIf(newScope, new Block(new ArrayList<>(), newScope));
-        IfStatement ifStatement = new IfStatement(
-                new ConditionalExpression(
-                        new Mod(new Value(BuiltInType.INT, "21"), new Value(BuiltInType.INT, "12")),
-                        new Addition(
-                                new UnaryNegative(new Value(BuiltInType.INT, "1")),
-                                new Value(BuiltInType.INT, "10")),
-                        CompareSign.EQUAL),
-                trueStatement);
-        Assert.assertEquals(ifStatement, statement);
+        List<Statement> statements = TestUtils.getStatementsFromCode("if 21 % 12 == -1 + 10 {}");
+        MethodVisitor mv = TestUtils.mockGenerateBytecode(statements);
+        InOrder inOrder = inOrder(mv);
+        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(21));
+        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(12));
+        inOrder.verify(mv).visitInsn(eq(IREM));
+        inOrder.verify(mv).visitInsn(eq(NOP));
+        inOrder.verify(mv).visitInsn(eq(ICONST_1));
+        inOrder.verify(mv).visitInsn(eq(INEG));
+        inOrder.verify(mv).visitIntInsn(eq(BIPUSH), eq(10));
+        inOrder.verify(mv).visitInsn(eq(IADD));
+        inOrder.verify(mv).visitInsn(eq(NOP));
+        inOrder.verify(mv).visitInsn(eq(ISUB));
+        inOrder.verify(mv).visitJumpInsn(eq(IFNE), isA(Label.class));
+        inOrder.verify(mv).visitJumpInsn(eq(GOTO), isA(Label.class));
     }
 
     @Test

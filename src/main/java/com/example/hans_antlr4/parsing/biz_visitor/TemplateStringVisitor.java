@@ -38,6 +38,7 @@ public class TemplateStringVisitor extends HansAntlrParserBaseVisitor<TemplateSt
         strs = strs.stream().map(s -> {
             return TypeResolver.getTransformedStringInTemplateString(s);
         }).collect(Collectors.toList());
-        return new TemplateString(strs, expressions);
+        int sourceLine = ctx.getStart().getLine();
+        return new TemplateString(strs, expressions, sourceLine);
     }
 }

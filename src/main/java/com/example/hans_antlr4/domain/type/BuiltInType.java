@@ -352,6 +352,35 @@ public enum BuiltInType implements Type {
         return opcodes.getDupX2();
     }
 
+    @Override
+    public int getPrimitiveTypeOperand() {
+        if (this == BuiltInType.BOOLEAN) {
+            return Opcodes.T_BOOLEAN;
+        }
+        if (this == BuiltInType.CHAR) {
+            return Opcodes.T_CHAR;
+        }
+        if (this == BuiltInType.BYTE) {
+            return Opcodes.T_BYTE;
+        }
+        if (this == BuiltInType.SHORT) {
+            return Opcodes.T_SHORT;
+        }
+        if (this == BuiltInType.INT) {
+            return Opcodes.T_INT;
+        }
+        if (this == BuiltInType.LONG) {
+            return Opcodes.T_LONG;
+        }
+        if (this == BuiltInType.FLOAT) {
+            return Opcodes.T_FLOAT;
+        }
+        if (this == BuiltInType.DOUBLE) {
+            return Opcodes.T_DOUBLE;
+        }
+        return Const.INVALID_OPERAND;
+    }
+
     public static Optional<BuiltInType> getBuiltInType(String typeName) {
         return Arrays.stream(BuiltInType.values())
                 .filter(type -> type.getName().equals(typeName))

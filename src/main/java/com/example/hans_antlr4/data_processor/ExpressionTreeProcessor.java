@@ -3,6 +3,7 @@ package com.example.hans_antlr4.data_processor;
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
 import com.example.hans_antlr4.domain.expression.ArrayAccess;
 import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
+import com.example.hans_antlr4.domain.expression.ArrayLiteral;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
@@ -87,6 +88,17 @@ public class ExpressionTreeProcessor {
         templateString.setBelongStatement(belongStatement);
         templateString.getExpressions().forEach(expression -> {
             expression.processSubExpressionTree(this, templateString, belongStatement);
+        });
+    }
+
+    public void processExpressionTree(ArrayLiteral arrayLiteral, Expression parent, Statement belongStatement) {
+        if (arrayLiteral == null) {
+            return;
+        }
+        arrayLiteral.setParent(parent);
+        arrayLiteral.setBelongStatement(belongStatement);
+        arrayLiteral.getItems().forEach(item -> {
+            item.processSubExpressionTree(this, arrayLiteral, belongStatement);
         });
     }
 

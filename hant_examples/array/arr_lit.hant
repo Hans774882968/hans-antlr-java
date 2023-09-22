@@ -1,0 +1,53 @@
+void arr1d() {
+    print "----- arr1d -----"
+    var aI = [2, 3, 4, 5]
+    print `aI[0] = ${aI[0]}`
+    var aL = [20L, 30L, 40L, 50L]
+    print `aL[1] = ${aL[1]}`
+    var aF = [2.1f, 3.1f, 4.1f, 5.1f]
+    print `aF[2] = ${aF[2]}`
+    var aD = [2.5, 3.5, 4.5, 5.5]
+    print `aD[3] = ${aD[3]}`
+    var aBy = [0o11y]
+    print `aBy[0] = ${aBy[0]}`
+    var aB = [true]
+    print `aB[0] = ${aB[0]}`
+    var aS1 = ["acm", "ctf"]
+    print `aS1[0] + aS1[1] = ${`${aS1[0]} ${aS1[1]}`}`
+    var aS2 = ["acm", new java.lang.String("er")]
+    print `aS2[0] + aS2[1] = ${`${aS2[0]}${aS2[1]}`}`
+}
+
+void arrMd() {
+    print "----- arrMd -----"
+    var aI = [[2, 3, 4], [5, 6, 7]]
+    print `aI[0][0] = ${aI[0][0]}`
+    var aL = [[20L, 30L, 40L], [50L, 60L, 70L]]
+    print `aL[0][0] = ${aL[0][1]}`
+    var aD3 = [[[2.5, 3.5, -4.5]], [[-5.5, 6.5, 7.5], [-8.5]]]
+    var sAD3 = 0d
+    for i: 0 to aD3.length - 1 {
+        var aD3i = aD3[i]
+        for j: 0 to aD3i.length - 1 {
+            var aD3ij = aD3[i][j]
+            for k: 0 to aD3ij.length - 1 {
+                sAD3 += aD3[i][j][k]
+            }
+        }
+    }
+    print `sAD3 = ${sAD3}`
+    var aS2 = [["a", `b${aI[0][0]}`], ["c", `${aL[1][2]}d`]]
+    var totAS2 = new java.lang.String(``)
+    for i: 0 to aS2.length - 1 {
+        var aS2i = aS2[i]
+        for j: 0 to aS2i.length - 1 {
+            totAS2 += aS2[i][j]
+        }
+    }
+    print `totAS2 = ${totAS2}`
+}
+
+void main(string[] args) {
+    arr1d()
+    arrMd()
+}

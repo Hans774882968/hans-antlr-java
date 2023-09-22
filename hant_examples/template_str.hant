@@ -22,6 +22,12 @@ void types() {
     print a7
     var ft = new java.text.SimpleDateFormat(`yyyy-MM-dd hh:mm:ss`)
     print `Current Date = ${ft.format(new java.util.Date())}.`
+    var a8 = `a8 = ${new java.util.Random()}`
+    print a8
+    var tmpArr = new double[2]
+    tmpArr[0] = 3
+    var a9 = `a9 = ${tmpArr} ${tmpArr[0]}`
+    print a9
 }
 
 void cornerCases() {

@@ -7,8 +7,8 @@
 近几天我看到一个项目叫[Creating JVM language](https://juejin.cn/post/6844903671679942663)，目标是开发一门编译到JVM字节码的语言。在此我打算跟着这个项目做一遍，以学习：
 
 1. 使用antlr4生成Lexer和Parser的代码。借助IDEA ASM Bytecode Viewer插件解决开发过程中可能遇到的二义性问题。
-2. 深入讨论了**隐式类型转换**等高级话题及其实现方案，并最终落地。
-3. 使用`ASM`，并熟悉大量JVM字节码指令。
+2. 深入讨论了**隐式类型转换**等高级话题及其实现方案，并最终落地。并实现了一些语法糖，如：ranged for loop `for i: st to ed`、JS风格的模板字符串。
+3. 使用`ASM`，并熟悉大量Java特性对应的JVM字节码指令。
 4. 使用`JUnit + Mockito`保证项目质量。使用`system-stubs`实现黑盒测试。
 
 为了更好地理解这个项目，我调换了各个功能的实现顺序，先实现过程式的特性，再实现函数和类。在此过程中，我会**额外实现许多`Enkel`没有的语法特性**，相信这些特性的实现过程对编程萌新们而言是很有价值的。另外，我修复了原作者项目的一些问题，在此列举：
@@ -18,6 +18,7 @@
 3. 原作者的`if`语句后跟的statement只有为块语句时才新建了作用域，我进行了修复。
 4. 原作者项目存在变量shadow问题，我进行了修复，详见《原作者项目的子作用域变量预期外地修改祖先作用域变量的问题修复》一节。
 5. 原作者项目括号表达式定义的优先级有问题，我进行了修复，详见《Part10：2-支持关系运算符+原作者项目括号优先级问题修复》一节。
+6. 原作者项目使用`StringBuilder`来实现字符串拼接，不仅性能差些，而且对类型支持不友好。我参考了Java9里字符串拼接的字节码实现，改用`makeConcatWithConstants`实现。
 
 这门语言叫做`hant`。[GitHub传送门](https://github.com/Hans774882968/hans-antlr-java)。
 
@@ -27,8 +28,13 @@
 - 输出到控制台。`print expression`可输出一行，`print \n expr`不输出换行符。
 - 字符串支持Java的转义字符。比如`print "\033[31m红色字符串\033[0m"`可输出红色字符串。
 - 完整的表达式支持。相比于C语言仅三目运算符、逗号表达式不支持。另外，新增了`**`和`**=`运算符，方便地进行乘方运算。与Java相同，字符串可与所有类型相加。
-- 支持`int, long, float, double, boolean, string`类型。和Java一样，立即数支持类型后缀，比如`1d`表示`double`类型的1。表达式支持**隐式类型转换**，类型提升优先级为：`int < long < float < double`。
+- `if`语句。如：`if x == 1 print x`。`if`的括号不是必须的。具体见《Part10：1-支持block语句和if语句》一节。
+- ranged for loop 。语法格式：`for itVar: startExpr to endExpr bodyStatement`，变量`itVar`存在或不存在于上一层作用域均可，`startExpr`和`endExpr`可以是任意表达式。如果`startExpr < endExpr`，则继续运行的条件为`itVar <= endExpr`，否则为`itVar >= endExpr`。只要`startExpr`和`endExpr`的大小关系不改变， ranged for loop 就算是一个能提效的好语法糖。具体见《Part13-1-支持ranged for循环》一节。
+- 标准`for`循环。`for`的括号不是必须的，比如`for var i = 1; i < 10; i += 1 print i`是合法的。
+- 支持`int, long, float, double, boolean, string`类型。和Java一样，立即数支持类型后缀，比如`1d`表示`double`类型的立即数`1`。表达式支持**隐式类型转换**，类型提升优先级为：`int < long < float < double`。
 - 支持定义方法。`hant`中，方法是语法糖，它们将被编译到隐藏的`public class`中，修饰符为`public static`。
+- 支持使用多维数组。与Java相同，`new double[d1][d2]`声明了一个二维数组。也可以用数组字面量来初始化数组。比如：`var a = [1, 2, 3]`。数组字面量的元素至少为1个，且类型应相同。
+- 支持JS风格的模板字符串。用法与JS的模板字符串基本相同，具体见《支持模板字符串》一节。
 
 环境：
 - Windows10
@@ -5867,6 +5873,50 @@ public static String concatJsonLine(int var0) {
     return "\"age'" + var0 + "'\": " + (var0 << 2) + "";
 }
 ```
+
+## 支持数组字面量
+
+TODO
+
+## 用`hant`写一些算法题吧！
+
+我为`hant`做了不少功能，如果不用它写几道算法题就太可惜了！
+
+### 经典算法：八皇后
+
+[`hant_examples/acm_and_leetcode/eight_queen.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/eight_queen.hant)
+
+1. 因为还不支持“全局变量”（隐藏的`public class`的静态字段），所以需要使用`var ans = new int[1]`并传入`dfs`方法的方式来模拟全局变量。
+
+### 经典算法：棋盘覆盖问题
+
+[`hant_examples/acm_and_leetcode/chess_fill.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/chess_fill.hant)
+
+1. 因为还不支持`!`运算符，所以用了这样的写法`in(xl, xr, x) == false`。
+
+### lc640：解方程。字符串小模拟
+
+思路：分两次扫描，第一次获取`x`的系数，第二次获取常数项。
+
+[`hant_examples/acm_and_leetcode/lc640.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc640.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc640.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc640.java.txt)
+
+1. 因为还不支持`char`字面量，所以使用`bytes[i] != 120`这样的方法来和`'x'`比较。
+
+### lc924：并查集。
+
+题意：给你一个无向图表示软件的病毒感染关系，再给你`initial`数组表示初始的被感染软件。和被感染软件处于同一连通块的软件都会被感染。现在允许去掉`initial`的一个元素，求最小被感染软件数。注意：被去掉的元素仍然能被同一连通块的软件感染。
+
+思路：对于给定`initial`，答案就是所涉及的连通块的点的个数之和。因此统计所涉及的连通块各有几个点在`initial`中，若一个连通块有2个及以上点在`initial`中，则去掉它们的贡献都是0。若只有一个，则去掉这个点的贡献就是该连通块的点的个数。
+
+注意题目中要求的“最小索引”指的是点的编号取最小。我理解成在`initial`中的下标最小，WA了好几发。
+
+[`hant_examples/acm_and_leetcode/lc924.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc924.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.java.txt)
+
+1. 在支持泛型后才能支持`Collections.min(Arrays.asList(a))`，目前只能用for循环来求数组最小值。
 
 ## 参考资料
 

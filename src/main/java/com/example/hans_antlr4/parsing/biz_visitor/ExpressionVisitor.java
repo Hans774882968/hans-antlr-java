@@ -14,6 +14,7 @@ import com.example.hans_antlr4.domain.expression.Additive;
 import com.example.hans_antlr4.domain.expression.And;
 import com.example.hans_antlr4.domain.expression.ArrayAccess;
 import com.example.hans_antlr4.domain.expression.ArrayDeclaration;
+import com.example.hans_antlr4.domain.expression.ArrayLiteral;
 import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.ClassFieldReference;
 import com.example.hans_antlr4.domain.expression.ConditionalExpression;
@@ -64,11 +65,13 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
     private Scope scope;
     private CallExpressionVisitor callExpressionVisitor;
     private TemplateStringVisitor templateStringVisitor;
+    private ArrayLiteralVisitor arrayLiteralVisitor;
 
     public ExpressionVisitor(Scope scope) {
         this.scope = scope;
         this.callExpressionVisitor = new CallExpressionVisitor(scope, this);
         this.templateStringVisitor = new TemplateStringVisitor(this);
+        this.arrayLiteralVisitor = new ArrayLiteralVisitor(this);
     }
 
     @Override
@@ -220,6 +223,11 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         // 约定：getValueFromString 调用时已经没有 typeSuffix
         String pureNumber = HantNumber.getStringWithoutTypeSuffix(value);
         return new Value(type, pureNumber);
+    }
+
+    @Override
+    public ArrayLiteral visitArrLiteral(HansAntlrParser.ArrLiteralContext ctx) {
+        return ctx.arrayLiteral().accept(arrayLiteralVisitor);
     }
 
     @Override

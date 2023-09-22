@@ -6,6 +6,8 @@ import java.util.Objects;
 
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.utils.Const;
+
 @Getter
 public class ArrayType implements Type {
     private Type elementType;
@@ -52,7 +54,7 @@ public class ArrayType implements Type {
 
     @Override
     public String getInternalName() {
-        return descriptor.replaceAll("/", ".");
+        return descriptor;
     }
 
     @Override
@@ -201,6 +203,11 @@ public class ArrayType implements Type {
     @Override
     public int getDupX2Opcode() {
         return Opcodes.DUP_X2;
+    }
+
+    @Override
+    public int getPrimitiveTypeOperand() {
+        return Const.INVALID_OPERAND;
     }
 
     @Override

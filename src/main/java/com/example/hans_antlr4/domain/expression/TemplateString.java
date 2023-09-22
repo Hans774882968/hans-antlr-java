@@ -25,6 +25,15 @@ public class TemplateString extends Expression {
         }
     }
 
+    public TemplateString(List<String> strs, List<Expression> expressions, int sourceLine) {
+        super(BuiltInType.STRING, null, null);
+        this.strs = strs;
+        this.expressions = expressions;
+        if (strs.size() != expressions.size() + 1) {
+            throw new IllegalTemplateStringException(strs, expressions, sourceLine);
+        }
+    }
+
     @Override
     public void accept(ExpressionGenerator generator) {
         generator.generate(this);

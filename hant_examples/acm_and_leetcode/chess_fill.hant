@@ -1,0 +1,89 @@
+boolean in(int l, int r, int x) {
+    if l > x return false
+    return x <= r
+}
+
+boolean inP(int xl, int xr, int yl, int yr, int x, int y) {
+    if in(xl, xr, x) == false return false
+    return in(yl, yr, y)
+}
+
+void dfs(int[][] a, int[] cur, int n, int stX, int stY, int x0, int y0) {
+    if n <= 1 return
+    var half = n >> 1
+    var area1 = inP(stX, stX + half - 1, stY, stY + half - 1, x0, y0)
+    var area2 = inP(stX + half, stX + n - 1, stY, stY + half - 1, x0, y0)
+    var area3 = inP(stX, stX + half - 1, stY + half, stY + n - 1, x0, y0)
+    var area4 = inP(stX + half, stX + n - 1, stY + half, stY + n - 1, x0, y0)
+    cur[0] += 1
+    if area1 == false {
+        var nx0 = stX + half - 1
+        var ny0 = stY + half - 1
+        a[nx0][ny0] = cur[0]
+    }
+    if area2 == false {
+        var nx0 = stX + half
+        var ny0 = stY + half - 1
+        a[nx0][ny0] = cur[0]
+    }
+    if area3 == false {
+        var nx0 = stX + half - 1
+        var ny0 = stY + half
+        a[nx0][ny0] = cur[0]
+    }
+    if area4 == false {
+        var nx0 = stX + half
+        var ny0 = stY + half
+        a[nx0][ny0] = cur[0]
+    }
+    if area1 {
+        dfs(a, cur, half, stX, stY, x0, y0)
+    } else {
+        var nx0 = stX + half - 1
+        var ny0 = stY + half - 1
+        dfs(a, cur, half, stX, stY, nx0, ny0)
+    }
+    if area2 {
+        dfs(a, cur, half, stX + half, stY, x0, y0)
+    } else {
+        var nx0 = stX + half
+        var ny0 = stY + half - 1
+        dfs(a, cur, half, stX + half, stY, nx0, ny0)
+    }
+    if area3 {
+        dfs(a, cur, half, stX, stY + half, x0, y0)
+    } else {
+        var nx0 = stX + half - 1
+        var ny0 = stY + half
+        dfs(a, cur, half, stX, stY + half, nx0, ny0)
+    }
+    if area4 {
+        dfs(a, cur, half, stX + half, stY + half, x0, y0)
+    } else {
+        var nx0 = stX + half
+        var ny0 = stY + half
+        dfs(a, cur, half, stX + half, stY + half, nx0, ny0)
+    }
+}
+
+void main(string[] args) {
+    for N: 1 to 3 {
+        var tot = 1 << N
+        var a = new int[tot][tot]
+        var r = new java.util.Random()
+        var i0 = r.nextInt(tot)
+        var j0 = r.nextInt(tot)
+        a[i0][j0] = 1
+        print `${i0} ${j0} ${a[i0][j0]}`
+        var cur = [1]
+
+        dfs(a, cur, tot, 0, 0, i0, j0)
+        for i: 0 to a.length - 1 {
+            var ai = a[i]
+            for j: 0 to ai.length - 1 {
+                print \n `${a[i][j]}\t`
+            }
+            print ""
+        }
+    }
+}

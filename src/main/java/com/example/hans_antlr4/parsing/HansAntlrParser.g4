@@ -91,6 +91,7 @@ expression:
 	| expression Dot Identifier									# ClazzFieldReference
 	| variableReference											# VarReference
 	| value														# ValueExpr
+	| arrayLiteral												# ArrLiteral
 	| templateStringLiteral										# TemplateLiteral
 	| OpenParen expression CloseParen							# BRACKET
 	| UNARY = (Plus | Minus | BitNot) expression				# UNARY
@@ -130,3 +131,5 @@ templateStringLiteral: BackTick templateStringAtom* BackTick;
 templateStringAtom:
 	TemplateStringAtom
 	| TemplateStringStartExpression expression CloseBrace;
+
+arrayLiteral: '[' expression (',' expression)* ']';

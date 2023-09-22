@@ -192,6 +192,11 @@ public class ClassType implements Type {
     }
 
     @Override
+    public int getPrimitiveTypeOperand() {
+        return Const.INVALID_OPERAND;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this)
             return true;

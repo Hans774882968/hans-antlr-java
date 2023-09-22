@@ -1,3 +1,11 @@
+void booleanDemo() {
+    print "----- booleanDemo -----"
+    print `${true == true} ${true == false} ${false == true} ${false == false}` // TFFT
+    var b1 = true
+    var b2 = false
+    print `${b1 == true} ${true == b2} ${false == b1} ${b2 == false}` // TFFT
+}
+
 void main(string[] args) {
     var const1 = 10 * 10
     var const2 = 10 ** 2
@@ -17,4 +25,6 @@ void main(string[] args) {
         var xi = 9 + 1
         print (xl == xi) + " " + (xl == xd) // true true
     }
+
+    booleanDemo()
 }

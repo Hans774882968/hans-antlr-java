@@ -1,0 +1,94 @@
+void parse(string expr, int[] coeffi) {
+    var bytes = expr.getBytes();
+    for (var i = 0; i < expr.length(); i += 1) {
+        // 'x'
+        if (bytes[i] != 120) {
+            continue;
+        }
+        var j = i - 1;
+        for (;; j -= 1) {
+            if (j < 0) {
+                break;
+            }
+            if (java.lang.Character.isDigit(expr.charAt(j)) == false) {
+                break;
+            }
+        }
+        var val = 1;
+        if (j + 1 < i) {
+            val = java.lang.Integer.parseInt(expr.substring(j + 1, i));
+        }
+        var sig = 1;
+        if (j >= 0) {
+            // '-'
+            if (bytes[j] == 45) {
+                sig = -1;
+            }
+        }
+        coeffi[1] += sig * val;
+    }
+
+    for (var i = 0; i < expr.length();) {
+        if (java.lang.Character.isDigit(expr.charAt(i)) == false) {
+            i += 1;
+            continue;
+        }
+        var j = i + 1;
+        for (;; j += 1) {
+            if (j >= expr.length()) {
+                break;
+            }
+            if (java.lang.Character.isDigit(expr.charAt(j)) == false) {
+                break;
+            }
+        }
+        var shouldAdd = true;
+        if (j < expr.length()) {
+            if (bytes[j] == 120) {
+                shouldAdd = false;
+            }
+        }
+        if (shouldAdd) {
+            var sig = 1;
+            if (i > 0) {
+                if (bytes[i - 1] == 45) {
+                    sig = -1;
+                }
+            }
+            var val = java.lang.Integer.parseInt(expr.substring(i, j));
+            coeffi[0] += sig * val;
+        }
+        i = j + 1;
+    }
+}
+
+string solveEquation(string equation) {
+    var exprs = equation.split("=");
+    var coeffis = [ [ 0, 0 ], [ 0, 0 ] ];
+    for (var i = 0; i < coeffis.length; i += 1) {
+        parse(exprs[i], coeffis[i])
+    }
+    if (coeffis[0][1] == coeffis[1][1]) {
+        if (coeffis[0][0] == coeffis[1][0]) {
+            return "Infinite solutions"
+        } else {
+            return "No solution"
+        }
+    }
+    var ans = (coeffis[1][0] - coeffis[0][0]) / (coeffis[0][1] - coeffis[1][1])
+    return `x=${ans}`
+}
+
+void main(string[] args) {
+    // 2 InfSol 0 67 -5 NoSol
+    var cases = [
+        "x+5-3+x=6+x-2",
+        "x=x",
+        "2x=x",
+        "3+2x=x+70",
+        "-3+12x=13x+2",
+        "2x=x+1+x"
+    ]
+    for i: 0 to cases.length - 1
+        print solveEquation(cases[i])
+}
