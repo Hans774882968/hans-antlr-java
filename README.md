@@ -5054,6 +5054,7 @@ compilationUnit: functions EOF;
 
 1. `funcCall`优先级必须高于`variableReference`，否则`foo(1)`会被优先解释为`foo`和表达式`(1)`。
 2. 之前`hant`不支持加分号，现在将`statements`规则调整为允许加或不加分号。原因在下一节《函数调用语法规则引入的二义性问题》讲解。
+3. 返回值类型可以省略。如果省略，则返回值类型为`BuiltInType.VOID`。
 
 ```g4
 compilationUnit: functions EOF;
@@ -5238,6 +5239,7 @@ private Type getReturnType(HansAntlrParser.FunctionContext functionDeclarationCo
 ```java
 public class TypeResolver {
     public static Type getFromTypeContext(HansAntlrParser.TypeContext typeContext) {
+        // 源代码省略返回值类型时，返回值类型为 void
         if (typeContext == null)
             return BuiltInType.VOID;
         return getFromTypeName(typeContext.getText());
@@ -5876,11 +5878,242 @@ public static String concatJsonLine(int var0) {
 
 ## 支持数组字面量
 
-TODO
+我们希望`hant`支持力扣风格（或者说Python风格）的数组字面量，但是又能推断出数组字面量的类型，因为`hant`是强类型语言。为了满足后者，必须规定数组字面量不能是空数组。
+
+文法规则修改：
+
+```g4
+expression:
+	functionName OpenParen argumentList CloseParen							# FunctionCall
+	// ...
+	| value														# ValueExpr
+	| arrayLiteral												# ArrLiteral
+	| templateStringLiteral										# TemplateLiteral
+    // ...
+    ;
+arrayLiteral: '[' expression (',' expression)* ']';
+```
+
+visitor：
+
+```java
+@AllArgsConstructor
+public class ArrayLiteralVisitor extends HansAntlrParserBaseVisitor<ArrayLiteral> {
+    private ExpressionVisitor parent;
+
+    @Override
+    public ArrayLiteral visitArrayLiteral(HansAntlrParser.ArrayLiteralContext ctx) {
+        List<Expression> items = ctx.expression().stream()
+                .map(expr -> expr.accept(parent))
+                .collect(Collectors.toList());
+        int sourceLine = ctx.getStart().getLine();
+        return new ArrayLiteral(items, sourceLine);
+    }
+}
+```
+
+`ArrayLiteral`很简单，只需要一个属性`List<Expression> items`，但需要在构造函数完成类型推断。简单来说，如果元素类型是数组，那么该字面量类型为维度加1的数组；否则该字面量类型为1维`elementType`数组。
+
+```java
+@Getter
+public class ArrayLiteral extends Expression {
+    private List<Expression> items;
+
+    public ArrayLiteral(List<Expression> items, int sourceLine) {
+        super(getInferredArrayType(items, sourceLine), null, null);
+        this.items = items;
+    }
+
+    private static ArrayType getInferredArrayType(List<Expression> items, int sourceLine) {
+        Set<Type> kinds = new HashSet<>();
+        items.forEach(item -> {
+            kinds.add(item.getType());
+        });
+        if (kinds.size() > 1 || kinds.isEmpty()) {
+            throw new IllegalArrayLiteralException(items, sourceLine);
+        }
+        Type elementType = items.get(0).getType();
+        if (elementType instanceof ArrayType) {
+            ArrayType arrayElementType = (ArrayType) elementType;
+            return new ArrayType(arrayElementType.getElementType(), arrayElementType.getDimension() + 1);
+        }
+        return new ArrayType(elementType, 1);
+    }
+    // 其他方法省略
+}
+```
+
+### `bytecode_gen`部分
+
+实现数组字面量，难点在其字节码。首先准备一段Java代码，用IDEA ASM Bytecode Viewer插件查看字节码。
+
+```java
+long tmpLL = 11;
+long[][] al = new long[][]{
+    {1, 2, tmpLL}, {3}
+};
+String[][] aS = new String[][]{{"acmer", "ac"}};
+long[] a = {4, 2, 3};
+```
+
+`a`的字节码：
+
+```java
+methodVisitor.visitInsn(ICONST_3);
+methodVisitor.visitIntInsn(NEWARRAY, T_LONG);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitLdcInsn(new Long(4L));
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitLdcInsn(new Long(2L));
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitLdcInsn(new Long(3L));
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitVarInsn(ASTORE, 4);
+```
+
+规律比较简单：
+
+1. `NEWARRAY`需要给出数组大小和原始类型，比如这里是`T_LONG`。
+2. 加入元素的命令：`DUP`、访问的下标、数值入栈、某个`ASTORE`命令。比如对于`Long`类型是`LASTORE`。
+
+`al`的字节码：
+
+```java
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitTypeInsn(ANEWARRAY, "[J");
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+
+
+methodVisitor.visitInsn(ICONST_3);
+methodVisitor.visitIntInsn(NEWARRAY, T_LONG);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitLdcInsn(new Long(114514L));
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitLdcInsn(new Long(2L));
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitVarInsn(LLOAD, 0);
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitInsn(AASTORE);
+
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_1);
+
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitIntInsn(NEWARRAY, T_LONG);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitLdcInsn(new Long(3L));
+methodVisitor.visitInsn(LASTORE);
+
+methodVisitor.visitInsn(AASTORE);
+
+methodVisitor.visitVarInsn(ASTORE, 2);
+```
+
+总结：
+
+1. 引用类型的数组和原始类型的数组不同，使用的是`ANEWARRAY`指令。比如这里的2维`long`数组就是1维`long`数组的数组。
+2. 数组是引用类型，所以对应的`ASTORE`指令是`AASTORE`。
+3. 可以推测`DUP`指令是将栈顶的数组引用地址复制一份压栈，所以总是`DUP`，不会是`DUP2`。进一步地，可以推测`ASTORE`类指令需要3个参数，从栈底到顶依次是**数组地址、被修改的下标和值**。
+
+最后再看下`aS`的字节码，验证上述结论的正确性。
+
+```java
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitTypeInsn(ANEWARRAY, "[Ljava/lang/String;");
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+
+
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitTypeInsn(ANEWARRAY, "java/lang/String");
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitLdcInsn("acmer");
+methodVisitor.visitInsn(AASTORE);
+
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitLdcInsn("ac");
+methodVisitor.visitInsn(AASTORE);
+
+methodVisitor.visitInsn(AASTORE);
+
+methodVisitor.visitVarInsn(ASTORE, 3);
+```
+
+看清规律后很容易就写出字节码生成部分的代码了。[`ArrayGenerator.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/bytecode_gen/expression/ArrayGenerator.java)
+
+```java
+public void generate(ArrayLiteral arrayLiteral) {
+    List<Expression> items = arrayLiteral.getItems();
+    // ArrayLiteral 构造函数保证 items 一定有至少一个元素
+    InsnUtil.generateIntInsn(mv, items.size());
+    Type elementType = items.get(0).getType();
+    if (elementType.getTypeClass().isPrimitive()) {
+        mv.visitIntInsn(NEWARRAY, elementType.getPrimitiveTypeOperand());
+    } else {
+        String internalName = elementType.getInternalName();
+        mv.visitTypeInsn(ANEWARRAY, internalName);
+    }
+
+    for (int i = 0; i < items.size(); i++) {
+        Expression item = items.get(i);
+        mv.visitInsn(DUP);
+        InsnUtil.generateIntInsn(mv, i);
+        item.accept(parent);
+        mv.visitInsn(item.getType().getStoreArrayItemOpcode());
+    }
+}
+```
+
+### 效果
+
+[单测用例：`src\test\java\com\example\hans_antlr4\array\ArrayLiteralTest.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/test/java/com/example/hans_antlr4/array/ArrayLiteralTest.java)
+
+[`hant_examples/array/arr_lit.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/array/arr_lit.hant)
+
+```hant
+var aS2 = [["a", `b${aI[0][0]}`], ["c", `${aL[1][2]}d`]]
+```
+
+的反编译效果：
+
+```java
+String[][] var10 = new String[][]{{"a", "b" + var0[0][0] + ""}, {"c", "" + var1[1][2] + "d"}};
+```
 
 ## 用`hant`写一些算法题吧！
 
 我为`hant`做了不少功能，如果不用它写几道算法题就太可惜了！
+
+### 力扣和其他OJ算法题的新过法
+
+首先写好代码，编译出`.class`文件，接着反编译出Java代码，稍作修改后提交到OJ。
 
 ### 经典算法：八皇后
 
@@ -5904,7 +6137,7 @@ TODO
 
 1. 因为还不支持`char`字面量，所以使用`bytes[i] != 120`这样的方法来和`'x'`比较。
 
-### lc924：并查集。
+### lc924：并查集
 
 题意：给你一个无向图表示软件的病毒感染关系，再给你`initial`数组表示初始的被感染软件。和被感染软件处于同一连通块的软件都会被感染。现在允许去掉`initial`的一个元素，求最小被感染软件数。注意：被去掉的元素仍然能被同一连通块的软件感染。
 
@@ -5917,6 +6150,17 @@ TODO
 [反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc924.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.java.txt)
 
 1. 在支持泛型后才能支持`Collections.min(Arrays.asList(a))`，目前只能用for循环来求数组最小值。
+2. 不支持`&&, ||, !`运算符还是挺痛的。
+
+### lc928：并查集，比lc924难
+
+题意：和lc924相同，只是删除`initial`的点后会把这个点和其他点的连边也删掉。
+
+思路：考虑`initial`以外的点构成的子图，每个`initial`中的点都和子图的某些连通块有连接。对于每个连通块，如果只有1个`initial`中的点和它有连接，那么删除这个点该连通块就能给这个点提供该连通块点的个数的贡献。所以遍历`initial`的每个点，算出所有连通块的总贡献，就得到每个点的收益，收益最大的点为所求。
+
+[`hant_examples/acm_and_leetcode/lc928.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc928.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.java.txt)
 
 ## 参考资料
 

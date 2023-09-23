@@ -1,0 +1,107 @@
+int find(int[] fa, int x) {
+    if (x == fa[x]) {
+        return x;
+    }
+    return fa[x] = find(fa, fa[x]);
+}
+
+int minMalwareSpread(int[][] G, int[] initial) {
+    var n = G.length;
+    var m = initial.length;
+    var inInitial = new boolean[n];
+    for (var i = 0; i < m; i += 1) {
+        inInitial[initial[i]] = true;
+    }
+    var fa = new int[n];
+    for i: 0 to n - 1 {
+        fa[i] = i;
+    }
+    for i: 0 to n - 1 {
+        for (var j = 0; j < i; j += 1) {
+            if (G[i][j] == 0) {
+                continue;
+            }
+            if (inInitial[i]) {
+                continue;
+            }
+            if (inInitial[j]) {
+                continue;
+            }
+            fa[find(fa, i)] = find(fa, j);
+        }
+    }
+    var cntMp = new boolean[n][n];
+    for i: 0 to m - 1 {
+        for j: 0 to n - 1 {
+            if (G[initial[i]][j] == 0) {
+                continue;
+            }
+            if (inInitial[j]) {
+                continue;
+            }
+            cntMp[find(fa, j)][initial[i]] = true;
+        }
+    }
+    var cnt = new int[n];
+    for i: 0 to n - 1 {
+        for j: 0 to n - 1 {
+            if (cntMp[i][j])
+                cnt[i] += 1;
+        }
+    }
+    var siz = new int[n];
+    for i: 0 to n - 1 {
+        if (inInitial[i]) {
+            continue;
+        }
+        siz[find(fa, i)] += 1;
+    }
+    var ans = new int[m];
+    for i: 0 to m - 1 {
+        var added = new boolean[n];
+        for j: 0 to n - 1 {
+            if (G[initial[i]][j] == 0) {
+                continue;
+            }
+            if (inInitial[j]) {
+                continue;
+            }
+            var faj = find(fa, j);
+            if (cnt[faj] == 1) {
+                if (added[faj]) {
+                    continue;
+                }
+                added[faj] = true;
+                ans[i] += siz[faj];
+            }
+        }
+    }
+    var mx = 0;
+    var ret = n;
+    for i: 0 to m - 1 {
+        if (mx <= ans[i]) {
+            if (mx == ans[i]) {
+                ret = java.lang.Math.min(ret, initial[i]);
+            } else {
+                ret = initial[i];
+            }
+            mx = ans[i];
+        }
+    }
+    return ret;
+}
+
+void main(string[] args) {
+    // 0 1 1 3 8
+    var gs = [
+        [[1,1,0],[1,1,0],[0,0,1]],
+        [[1,1,0],[1,1,1],[0,1,1]],
+        [[1,1,0,0],[1,1,1,0],[0,1,1,1],[0,0,1,1]],
+        [[1,0,0,0,0,0,0,0,1],[0,1,0,1,0,0,0,0,0],[0,0,1,1,0,1,0,0,0],[0,1,1,1,1,0,1,0,0],[0,0,0,1,1,1,0,0,0],[0,0,1,0,1,1,0,0,0],[0,0,0,1,0,0,1,1,0],[0,0,0,0,0,0,1,1,1],[1,0,0,0,0,0,0,1,1]],
+        [[1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,1],[0,0,1,0,0,0,0,0,0],[0,0,0,1,0,0,0,0,1],[0,0,0,0,1,0,1,1,1],[0,0,0,0,0,1,0,0,1],[0,0,0,0,1,0,1,1,0],[0,0,0,0,1,0,1,1,0],[0,1,0,1,1,1,0,0,1]]
+    ]
+    var initials = [[0,1], [0,1], [0,1], [3,7], [8,4,2,0]]
+    for (var i = 0; i < gs.length; i += 1) {
+        print minMalwareSpread(gs[i], initials[i])
+    }
+}

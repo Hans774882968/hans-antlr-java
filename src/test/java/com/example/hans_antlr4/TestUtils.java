@@ -75,6 +75,12 @@ public class TestUtils {
         return findPublicClassMainMethod(compilationUnit).getBody().getStatements();
     }
 
+    public static Function getMainMethodFromCode(String code) throws MainMethodNotFoundInPublicClass {
+        code = buildMainMethodCodeFromSnippet(code);
+        CompilationUnit compilationUnit = ParseEntry.parseFromCode(code);
+        return findPublicClassMainMethod(compilationUnit);
+    }
+
     public static MethodVisitor mockGenerateBytecode(List<Statement> statements) {
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);

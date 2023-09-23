@@ -29,7 +29,7 @@ public class ArrayLiteral extends Expression {
             kinds.add(item.getType());
         });
         if (kinds.size() > 1 || kinds.isEmpty()) {
-            throw new IllegalArrayLiteralException(items, sourceLine);
+            throw new IllegalArrayLiteralException(items, kinds.size(), sourceLine);
         }
         Type elementType = items.get(0).getType();
         if (elementType instanceof ArrayType) {

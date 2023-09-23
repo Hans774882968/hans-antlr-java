@@ -35,7 +35,6 @@ public class ArrayGenerator implements Opcodes {
         for (int i = 0; i < items.size(); i++) {
             Expression item = items.get(i);
             mv.visitInsn(DUP);
-            // mv.visitInsn(item.getType().getDupOpcode());
             InsnUtil.generateIntInsn(mv, i);
             item.accept(parent);
             mv.visitInsn(item.getType().getStoreArrayItemOpcode());

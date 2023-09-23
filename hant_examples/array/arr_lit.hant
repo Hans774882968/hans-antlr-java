@@ -1,4 +1,4 @@
-void arr1d() {
+arr1d() {
     print "----- arr1d -----"
     var aI = [2, 3, 4, 5]
     print `aI[0] = ${aI[0]}`
@@ -18,7 +18,7 @@ void arr1d() {
     print `aS2[0] + aS2[1] = ${`${aS2[0]}${aS2[1]}`}`
 }
 
-void arrMd() {
+arrMd() {
     print "----- arrMd -----"
     var aI = [[2, 3, 4], [5, 6, 7]]
     print `aI[0][0] = ${aI[0][0]}`
@@ -36,7 +36,7 @@ void arrMd() {
         }
     }
     print `sAD3 = ${sAD3}`
-    var aS2 = [["a", `b${aI[0][0]}`], ["c", `${aL[1][2]}d`]]
+    var aS2 = [["a", `b${aI[0][0]}`], ["c", `${aL[1][2]}d`, new java.lang.String(`e`)]]
     var totAS2 = new java.lang.String(``)
     for i: 0 to aS2.length - 1 {
         var aS2i = aS2[i]
@@ -47,7 +47,22 @@ void arrMd() {
     print `totAS2 = ${totAS2}`
 }
 
-void main(string[] args) {
+int[][] getArr2d() {
+    return [[4, 5, 6], [7, 8, 9]]
+}
+
+arrLitInStatementDemo() {
+    print "----- arrLitInStatementDemo -----"
+    print getArr2d()[0][0]
+    var tmpL = 10
+    print `tmpL = ${tmpL = [[3, 4, 5]][0][1]}`
+    print [1919810L][0]
+    var aD = [[2.3, 3.4]][0]
+    print `aD[1] = ${aD[1]}`
+}
+
+main(string[] args) {
     arr1d()
     arrMd()
+    arrLitInStatementDemo()
 }
