@@ -11,9 +11,10 @@ import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
+import com.example.hans_antlr4.domain.expression.reference.GlobalVarReference;
+import com.example.hans_antlr4.domain.expression.reference.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.statement.Statement;
 
@@ -103,6 +104,14 @@ public class ExpressionTreeProcessor {
     }
 
     public void processExpressionTree(VarReference varReference, Expression parent, Statement belongStatement) {
+        if (varReference == null) {
+            return;
+        }
+        varReference.setParent(parent);
+        varReference.setBelongStatement(belongStatement);
+    }
+
+    public void processExpressionTree(GlobalVarReference varReference, Expression parent, Statement belongStatement) {
         if (varReference == null) {
             return;
         }

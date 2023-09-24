@@ -1,0 +1,84 @@
+var vI = 123
+var vL = 0x3f3fL
+var vF = 2.3f
+var vD = java.lang.Math.PI
+var vBy = 0o10y
+var vB = true
+var vS1 = `${"hello"} ${"world"}`
+var vS2 = new java.lang.String("asm bytecode viewer")
+var aI = [[2, 3, 4], [5, 6, 7]]
+
+basicUsageDemo {
+    print `vI = ${vI}, vL = ${vL}, vF = ${vF}, vD = ${vD}`
+    print `vBy = ${vBy}, vB = ${vB}, vS1 = ${vS1}, vS2 = ${vS2}`
+    print `${vS1.length()} ${vS1.toUpperCase()}`
+
+    print `aI.length = ${aI.length}`
+    var tmpAI0 = aI[0]
+    print `aI[0].length = ${tmpAI0.length}`
+    var sAI = 0
+    for i: 0 to 1 for j: 0 to 2 sAI += aI[i][j]
+    print `sAI = ${sAI}`
+}
+
+void varShadowDemo() {
+    print "----- varShadowDemo -----"
+
+    var vI = 1919809
+    vI += 1
+    var vL = 50L
+    vL *= 2
+    var vF = 1.2f
+    var vD = java.lang.Math.E
+    print `vI = ${vI}, vL = ${vL}, vF = ${vF}, vD = ${vD}`
+
+    var vBy = 0o127y
+    var vB = false
+    var vS1 = `${"hello"}-${"world"}`
+    var vS2 = new java.lang.String("foo")
+    print `vBy = ${vBy}, vB = ${vB}, vS1 = ${vS1}, vS2 = ${vS2}`
+    print `${vS1.length()} ${vS1.toUpperCase()}`
+
+    var aI = [[12, 13, 14], [15, 16, 17]]
+    print `aI.length = ${aI.length}`
+    var sAI = 0
+    for i: 0 to 1 for j: 0 to 2 sAI += aI[i][j]
+    print `sAI = ${sAI}`
+
+    afterVarShadowDemo()
+}
+
+// 应该呈现原值
+afterVarShadowDemo() {
+    print "afterVarShadowDemo:"
+    print `vI = ${vI}, vL = ${vL}, vF = ${vF}, vD = ${vD}`
+    print `vBy = ${vBy}, vB = ${vB}, vS1 = ${vS1}, vS2 = ${vS2}`
+    print `${vS1.length()} ${vS1.toUpperCase()}`
+    var sAI = 0
+    for i: 0 to 1 for j: 0 to 2 sAI += aI[i][j]
+    print `sAI = ${sAI}`
+}
+
+modifyDemo() {
+    print "----- modifyDemo -----"
+    vI = 125
+    vL >>>= 4
+    vF *= 2
+    vD %= -3
+    print `vI = ${vI}, vL = ${vL}, vF = ${vF}, vD = ${vD}`
+    vBy |= 16L
+    vB = false
+    vS1 = "hello world!"
+    vS2 += "!!"
+    print `vBy = ${vBy}, vB = ${vB}, vS1 = ${vS1}, vS2 = ${vS2}`
+    aI = [[2, 3, 4], [5, 6, 8]]
+    print `aI.length = ${aI.length}, aI[1][2] = ${aI[1][2]}`
+    aI[1][2] = 0o337522
+    print `aI[1][2] = ${aI[1][2]}`
+}
+
+main(string[] args) {
+    basicUsageDemo()
+    varShadowDemo()
+    modifyDemo()
+}

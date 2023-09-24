@@ -32,10 +32,12 @@ import com.example.hans_antlr4.domain.expression.Subtraction;
 import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
 import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
+import com.example.hans_antlr4.domain.expression.reference.GlobalVarReference;
+import com.example.hans_antlr4.domain.expression.reference.Reference;
+import com.example.hans_antlr4.domain.expression.reference.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.Unary;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
@@ -44,6 +46,7 @@ import com.example.hans_antlr4.domain.global.ArithmeticSign;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
+import com.example.hans_antlr4.domain.scope.GlobalVariable;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.ArrayType;
@@ -133,7 +136,11 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
 
     private Class<?> getInitialOwnerClass(String[] identifiers, int findFieldStartIndex) {
         if (findFieldStartIndex == -1) {
-            return scope.getLocalVariable(identifiers[0]).getType().getTypeClass();
+            String possibleVarName = identifiers[0];
+            if (scope.localVariableExists(possibleVarName)) {
+                return scope.getLocalVariable(possibleVarName).getType().getTypeClass();
+            }
+            return scope.getGlobalVariable(possibleVarName).getType().getTypeClass();
         }
         String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
         try {
@@ -202,18 +209,27 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         }
 
         if (findFieldStartIndex == -1) {
-            LocalVariable localVariable = scope.getLocalVariable(identifiers[0]);
-            return new ClassFieldReference(localVariable, fieldReferenceRecords);
+            String possibleVarName = identifiers[0];
+            if (scope.localVariableExists(possibleVarName)) {
+                LocalVariable localVariable = scope.getLocalVariable(possibleVarName);
+                return new ClassFieldReference(localVariable, fieldReferenceRecords);
+            }
+            GlobalVariable globalVariable = scope.getGlobalVariable(possibleVarName);
+            return new ClassFieldReference(globalVariable, fieldReferenceRecords);
         }
         String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
         return new ClassFieldReference(classQualifiedName, fieldReferenceRecords);
     }
 
     @Override
-    public Expression visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
+    public Reference visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
         String varName = ctx.getText();
-        LocalVariable localVariable = scope.getLocalVariable(varName);
-        return new VarReference(varName, localVariable.getType());
+        if (scope.localVariableExists(varName)) {
+            LocalVariable localVariable = scope.getLocalVariable(varName);
+            return new VarReference(varName, localVariable.getType());
+        }
+        GlobalVariable globalVariable = scope.getGlobalVariable(varName);
+        return new GlobalVarReference(varName, globalVariable.getType());
     }
 
     @Override
@@ -421,10 +437,14 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         AssignmentSign assignmentSign = AssignmentSign.fromString(op);
         Expression expression = ctx.rightHandSide.accept(this);
         int sourceLine = ctx.AssignmentOperator.getLine();
-        if (leftHandSide instanceof VarReference) {
-            String varName = ((VarReference) leftHandSide).getVarName();
-            LocalVariable localVariable = scope.getLocalVariable(varName);
-            return new AssignmentExpression(localVariable, assignmentSign, expression, sourceLine);
+        if (leftHandSide instanceof Reference) {
+            String varName = ((Reference) leftHandSide).getVarName();
+            if (scope.localVariableExists(varName)) {
+                LocalVariable localVariable = scope.getLocalVariable(varName);
+                return new AssignmentExpression(localVariable, assignmentSign, expression, sourceLine);
+            }
+            GlobalVariable globalVariable = scope.getGlobalVariable(varName);
+            return new AssignmentExpression(globalVariable, assignmentSign, expression, sourceLine);
         }
         if (leftHandSide instanceof ClassFieldReference) {
             ClassFieldReference classFieldReference = (ClassFieldReference) leftHandSide;

@@ -9,12 +9,12 @@ import java.util.Objects;
 
 @Getter
 public class AssignmentLhs {
-    private LocalVariable localVariable;
+    private Variable variable;
     private ClassFieldReference classFieldReference;
     private ArrayAccess arrayAccess;
 
-    public AssignmentLhs(LocalVariable localVariable) {
-        this.localVariable = localVariable;
+    public AssignmentLhs(Variable variable) {
+        this.variable = variable;
     }
 
     public AssignmentLhs(ClassFieldReference classFieldReference) {
@@ -26,8 +26,8 @@ public class AssignmentLhs {
     }
 
     public Type getType() {
-        if (localVariable != null) {
-            return localVariable.getType();
+        if (variable != null) {
+            return variable.getType();
         }
         if (classFieldReference != null) {
             return classFieldReference.getType();
@@ -46,13 +46,13 @@ public class AssignmentLhs {
             return false;
         }
         AssignmentLhs assignmentLhs = (AssignmentLhs) o;
-        return Objects.equals(localVariable, assignmentLhs.localVariable)
+        return Objects.equals(variable, assignmentLhs.variable)
                 && Objects.equals(classFieldReference, assignmentLhs.classFieldReference)
                 && Objects.equals(arrayAccess, assignmentLhs.arrayAccess);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(localVariable, classFieldReference, arrayAccess);
+        return Objects.hash(variable, classFieldReference, arrayAccess);
     }
 }

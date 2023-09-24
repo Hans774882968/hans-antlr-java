@@ -2,9 +2,9 @@ boolean collide(int x1, int x2, int y1, int y2) {
     return java.lang.Math.abs(x1 - x2) == java.lang.Math.abs(y1 - y2)
 }
 
-void dfs(int dep, int n, int[] ans, int[] x, boolean[] vis) {
+void dfs(int dep, int n) {
     if dep >= n {
-        ans[0] += 1
+        ans += 1
         return
     }
     for i: 0 to n - 1 {
@@ -18,17 +18,22 @@ void dfs(int dep, int n, int[] ans, int[] x, boolean[] vis) {
                 break
             }
         }
-        if legal dfs(dep + 1, n, ans, x, vis)
+        if legal dfs(dep + 1, n)
         vis[i] = false
     }
 }
 
+var N = 20
+var ans = 0
+var x = new int[N]
+var vis = new boolean[N]
+
 void main(string[] args) {
     for N: 1 to 12 {
-        var ans = new int[1]
-        var x = new int[N]
-        var vis = new boolean[N]
-        dfs(0, N, ans, x, vis)
-        print ans[0] // 1 0 0 2 10 4 40 92 352 724 2680 14200 73712 365596
+        ans = 0
+        x = new int[N]
+        vis = new boolean[N]
+        dfs(0, N)
+        print ans // 1 0 0 2 10 4 40 92 352 724 2680 14200 73712 365596
     }
 }

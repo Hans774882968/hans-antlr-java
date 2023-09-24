@@ -8,7 +8,7 @@ import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.Pow;
 import com.example.hans_antlr4.domain.expression.Subtraction;
 import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.expression.VarReference;
+import com.example.hans_antlr4.domain.expression.reference.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.scope.LocalVariable;

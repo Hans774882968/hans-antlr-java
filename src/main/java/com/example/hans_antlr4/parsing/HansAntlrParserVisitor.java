@@ -23,13 +23,13 @@ public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	T visitCompilationUnit(HansAntlrParser.CompilationUnitContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link HansAntlrParser#functions}.
+	 * Visit a parse tree produced by {@link HansAntlrParser#globalVariable}.
 	 * 
 	 * @param ctx
 	 *            the parse tree
 	 * @return the visitor result
 	 */
-	T visitFunctions(HansAntlrParser.FunctionsContext ctx);
+	T visitGlobalVariable(HansAntlrParser.GlobalVariableContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link HansAntlrParser#function}.

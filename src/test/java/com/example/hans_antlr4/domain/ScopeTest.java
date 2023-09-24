@@ -14,8 +14,8 @@ import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
-import com.example.hans_antlr4.exception.LocalVariableNotFoundException;
 import com.example.hans_antlr4.exception.func.MethodSignatureNotFoundException;
+import com.example.hans_antlr4.exception.scope.LocalVariableNotFoundException;
 
 public class ScopeTest {
     @Test

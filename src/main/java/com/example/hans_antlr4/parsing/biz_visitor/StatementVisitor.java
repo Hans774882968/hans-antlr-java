@@ -8,6 +8,7 @@ import com.example.hans_antlr4.domain.expression.AssignmentExpression;
 import com.example.hans_antlr4.domain.expression.EmptyExpression;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.scope.GlobalVariable;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
@@ -128,6 +129,10 @@ public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement> {
         Statement iteratorVariableStatement = null;
         if (newScope.localVariableExists(iteratorVarName)) {
             LocalVariable iteratorVar = newScope.getLocalVariable(iteratorVarName);
+            iteratorVariableStatement = new ExpressionStatement(
+                    new AssignmentExpression(iteratorVar, AssignmentSign.ASSIGN, startExpr, sourceLine));
+        } else if (newScope.globalVariableExists(iteratorVarName)) {
+            GlobalVariable iteratorVar = newScope.getGlobalVariable(iteratorVarName);
             iteratorVariableStatement = new ExpressionStatement(
                     new AssignmentExpression(iteratorVar, AssignmentSign.ASSIGN, startExpr, sourceLine));
         } else {

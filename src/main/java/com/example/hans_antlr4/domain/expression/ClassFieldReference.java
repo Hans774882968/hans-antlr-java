@@ -3,7 +3,7 @@ package com.example.hans_antlr4.domain.expression;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
-import com.example.hans_antlr4.domain.scope.LocalVariable;
+import com.example.hans_antlr4.domain.scope.Variable;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -16,7 +16,7 @@ import java.util.Objects;
 @Getter
 public class ClassFieldReference extends Expression {
     private boolean startsWithClass;
-    private LocalVariable startVar; // 仅 startsWithClass = false 时有
+    private Variable startVar; // 仅 startsWithClass = false 时有
     private List<FieldReferenceRecord> fieldReferenceRecords;
 
     public ClassFieldReference(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
@@ -25,7 +25,7 @@ public class ClassFieldReference extends Expression {
         this.fieldReferenceRecords = fieldReferenceRecords;
     }
 
-    public ClassFieldReference(LocalVariable startVar, List<FieldReferenceRecord> fieldReferenceRecords) {
+    public ClassFieldReference(Variable startVar, List<FieldReferenceRecord> fieldReferenceRecords) {
         super(getReturnTypeInInitOrReportError(fieldReferenceRecords), null, null);
         this.startsWithClass = false;
         this.startVar = startVar;

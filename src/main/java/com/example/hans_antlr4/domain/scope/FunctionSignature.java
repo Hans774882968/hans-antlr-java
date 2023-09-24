@@ -22,7 +22,7 @@ public class FunctionSignature {
         return Collections.unmodifiableList(parameters);
     }
 
-    public boolean matches(String methodName, List<Type> argTypes, int sourceLine) {
+    public boolean matches(String methodName, List<Type> argTypes) {
         if (!name.equals(methodName)) {
             return false;
         }

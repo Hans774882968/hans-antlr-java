@@ -1,22 +1,16 @@
-package com.example.hans_antlr4.domain.expression;
+package com.example.hans_antlr4.domain.expression.reference;
+
+import java.util.Objects;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
+import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.Type;
 
-import lombok.Getter;
-import lombok.Setter;
-import java.util.Objects;
-
-@Setter
-@Getter
-public class VarReference extends Expression {
-    private String varName;
-
-    public VarReference(String varName, Type type) {
-        super(type, null, null);
-        this.varName = varName;
+public class GlobalVarReference extends Reference {
+    public GlobalVarReference(String varName, Type type) {
+        super(varName, type);
     }
 
     @Override
@@ -36,15 +30,16 @@ public class VarReference extends Expression {
     public boolean equals(Object o) {
         if (o == this)
             return true;
-        if (!(o instanceof VarReference)) {
+        if (!(o instanceof GlobalVarReference)) {
             return false;
         }
-        VarReference varReference = (VarReference) o;
-        return Objects.equals(getType(), varReference.getType()) && Objects.equals(varName, varReference.varName);
+        GlobalVarReference globalVarReference = (GlobalVarReference) o;
+        return Objects.equals(getType(), globalVarReference.getType())
+                && Objects.equals(getVarName(), globalVarReference.getVarName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getType(), varName);
+        return Objects.hash(getType(), getVarName());
     }
 }

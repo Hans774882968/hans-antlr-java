@@ -1,4 +1,4 @@
-void types() {
+void types {
     print "----- types -----"
     var a1 = `a1 = abc${1}def`
     print a1
@@ -30,7 +30,7 @@ void types() {
     print a9
 }
 
-void cornerCases() {
+cornerCases() {
     print "----- cornerCases -----"
     var a1 = ``
     print `a1 = "${a1}"`
@@ -63,7 +63,7 @@ string concatJsonLine(int v) {
     return `"age'${v}'": ${v << 2}`
 }
 
-void jsonDemo() {
+jsonDemo {
     print "----- jsonDemo -----"
     var s = `{`
     var n = 3

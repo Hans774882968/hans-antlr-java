@@ -6107,6 +6107,69 @@ var aS2 = [["a", `b${aI[0][0]}`], ["c", `${aL[1][2]}d`]]
 String[][] var10 = new String[][]{{"a", "b" + var0[0][0] + ""}, {"c", "" + var1[1][2] + "d"}};
 ```
 
+## 支持“全局变量”
+
+在《Part7-支持方法：期望的`hant`程序结构》一节，我们讨论过`hant`最终期望的结构。这一节要实现的全局变量仅仅是隐藏的`public class`的静态字段，之后要支持的自定义类并不能访问到这些“全局变量”。
+
+文法修改（`src\main\java\com\example\hans_antlr4\parsing\HansAntlrParser.g4`）：
+
+```g4
+compilationUnit: (function | globalVariable)* EOF;
+globalVariable: variable;
+```
+
+### 支持“全局变量”定义
+
+TODO
+
+效果：
+
+```hant
+var aI = 1
+var aL = 0x3f3fL
+var aF = 2.3f
+var aD = java.lang.Math.PI
+var aBy = 0o10y
+var aB = true
+var aS1 = `${"hello"} ${"world"}`
+var aS2 = new java.lang.String("asm bytecode viewer")
+
+main(string[] args) {
+    print 1
+}
+```
+
+的反编译效果：
+
+```java
+public class global_var {
+    public static int aI = 1;
+    public static long aL = 16191L;
+    public static float aF = 2.3F;
+    public static double aD;
+    public static byte aBy;
+    public static boolean aB;
+    public static String aS1;
+    public static String aS2;
+
+    public static void main(String[] var0) {
+        System.out.println(1);
+    }
+
+    static {
+        aD = Math.PI;
+        aBy = 8;
+        aB = (boolean)1;
+        aS1 = "" + "hello" + " " + "world" + "";
+        aS2 = new String("asm bytecode viewer");
+    }
+}
+```
+
+### 支持“全局变量”引用
+
+TODO
+
 ## 用`hant`写一些算法题吧！
 
 我为`hant`做了不少功能，如果不用它写几道算法题就太可惜了！

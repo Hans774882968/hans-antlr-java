@@ -14,6 +14,7 @@ import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.TestUtils;
 
+// TODO: 这两个 case 失败了，之后再看看原因
 public class BooleanRelevantFunctionsTest implements Opcodes {
     @Test
     public void returnBooleanFunction() {

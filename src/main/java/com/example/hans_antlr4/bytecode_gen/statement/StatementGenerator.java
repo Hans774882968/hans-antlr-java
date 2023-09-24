@@ -7,6 +7,7 @@ import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.Break;
 import com.example.hans_antlr4.domain.statement.Continue;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
+import com.example.hans_antlr4.domain.statement.GlobalVariableDeclaration;
 import com.example.hans_antlr4.domain.statement.IfStatement;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
@@ -71,5 +72,9 @@ public class StatementGenerator {
 
     public void generate(ExpressionStatement expressionStatement) {
         new ExpressionStatementGenerator(mv, scope).generate(expressionStatement);
+    }
+
+    public void generate(GlobalVariableDeclaration globalVariableDeclaration) {
+        new GlobalVariableDeclarationGenerator(mv, scope).generate(globalVariableDeclaration);
     }
 }

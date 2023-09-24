@@ -34,7 +34,12 @@ public class AssignmentExpressionGenerator implements Opcodes {
 
     private void generateCastToOtherPriorityTypeInsn(Type type, Type targetType) {
         if (type.isNumericTypes() && targetType.isNumericTypes()) {
-            mv.visitInsn(type.getToOtherNumericTypeOpcode(targetType));
+            if (type == BuiltInType.LONG && targetType == BuiltInType.BYTE) {
+                mv.visitInsn(L2I);
+                mv.visitInsn(I2B);
+            } else {
+                mv.visitInsn(type.getToOtherNumericTypeOpcode(targetType));
+            }
         }
     }
 
@@ -68,8 +73,8 @@ public class AssignmentExpressionGenerator implements Opcodes {
                 mv.visitInsn(arrayAccess.getType().getLoadArrayItemOpcode());
             }
             if (currentAssignmentExpression.lhsIsVariable()) {
-                int variableIndex = assignmentUtil.getVariableIndexByAssignmentExpression(currentAssignmentExpression);
-                mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
+                assignmentUtil.generateLoadVariableInsn(
+                        mv, currentAssignmentExpression, lhsType);
             }
             if (sign == AssignmentSign.POW) {
                 mv.visitInsn(lhsType.getToDoubleOpcode());
@@ -172,8 +177,8 @@ public class AssignmentExpressionGenerator implements Opcodes {
             }
 
             if (currentAssignmentExpression.lhsIsVariable()) {
-                int variableIndex = assignmentUtil.getVariableIndexByAssignmentExpression(currentAssignmentExpression);
-                mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
+                assignmentUtil.generateModifyVariableInsn(
+                        mv, currentAssignmentExpression, lhsType);
             } else if (currentAssignmentExpression.lhsIsArrayAccess()) {
                 mv.visitInsn(lhsType.getStoreArrayItemOpcode());
             }

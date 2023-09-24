@@ -37,7 +37,7 @@ public class HansAntlrParserBaseVisitor<T> extends AbstractParseTreeVisitor<T> i
 	 * </p>
 	 */
 	@Override
-	public T visitFunctions(HansAntlrParser.FunctionsContext ctx) {
+	public T visitGlobalVariable(HansAntlrParser.GlobalVariableContext ctx) {
 		return visitChildren(ctx);
 	}
 

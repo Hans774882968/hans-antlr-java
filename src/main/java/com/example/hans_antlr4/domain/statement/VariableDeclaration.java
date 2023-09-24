@@ -5,18 +5,15 @@ import com.example.hans_antlr4.data_processor.CheckOutsideLoopBreakContinueProce
 import com.example.hans_antlr4.data_processor.StatementTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import java.util.Objects;
 
+@AllArgsConstructor
 @Getter
 public class VariableDeclaration extends Statement {
     private String name;
     private Expression expression;
-
-    public VariableDeclaration(String name, Expression expression) {
-        this.name = name;
-        this.expression = expression;
-    }
 
     @Override
     public void accept(StatementGenerator generator) {

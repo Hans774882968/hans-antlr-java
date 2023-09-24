@@ -27,15 +27,18 @@ import com.example.hans_antlr4.domain.expression.Subtraction;
 import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.expression.VarReference;
 import com.example.hans_antlr4.domain.expression.Xor;
 import com.example.hans_antlr4.domain.expression.call.ConstructorCall;
 import com.example.hans_antlr4.domain.expression.call.FunctionCall;
+import com.example.hans_antlr4.domain.expression.reference.GlobalVarReference;
+import com.example.hans_antlr4.domain.expression.reference.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
+import com.example.hans_antlr4.domain.scope.GlobalVariable;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
+import com.example.hans_antlr4.domain.scope.Variable;
 import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.ClassType;
@@ -76,12 +79,29 @@ public class ExpressionGenerator implements Opcodes {
         mv.visitVarInsn(type.getLoadVariableOpcode(), index);
     }
 
+    public void generate(GlobalVarReference globalVarReference) {
+        String varName = globalVarReference.getVarName();
+        String descriptor = globalVarReference.getType().getDescriptor();
+        String publicClassName = scope.getMetaData().getClassName();
+        mv.visitFieldInsn(GETSTATIC, publicClassName, varName, descriptor);
+    }
+
     public void generate(ClassFieldReference classFieldReference) {
         if (!classFieldReference.isStartsWithClass()) {
-            LocalVariable localVariable = classFieldReference.getStartVar();
-            int index = scope.getLocalVariableIndex(localVariable.getVarName());
-            int opcode = localVariable.getType().getLoadVariableOpcode();
-            mv.visitVarInsn(opcode, index);
+            Variable variable = classFieldReference.getStartVar();
+            if (variable instanceof LocalVariable) {
+                LocalVariable localVariable = (LocalVariable) variable;
+                int index = scope.getLocalVariableIndex(localVariable.getVarName());
+                int opcode = localVariable.getType().getLoadVariableOpcode();
+                mv.visitVarInsn(opcode, index);
+            }
+            if (variable instanceof GlobalVariable) {
+                String publicClassName = scope.getMetaData().getClassName();
+                GlobalVariable globalVariable = (GlobalVariable) variable;
+                String varName = globalVariable.getVarName();
+                String descriptor = globalVariable.getType().getDescriptor();
+                mv.visitFieldInsn(GETSTATIC, publicClassName, varName, descriptor);
+            }
         }
         classFieldReference.getFieldReferenceRecords().forEach(fieldReferenceRecord -> {
             Type owner = fieldReferenceRecord.getOwner();

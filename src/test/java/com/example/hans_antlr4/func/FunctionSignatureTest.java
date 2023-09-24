@@ -18,7 +18,7 @@ public class FunctionSignatureTest {
         List<Parameter> parameters = Arrays.asList(new Parameter(new ArrayType(BuiltInType.LONG, 2), "a"));
         FunctionSignature sign = new FunctionSignature(true, "f", parameters, BuiltInType.LONG);
         List<Type> argTypes = Arrays.asList(new ArrayType(BuiltInType.LONG, 2));
-        Assert.assertTrue(sign.matches("f", argTypes, 10));
+        Assert.assertTrue(sign.matches("f", argTypes));
     }
 
     @Test
@@ -26,6 +26,6 @@ public class FunctionSignatureTest {
         List<Parameter> parameters = Arrays.asList(new Parameter(new ArrayType(BuiltInType.LONG, 2), "a"));
         FunctionSignature sign = new FunctionSignature(true, "f", parameters, BuiltInType.LONG);
         List<Type> argTypes = Arrays.asList(new ArrayType(BuiltInType.LONG, 2));
-        Assert.assertTrue(sign.matches("f", argTypes, 10));
+        Assert.assertTrue(sign.matches("f", argTypes));
     }
 }

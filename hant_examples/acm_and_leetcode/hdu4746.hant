@@ -10,16 +10,16 @@ showArr2d(int[][] a, int d1, int d2) {
     }
 }
 
-initPrimes(int lim) {
-    var N = lim + 5
-    var D = 19
-    var vis = new boolean[N]
-    var primes = new int[N]
-    var pl = 0
-    var pf = new int[N]
-    var mu = new int[N]
-    var sum = new int[19][N]
+var N = 500005
+var D = 19
+var vis = new boolean[N]
+var primes = new int[N]
+var pl = 0
+var pf = new int[N]
+var mu = new int[N]
+var sum = new int[19][N]
 
+initPrimes(int lim) {
     vis[1] = true; pf[1] = 0; mu[1] = 1;
     for i: 2 to lim {
         if (vis[i] == false) {
@@ -37,9 +37,6 @@ initPrimes(int lim) {
             mu[i * p] = -mu[i];
         }
     }
-    showArr(primes)
-    showArr(mu)
-    showArr(pf)
     for x: 0 to D - 1 {
         for i: 1 to lim {
             if (pf[i] != x) continue;
@@ -53,19 +50,48 @@ initPrimes(int lim) {
     for i: 1 to lim {
         for x: 1 to D - 1 sum[x][i] += sum[x - 1][i];
     }
-    print "sum:"
-    showArr2d(sum, 2, 10)
 }
 
+/*
+111
+10 10 0
+10 10 1
+10 10 2
+10 10 3
+10 10 500000
+500000 500000 18
+500000 500000 17
+128971 438912 12
+428971 238912 14
+
+// 63 93 99 100 100 250000000000 249999999998 56606917976 102486319391
+*/
+
 main(string[] args) {
-    // TODO: 目前只写了预处理部分
-    initPrimes(100000)
+    initPrimes(N - 5)
+
+    if false {
+        showArr(primes)
+        showArr(mu)
+        showArr(pf)
+        print "sum:"
+        showArr2d(sum, 2, 10)
+    }
+
     var sc = new java.util.Scanner(java.lang.System.in)
     var T = sc.nextInt()
     for cas: 1 to T {
         var n = sc.nextInt()
         var m = sc.nextInt()
         var k = sc.nextInt()
-        print `${n} ${m} ${k}`
+        k = java.lang.Math.min(k, D - 1);
+        var lim = java.lang.Math.min(n, m);
+        var ans = 0L;
+        for (var L = 1; L <= lim;) {
+            var R = java.lang.Math.min(n / (n / L), m / (m / L));
+            ans += 1L * (n / L) * (m / L) * (sum[k][R] - sum[k][L - 1]);
+            L = R + 1;
+        }
+        print ans
     }
 }

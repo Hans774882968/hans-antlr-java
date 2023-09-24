@@ -15,7 +15,7 @@ import com.example.hans_antlr4.domain.expression.Shr;
 import com.example.hans_antlr4.domain.expression.Subtraction;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
-import com.example.hans_antlr4.domain.expression.VarReference;
+import com.example.hans_antlr4.domain.expression.reference.VarReference;
 import com.example.hans_antlr4.domain.expression.unary.UnaryNegative;
 import com.example.hans_antlr4.domain.expression.unary.UnaryPositive;
 import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;

@@ -9,11 +9,14 @@ package com.example.hans_antlr4.parsing;
 }
 
 // compilationUnit: root rule
-compilationUnit: functions EOF;
+compilationUnit: (function | globalVariable)* EOF;
 
-functions: function*;
+globalVariable: variable;
+
 function: functionDeclaration block;
-functionDeclaration: (type)? functionName OpenParen functionParameterList? CloseParen;
+functionDeclaration: (type)? functionName (
+		OpenParen functionParameterList? CloseParen
+	)?;
 functionName: Identifier;
 functionParameterList:
 	functionParameter (Comma functionParameter)*;

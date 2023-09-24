@@ -8,24 +8,31 @@ import java.util.Optional;
 import com.example.hans_antlr4.domain.global.MetaData;
 import com.example.hans_antlr4.domain.type.ClassType;
 import com.example.hans_antlr4.domain.type.Type;
-import com.example.hans_antlr4.exception.LocalVariableNotFoundException;
 import com.example.hans_antlr4.exception.func.MethodSignatureNotFoundException;
+import com.example.hans_antlr4.exception.scope.GlobalVariableNotFoundException;
+import com.example.hans_antlr4.exception.scope.LocalVariableNotFoundException;
 
+import lombok.Getter;
+
+@Getter
 public class Scope {
     private MetaData metaData;
     private List<LocalVariable> localVariables;
     private List<FunctionSignature> functionSignatures;
+    private List<GlobalVariable> globalVariables;
 
     public Scope(MetaData metaData) {
         this.metaData = metaData;
         this.localVariables = new ArrayList<>();
         this.functionSignatures = new ArrayList<>();
+        this.globalVariables = new ArrayList<>();
     }
 
     public Scope(Scope scope) {
         this.metaData = scope.metaData;
         this.localVariables = new ArrayList<>(scope.localVariables);
         this.functionSignatures = new ArrayList<>(scope.functionSignatures);
+        this.globalVariables = new ArrayList<>(scope.globalVariables);
     }
 
     public void addLocalVariable(LocalVariable localVariable) {
@@ -35,6 +42,16 @@ public class Scope {
     public void addLocalVariables(LocalVariable... localVariableList) {
         for (LocalVariable localVariable : localVariableList) {
             addLocalVariable(localVariable);
+        }
+    }
+
+    public void addGlobalVariable(GlobalVariable globalVariable) {
+        globalVariables.add(globalVariable);
+    }
+
+    public void addGlobalVariables(GlobalVariable... globalVariableList) {
+        for (GlobalVariable globalVariable : globalVariableList) {
+            addGlobalVariable(globalVariable);
         }
     }
 
@@ -63,6 +80,18 @@ public class Scope {
                 .anyMatch(variable -> variable.getVarName().equals(varName));
     }
 
+    public GlobalVariable getGlobalVariable(String varName) {
+        return globalVariables.stream()
+                .filter(variable -> variable.getVarName().equals(varName))
+                .reduce((result, item) -> item)
+                .orElseThrow(() -> new GlobalVariableNotFoundException(this, varName));
+    }
+
+    public boolean globalVariableExists(String varName) {
+        return globalVariables.stream()
+                .anyMatch(variable -> variable.getVarName().equals(varName));
+    }
+
     public String getClassName() {
         return metaData.getClassName();
     }
@@ -79,7 +108,7 @@ public class Scope {
     // 支持重载功能
     public FunctionSignature getMethodCallSignature(String methodName, List<Type> argTypes, int sourceLine) {
         return functionSignatures.stream()
-                .filter(signature -> signature.matches(methodName, argTypes, sourceLine))
+                .filter(signature -> signature.matches(methodName, argTypes))
                 .findFirst()
                 .orElseThrow(() -> new MethodSignatureNotFoundException(this, methodName, sourceLine));
     }

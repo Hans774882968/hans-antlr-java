@@ -32,6 +32,16 @@ void byteDemo() {
         print \n y; print \n " "
     }
     print ""
+
+    var tmpBy = 0b1000y
+    tmpBy |= 16
+    print `tmpBy = ${tmpBy}` // 24
+    tmpBy = 8y
+    tmpBy ^= 16L
+    print `tmpBy = ${tmpBy}` // 24
+    tmpBy = 10y
+    tmpBy &= 8L
+    print `tmpBy = ${tmpBy}` // 8
 }
 
 void main(string[] args) {

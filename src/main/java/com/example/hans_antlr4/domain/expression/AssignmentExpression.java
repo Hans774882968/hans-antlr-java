@@ -4,7 +4,7 @@ import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
 import com.example.hans_antlr4.domain.scope.AssignmentLhs;
-import com.example.hans_antlr4.domain.scope.LocalVariable;
+import com.example.hans_antlr4.domain.scope.Variable;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.Type;
@@ -23,7 +23,7 @@ public class AssignmentExpression extends Expression {
 
     // AssignmentExpression 的类型为 LHS 类型，计算时左右侧入栈顶并转为 max 类型，计算完毕后把 max 类型转为 LHS 类型再赋值
     public AssignmentExpression(
-            LocalVariable variable,
+            Variable variable,
             AssignmentSign sign,
             Expression expression,
             int sourceLine) {
@@ -70,7 +70,7 @@ public class AssignmentExpression extends Expression {
     }
 
     public boolean lhsIsVariable() {
-        return lhs.getLocalVariable() != null;
+        return lhs.getVariable() != null;
     }
 
     public boolean lhsIsClassFieldReference() {
@@ -81,8 +81,8 @@ public class AssignmentExpression extends Expression {
         return lhs.getArrayAccess() != null;
     }
 
-    public LocalVariable getLhsVariable() {
-        return lhs.getLocalVariable();
+    public Variable getLhsVariable() {
+        return lhs.getVariable();
     }
 
     public ClassFieldReference getLhsClassFieldReference() {
