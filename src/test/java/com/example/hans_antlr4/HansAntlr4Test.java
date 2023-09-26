@@ -3,9 +3,9 @@ package com.example.hans_antlr4;
 import org.junit.Assert;
 import org.junit.Test;
 
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;

@@ -1712,10 +1712,12 @@ public class TestLookAtBytecode {
 ```xml
 <dependency>
     <groupId>org.mockito</groupId>
-    <artifactId>mockito-all</artifactId>
-    <version>2.0.2-beta</version>
+    <artifactId>mockito-core</artifactId>
+    <version>5.5.0</version>
 </dependency>
 ```
+
+注意，根据[参考链接13](https://www.baeldung.com/mockito-core-vs-mockito-all)，依赖应该采用`mockito-core`而不是`mockito-all`。
 
 顺便把`junit`升级到最新，以解决GitHub指出的安全漏洞：
 
@@ -6120,6 +6122,87 @@ globalVariable: variable;
 
 ### 支持“全局变量”定义
 
+写一段Java代码：
+
+```java
+public class Main {
+    public static int len = 3114514;
+    public static long len2 = len + 1;
+
+    static void foo0() {
+        ++len2;
+        System.out.println(len2);
+        len = 4;
+        int ww = len;
+        ww -= len += 2;
+    }
+}
+```
+
+用IDEA ASM Bytecode Viewer插件查看字节码。字段定义相关代码如下：
+
+```java
+FieldVisitor fieldVisitor;
+{
+    fieldVisitor = classWriter.visitField(ACC_PUBLIC | ACC_STATIC, "len", "I", null, null);
+    fieldVisitor.visitEnd();
+}
+{
+    fieldVisitor = classWriter.visitField(ACC_PUBLIC | ACC_STATIC, "len2", "J", null, null);
+    fieldVisitor.visitEnd();
+}
+
+methodVisitor = classWriter.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
+
+methodVisitor.visitLdcInsn(new Integer(3114514));
+methodVisitor.visitFieldInsn(PUTSTATIC, "Main", "len", "I");
+
+methodVisitor.visitFieldInsn(GETSTATIC, "Main", "len", "I");
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitInsn(IADD);
+methodVisitor.visitInsn(I2L);
+methodVisitor.visitFieldInsn(PUTSTATIC, "Main", "len2", "J");
+```
+
+由此可知：
+
+1. 第一段代码的功能是定义字段，第二段代码的功能是字段初始化。初始化需要在`<clinit>`方法完成，这个方法在Java中体现为`static`块，在后文“效果”部分也可以看到反编译出的代码存在`static`块。主要命令是`GETSTATIC`和`PUTSTATIC`，所以数据结构需要记录变量名、类型。上述`Main`是`public class name`，可以通过Scope的`metadata`属性拿到。
+2. 显然我们需要重构Visitor和`bytecode_gen`部分的入口。字段定义部分的代码和`<clinit>`方法的定义代码执行的先后顺序无关紧要，如果前者不存在则会在运行时报错`Exception in thread "main" java.lang.NoSuchFieldError: vI1`。
+
+引入`GlobalVariableDeclaration`，它是`VariableDeclaration`的子类：
+
+```java
+public class GlobalVariableDeclaration extends VariableDeclaration {
+    public GlobalVariableDeclaration(String name, Expression expression) {
+        super(name, expression);
+    }
+
+    @Override
+    public void accept(StatementGenerator generator) {
+        generator.generate(this);
+    }
+}
+```
+
+引入`GlobalVariable`和`LocalVariable`做出区分，并给两者定义一个共同父类`Variable`：
+
+```java
+@AllArgsConstructor
+@Getter
+public abstract class Variable {
+    private String varName;
+    private Type type;
+}
+
+@Getter
+public class GlobalVariable extends Variable {
+    public GlobalVariable(String varName, Type type) {
+        super(varName, type);
+    }
+    // equals hashCode 省略
+}
+```
+
 TODO
 
 效果：
@@ -6169,6 +6252,21 @@ public class global_var {
 ### 支持“全局变量”引用
 
 TODO
+
+Visitor部分。首先是`VarReference`，注意存在同名现象时优先返回局部变量，以实现变量Shadow效果。
+
+```java
+@Override
+public Reference visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
+    String varName = ctx.getText();
+    if (scope.localVariableExists(varName)) {
+        LocalVariable localVariable = scope.getLocalVariable(varName);
+        return new VarReference(varName, localVariable.getType());
+    }
+    GlobalVariable globalVariable = scope.getGlobalVariable(varName);
+    return new GlobalVarReference(varName, globalVariable.getType());
+}
+```
 
 ## 用`hant`写一些算法题吧！
 
@@ -6225,6 +6323,12 @@ TODO
 
 [反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc928.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.java.txt)
 
+### hdu4746：莫比乌斯反演+交换求和顺序+预处理
+
+[我21年写的题解](https://blog.csdn.net/hans774882968/article/details/117399861)
+
+[`hant_examples/acm_and_leetcode/hdu4746.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/hdu4746.hant)
+
 ## 参考资料
 
 1. antlr4简明教程：https://wizardforcel.gitbooks.io/antlr4-short-course/content/getting-started.html
@@ -6239,3 +6343,4 @@ TODO
 10. JVM官方文档，方法描述符：https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.3.3
 11. 如何用antlr实现模板字符串：https://stackoverflow.com/questions/55727031/antlr-grammar-allow-whitespace-matching-only-in-template-string
 12. 引入`nesting`变量解决`calling popMode on an empty stack`的问题：https://stackoverflow.com/questions/53504903/parse-string-antlr
+13. `mockito-core`和`mockito-all`的区别：https://www.baeldung.com/mockito-core-vs-mockito-all

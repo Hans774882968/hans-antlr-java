@@ -7,7 +7,7 @@ import org.mockito.InOrder;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 
 import com.example.hans_antlr4.TestUtils;
@@ -20,7 +20,7 @@ import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
 public class AssignmentIntTest implements Opcodes {
     @Test
-    public void assignmentIntTest1() throws MainMethodNotFoundInPublicClass {
+    public void assignmentToIntTest1() throws MainMethodNotFoundInPublicClass {
         List<Statement> statements = TestUtils.getStatementsFromCode(
                 "var x = 1\nvar y = 2\ny = (x += 20) * (y += y = (x &= 40))");
         Scope scope = new Scope(new MetaData(null));

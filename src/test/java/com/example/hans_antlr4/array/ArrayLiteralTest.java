@@ -1,6 +1,6 @@
 package com.example.hans_antlr4.array;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 

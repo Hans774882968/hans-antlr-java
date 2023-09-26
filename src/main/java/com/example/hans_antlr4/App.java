@@ -70,8 +70,7 @@ public class App {
         String publicClassName = StringUtils.remove(fileName, ".hant");
         CompilationUnit compilationUnit = null;
         try {
-            ParseEntry.publicClassName = publicClassName;
-            compilationUnit = ParseEntry.parseFromFilePath(fileAbsolutePath);
+            compilationUnit = ParseEntry.parseFromFilePath(fileAbsolutePath, publicClassName);
         } catch (IOException e) {
             e.printStackTrace();
             return;

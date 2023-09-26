@@ -17,7 +17,14 @@ import lombok.Data;
 public class CompilationUnit implements Opcodes {
     private List<Function> functions;
 
-    private void generateGlobalVariableBytecode(ClassWriter cw) {
+    public ClassWriter createClassWriter(String publicClassName) {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        // version, access, name, signature, base class, interfaces
+        cw.visit(52, ACC_PUBLIC + ACC_SUPER, publicClassName, null, "java/lang/Object", null);
+        return cw;
+    }
+
+    public void generateGlobalVariableBytecode(ClassWriter cw) {
         functions.stream()
                 .filter(func -> func.getFunctionSignature().getName().equals("<clinit>"))
                 .findFirst()
@@ -34,9 +41,7 @@ public class CompilationUnit implements Opcodes {
     }
 
     public byte[] generateBytecode(String publicClassName) {
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        // version, access, name, signature, base class, interfaces
-        cw.visit(52, ACC_PUBLIC + ACC_SUPER, publicClassName, null, "java/lang/Object", null);
+        ClassWriter cw = createClassWriter(publicClassName);
 
         generateGlobalVariableBytecode(cw);
 

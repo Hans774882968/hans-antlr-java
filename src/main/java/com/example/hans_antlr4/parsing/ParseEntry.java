@@ -10,24 +10,24 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.data_processor.ProcessorEntry;
 import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
+import com.example.hans_antlr4.utils.Const;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ParseEntry {
-    public static String publicClassName;
-
-    public static CompilationUnit parseFromFilePath(String fileAbsolutePath) throws IOException {
+    public static CompilationUnit parseFromFilePath(
+            String fileAbsolutePath, String publicClassName) throws IOException {
         CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
-        return parse(charStream);
+        return parse(charStream, publicClassName);
     }
 
     public static CompilationUnit parseFromCode(String code) {
         CharStream charStream = CharStreams.fromString(code);
-        return parse(charStream);
+        return parse(charStream, Const.mockPublicClass);
     }
 
-    private static CompilationUnit parse(CharStream charStream) {
+    private static CompilationUnit parse(CharStream charStream, String publicClassName) {
         HansAntlrLexer lexer = new HansAntlrLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);

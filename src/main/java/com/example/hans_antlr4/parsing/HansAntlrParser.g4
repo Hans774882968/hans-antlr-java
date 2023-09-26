@@ -11,7 +11,7 @@ package com.example.hans_antlr4.parsing;
 // compilationUnit: root rule
 compilationUnit: (function | globalVariable)* EOF;
 
-globalVariable: variable;
+globalVariable: variable SemiColon?;
 
 function: functionDeclaration block;
 functionDeclaration: (type)? functionName (

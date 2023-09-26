@@ -1,0 +1,15 @@
+var vI1 = 124
+var vI2 = vI1 >> 1
+var vD1 = 1.2 ** 2
+var vD2 = java.lang.Math.sqrt(vD1)
+var vS1 = "acm"
+var vS2 = `${vS1}er`
+var vS3 = new java.lang.String(vS2)
+var aB1 = [true, false]
+var aB2 = [aB1]
+
+main(string[] args) {
+    print `vI2 = ${vI2} vD1 = ${vD1} vD2 = ${vD2}`
+    print `vS2 = ${vS2} vS3 = ${vS3}`
+    print `aB2[0][0] = ${aB2[0][0]}`
+}

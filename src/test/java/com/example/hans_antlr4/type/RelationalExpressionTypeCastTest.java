@@ -1,7 +1,7 @@
 package com.example.hans_antlr4.type;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.inOrder;
 
 import java.util.Arrays;

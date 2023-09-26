@@ -1,6 +1,6 @@
 package com.example.hans_antlr4.func;
 
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 
 import org.junit.Test;

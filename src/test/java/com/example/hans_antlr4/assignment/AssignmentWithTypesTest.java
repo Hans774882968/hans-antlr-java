@@ -1,8 +1,8 @@
 package com.example.hans_antlr4.assignment;
 
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.inOrder;
 
 import java.util.List;
@@ -22,7 +22,7 @@ import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
-class BootstrapMethodArgMatcher extends ArgumentMatcher<Object> {
+class BootstrapMethodArgMatcher implements ArgumentMatcher<Object> {
     @Override
     public boolean matches(Object right) {
         if (!(right instanceof String)) {
