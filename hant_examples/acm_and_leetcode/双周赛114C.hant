@@ -1,0 +1,45 @@
+int maxSubarrays(int[] a) {
+    var n = a.length;
+    var tot = a[0];
+    for (var i = 1; i < a.length; i += 1) {
+        tot &= a[i];
+    }
+    var ans = 0
+    var val = tot;
+    for (var i = 0; i < a.length;) {
+        var cur = a[i];
+        var j = i + 1;
+        for (;;) {
+            if (cur <= val) break
+            if (j >= n) break
+            cur &= a[j];
+            j += 1
+        }
+        if (cur <= val) {
+            ans += 1;
+            val -= cur;
+        }
+        i = j;
+    }
+    return ans;
+}
+
+main(string[] args) {
+    // 3 1 5 1 2 3 7 1 1 1
+    var cases = [
+        [ 1, 0, 2, 0, 1, 2 ],
+        [ 5, 7, 1, 3 ],
+        [ 1, 0, 2, 0, 5, 7, 1, 0, 2, 0, 5, 7, 3, 1, 2 ],
+        [ 0 ],
+        [ 0, 0 ],
+        [ 0, 0, 0 ],
+        [ 1, 0, 2, 0, 5, 7, 7, 3, 1, 8, 3, 2, 1, 0, 2, 0, 5, 7, 3, 1, 2 ],
+        [ 100000 ],
+        [ 10000, 10000 ],
+        [ 10000, 10000, 10000, 10000 ]
+    ]
+    for var i = 0; i < cases.length; i += 1 {
+        print \n `${maxSubarrays(cases[i])} `
+    }
+    print ""
+}

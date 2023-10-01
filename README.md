@@ -6111,6 +6111,8 @@ String[][] var10 = new String[][]{{"a", "b" + var0[0][0] + ""}, {"c", "" + var1[
 
 ## 支持“全局变量”
 
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/commit/0fb7ebccf8d491e71fc05354e04614d3c5c80ca1)
+
 在《Part7-支持方法：期望的`hant`程序结构》一节，我们讨论过`hant`最终期望的结构。这一节要实现的全局变量仅仅是隐藏的`public class`的静态字段，之后要支持的自定义类并不能访问到这些“全局变量”。
 
 文法修改（`src\main\java\com\example\hans_antlr4\parsing\HansAntlrParser.g4`）：
@@ -6167,7 +6169,9 @@ methodVisitor.visitFieldInsn(PUTSTATIC, "Main", "len2", "J");
 由此可知：
 
 1. 第一段代码的功能是定义字段，第二段代码的功能是字段初始化。初始化需要在`<clinit>`方法完成，这个方法在Java中体现为`static`块，在后文“效果”部分也可以看到反编译出的代码存在`static`块。主要命令是`GETSTATIC`和`PUTSTATIC`，所以数据结构需要记录变量名、类型。上述`Main`是`public class name`，可以通过Scope的`metadata`属性拿到。
-2. 显然我们需要重构Visitor和`bytecode_gen`部分的入口。字段定义部分的代码和`<clinit>`方法的定义代码执行的先后顺序无关紧要，如果前者不存在则会在运行时报错`Exception in thread "main" java.lang.NoSuchFieldError: vI1`。
+2. 显然我们需要重构Visitor和`bytecode_gen`部分的入口。字段定义部分的`visitField`代码和`<clinit>`方法的定义代码执行的先后顺序无关紧要，如果前者不存在则会在运行时报错`Exception in thread "main" java.lang.NoSuchFieldError: vI1`。
+
+对字节码心中有数以后，需要对数据结构做出改动。要实现完整的支持改动量比较大，但只实现变量定义的话改动量就还好。
 
 引入`GlobalVariableDeclaration`，它是`VariableDeclaration`的子类：
 
@@ -6203,7 +6207,108 @@ public class GlobalVariable extends Variable {
 }
 ```
 
-TODO
+相应地，`Scope`也要提供对`GlobalVariable`的支持。
+
+```java
+public void addGlobalVariable(GlobalVariable globalVariable) {
+    globalVariables.add(globalVariable);
+}
+
+public GlobalVariable getGlobalVariable(String varName) {
+    return globalVariables.stream()
+            .filter(variable -> variable.getVarName().equals(varName))
+            .reduce((result, item) -> item)
+            .orElseThrow(() -> new GlobalVariableNotFoundException(this, varName));
+}
+
+public boolean globalVariableExists(String varName) {
+    return globalVariables.stream()
+            .anyMatch(variable -> variable.getVarName().equals(varName));
+}
+```
+
+接下来看visitor部分的改动。新增的`GlobalVariableDeclarationVisitor`比较常规：
+
+```java
+@AllArgsConstructor
+public class GlobalVariableDeclarationVisitor extends HansAntlrParserBaseVisitor<GlobalVariableDeclaration> {
+    private Scope scope;
+
+    @Override
+    public GlobalVariableDeclaration visitGlobalVariable(HansAntlrParser.GlobalVariableContext ctx) {
+        final TerminalNode varTerminalNode = ctx.variable().Identifier();
+        final String varName = varTerminalNode.getText();
+        final ExpressionContext expressionContext = ctx.variable().expression();
+        final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+        Expression expression = expressionContext.accept(expressionVisitor);
+
+        scope.addGlobalVariable(new GlobalVariable(varName, expression.getType()));
+        GlobalVariableDeclaration variableDeclaration = new GlobalVariableDeclaration(varName, expression);
+
+        return variableDeclaration;
+    }
+}
+```
+
+但它在哪被调用呢？我们刚刚已经了解到`<clinit>`方法，所以我们需要改造入口，将`<clinit>`方法加入之前支持方法的时候引入的`List<Function> methods`。核心代码如下：
+
+```java
+private Function getClinitFunction(CompilationUnitContext ctx, Scope scope) {
+    List<Statement> globalVariables = ctx.globalVariable().stream()
+            .map(variable -> variable.accept(new GlobalVariableDeclarationVisitor(scope)))
+            .collect(Collectors.toList());
+    Function clinitFunction = new Function(
+            new FunctionSignature(true, "<clinit>", new ArrayList<>(), BuiltInType.VOID),
+            new Block(globalVariables, scope));
+    return clinitFunction;
+}
+```
+
+最后看字节码生成部分的改动。首先需要在入口调用`visitField`，上文我们已经了解到调用`visitField`和生成函数体的顺序无关紧要。
+
+```java
+private void generateGlobalVariableBytecode(ClassWriter cw) {
+    functions.stream()
+            .filter(func -> func.getFunctionSignature().getName().equals("<clinit>"))
+            .findFirst()
+            .ifPresent(clinit -> {
+                List<GlobalVariable> globalVariables = clinit.getBody().getScope().getGlobalVariables();
+                globalVariables.forEach(globalVariable -> {
+                    String varName = globalVariable.getVarName();
+                    String descriptor = globalVariable.getType().getDescriptor();
+                    FieldVisitor fieldVisitor = cw.visitField(
+                            ACC_PUBLIC | ACC_STATIC, varName, descriptor, null, null);
+                    fieldVisitor.visitEnd();
+                });
+            });
+}
+```
+
+接下来要新增全局变量定义语句的generator，它会被`<clinit>`方法的函数体调用：
+
+```java
+@Getter
+public class GlobalVariableDeclarationGenerator implements Opcodes {
+    private MethodVisitor mv;
+    private Scope scope;
+    private ExpressionGenerator expressionGenerator;
+
+    public GlobalVariableDeclarationGenerator(MethodVisitor mv, Scope scope) {
+        this.mv = mv;
+        this.scope = scope;
+        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+    }
+
+    public void generate(GlobalVariableDeclaration globalVariableDeclaration) {
+        Expression expression = globalVariableDeclaration.getExpression();
+        expression.accept(expressionGenerator);
+        String varName = globalVariableDeclaration.getName();
+        Type type = expression.getType();
+        String publicClassName = scope.getMetaData().getClassName();
+        mv.visitFieldInsn(PUTSTATIC, publicClassName, varName, type.getDescriptor());
+    }
+}
+```
 
 效果：
 
@@ -6251,9 +6356,39 @@ public class global_var {
 
 ### 支持“全局变量”引用
 
-TODO
+首先看数据结构的改动。我们需要区分“全局变量”引用和局部变量引用，所以引入公共基类`Reference`。
 
-Visitor部分。首先是`VarReference`，注意存在同名现象时优先返回局部变量，以实现变量Shadow效果。
+```java
+@Getter
+public abstract class Reference extends Expression {
+    private String varName;
+
+    public Reference(String varName, Type type) {
+        super(type, null, null);
+        this.varName = varName;
+    }
+}
+
+public class GlobalVarReference extends Reference {
+    public GlobalVarReference(String varName, Type type) {
+        super(varName, type);
+    }
+    // accept 等方法省略
+}
+
+@Setter
+@Getter
+public class VarReference extends Reference {
+    public VarReference(String varName, Type type) {
+        super(varName, type);
+    }
+    // accept 等方法省略
+}
+```
+
+接下来需要关注所有之前认为只会出现`LocalVariable`的地方，评估它们是否也有可能出现`GlobalVariable`。比如`ClassFieldReference`的`LocalVariable startVar`，显然也可以引用全局变量的属性，所以需要把类型改成`Variable`。改动后自然而然就知道要去修复visitor和`bytecode_gen`部分的报错。
+
+接下来关注visitor部分的改动。首先是`VarReference`，注意存在全局和局部变量同名的现象时优先返回局部变量，以实现变量Shadow效果。
 
 ```java
 @Override
@@ -6265,6 +6400,273 @@ public Reference visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
     }
     GlobalVariable globalVariable = scope.getGlobalVariable(varName);
     return new GlobalVarReference(varName, globalVariable.getType());
+}
+```
+
+数据结构`LocalVariable`类型的成员改为`Variable`类型后，visitor也要改动。以`visitClazzFieldReference`为例：
+
+```java
+private Class<?> getInitialOwnerClass(String[] identifiers, int findFieldStartIndex) {
+    if (findFieldStartIndex == -1) {
+        String possibleVarName = identifiers[0];
+        if (scope.localVariableExists(possibleVarName)) {
+            return scope.getLocalVariable(possibleVarName).getType().getTypeClass();
+        }
+        return scope.getGlobalVariable(possibleVarName).getType().getTypeClass();
+    }
+    // ...
+}
+
+if (findFieldStartIndex == -1) {
+    String possibleVarName = identifiers[0];
+    if (scope.localVariableExists(possibleVarName)) {
+        LocalVariable localVariable = scope.getLocalVariable(possibleVarName);
+        return new ClassFieldReference(localVariable, fieldReferenceRecords);
+    }
+    GlobalVariable globalVariable = scope.getGlobalVariable(possibleVarName);
+    return new ClassFieldReference(globalVariable, fieldReferenceRecords);
+}
+```
+
+最后看`bytecode_gen`部分。同理需要关注可能出现局部变量和全局变量但之前直接认定为局部变量的地方，增加判断逻辑。改动比较零碎，可以参考我的git commit，下面举些例子。
+
+（1）`RangedForStatementGenerator`
+
+```java
+{
+    Reference reference = newScope.localVariableExists(iteratorVarName)
+            ? new VarReference(iteratorVarName, endExprType)
+            : new GlobalVarReference(iteratorVarName, endExprType);
+    ConditionalExpression iteratorGreaterThanEndCondition = new ConditionalExpression(
+            reference, endExpression, CompareSign.GREATER);
+    iteratorGreaterThanEndCondition.accept(expressionGenerator);
+}
+{
+    Reference reference = newScope.localVariableExists(iteratorVarName)
+            ? new VarReference(iteratorVarName, endExprType)
+            : new GlobalVarReference(iteratorVarName, endExprType);
+    ConditionalExpression iteratorLessThanEndCondition = new ConditionalExpression(
+            reference, endExpression, CompareSign.LESS);
+    iteratorLessThanEndCondition.accept(expressionGenerator);
+}
+```
+
+（2）`ClassFieldReference`的generator。
+
+```java
+if (!classFieldReference.isStartsWithClass()) {
+    Variable variable = classFieldReference.getStartVar();
+    if (variable instanceof LocalVariable) {
+        LocalVariable localVariable = (LocalVariable) variable;
+        int index = scope.getLocalVariableIndex(localVariable.getVarName());
+        int opcode = localVariable.getType().getLoadVariableOpcode();
+        mv.visitVarInsn(opcode, index);
+    }
+    if (variable instanceof GlobalVariable) {
+        String publicClassName = scope.getMetaData().getClassName();
+        GlobalVariable globalVariable = (GlobalVariable) variable;
+        String varName = globalVariable.getVarName();
+        String descriptor = globalVariable.getType().getDescriptor();
+        mv.visitFieldInsn(GETSTATIC, publicClassName, varName, descriptor);
+    }
+}
+```
+
+上面的改动最终依赖`GlobalVarReference`的generator，这个很常规。
+
+```java
+public void generate(GlobalVarReference globalVarReference) {
+    String varName = globalVarReference.getVarName();
+    String descriptor = globalVarReference.getType().getDescriptor();
+    String publicClassName = scope.getMetaData().getClassName();
+    mv.visitFieldInsn(GETSTATIC, publicClassName, varName, descriptor);
+}
+```
+
+效果：
+
+[测试变量shadow特性：`var_shadow.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/global_var/var_shadow.hant)
+
+```hant
+var vI = 123
+var vL = 0x3f3fL
+var vF = 2.3f
+var vD = java.lang.Math.PI
+var vBy = 0o10y
+var vB = true
+var vS1 = `${"hello"} ${"world"}`
+var vS2 = new java.lang.String("asm bytecode viewer")
+var aI = [[2, 3, 4], [5, 6, 7]]
+
+basicUsageDemo {
+    print `vI = ${vI}, vL = ${vL}, vF = ${vF}, vD = ${vD}`
+    print `vBy = ${vBy}, vB = ${vB}, vS1 = ${vS1}, vS2 = ${vS2}`
+    print `${vS1.length()} ${vS1.toUpperCase()}`
+
+    print `aI.length = ${aI.length}`
+    var tmpAI0 = aI[0]
+    print `aI[0].length = ${tmpAI0.length}`
+}
+```
+
+的反编译效果：
+
+```java
+public static void basicUsageDemo() {
+    System.out.println("vI = " + vI + ", vL = " + vL + ", vF = " + vF + ", vD = " + vD + "");
+    System.out.println("vBy = " + vBy + ", vB = " + vB + ", vS1 = " + vS1 + ", vS2 = " + vS2 + "");
+    System.out.println("" + vS1.length() + " " + vS1.toUpperCase() + "");
+    System.out.println("aI.length = " + aI.length + "");
+    int[] var0 = aI[0];
+    System.out.println("aI[0].length = " + var0.length + "");
+}
+```
+
+### 支持“全局变量”赋值
+
+首先研究一下静态成员赋值的字节码，示例代码和上文一样：
+
+```java
+public class Main {
+    public static int len = 3114514;
+    public static long len2 = len + 1;
+
+    static void foo0() {
+        ++len2;
+        System.out.println(len2);
+        len = 4;
+        int ww = len;
+        ww -= len += 2;
+    }
+}
+```
+
+IDEA ASM Bytecode Viewer插件查看：
+
+```java
+methodVisitor.visitFieldInsn(GETSTATIC, "Main", "len", "I");
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitInsn(IADD);
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitFieldInsn(PUTSTATIC, "Main", "len", "I");
+methodVisitor.visitInsn(ISUB);
+methodVisitor.visitVarInsn(ISTORE, 0);
+```
+
+回顾《Part19-支持赋值运算符》可知，将连续赋值的预先Load指令和最后的Store指令替换为对应的`GETSTATIC`和`PUTSTATIC`即可，其他对栈的操作如`DUP`指令的逻辑没有区别。
+
+和上一节类似，需要梳理所有可能出现全局变量和局部变量但之前认定为局部变量的地方，改动点比较零碎。
+
+数据结构部分的改动类：`AssignmentExpression`、`AssignmentLhs`。
+
+visitor部分的改动集中在`visitASSIGNMENT`方法。
+
+```java
+if (leftHandSide instanceof Reference) {
+    String varName = ((Reference) leftHandSide).getVarName();
+    if (scope.localVariableExists(varName)) {
+        LocalVariable localVariable = scope.getLocalVariable(varName);
+        return new AssignmentExpression(localVariable, assignmentSign, expression, sourceLine);
+    }
+    GlobalVariable globalVariable = scope.getGlobalVariable(varName);
+    return new AssignmentExpression(globalVariable, assignmentSign, expression, sourceLine);
+}
+```
+
+`bytecode_gen`部分的改动集中在`AssignmentExpressionGenerator`，主要是增加判断变量是全局变量或局部变量的逻辑。
+
+```java
+if (currentAssignmentExpression.lhsIsVariable()) {
+    assignmentUtil.generateLoadVariableInsn(
+            mv, currentAssignmentExpression, lhsType);
+}
+
+if (currentAssignmentExpression.lhsIsVariable()) {
+    assignmentUtil.generateModifyVariableInsn(
+            mv, currentAssignmentExpression, lhsType);
+} else if (currentAssignmentExpression.lhsIsArrayAccess()) {
+    mv.visitInsn(lhsType.getStoreArrayItemOpcode());
+}
+```
+
+```java
+// AssignmentUtil.java
+public void generateLoadVariableInsn(
+        MethodVisitor mv,
+        AssignmentExpression assignmentExpression,
+        Type lhsType) {
+    Variable variable = assignmentExpression.getLhsVariable();
+    if (variable instanceof LocalVariable) {
+        int variableIndex = getVariableIndexByAssignmentExpression(assignmentExpression);
+        mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
+    }
+    if (variable instanceof GlobalVariable) {
+        String publicClassName = parent.getScope().getMetaData().getClassName();
+        String varName = variable.getVarName();
+        String descriptor = variable.getType().getDescriptor();
+        mv.visitFieldInsn(Opcodes.GETSTATIC, publicClassName, varName, descriptor);
+    }
+}
+
+public void generateModifyVariableInsn(
+        MethodVisitor mv,
+        AssignmentExpression assignmentExpression,
+        Type lhsType) {
+    Variable variable = assignmentExpression.getLhsVariable();
+    if (variable instanceof LocalVariable) {
+        int variableIndex = getVariableIndexByAssignmentExpression(assignmentExpression);
+        mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
+    }
+    if (variable instanceof GlobalVariable) {
+        String publicClassName = parent.getScope().getMetaData().getClassName();
+        String varName = variable.getVarName();
+        String descriptor = variable.getType().getDescriptor();
+        mv.visitFieldInsn(Opcodes.PUTSTATIC, publicClassName, varName, descriptor);
+    }
+}
+```
+
+效果：
+
+```hant
+modifyDemo() {
+    print "----- modifyDemo -----"
+    vI = 125
+    vL >>>= 4
+    vF *= 2
+    vD %= -3
+    print `vI = ${vI}, vL = ${vL}, vF = ${vF}, vD = ${vD}`
+    vBy |= 16L
+    vB = false
+    vS1 = "hello world!"
+    vS2 += "!!"
+    print `vBy = ${vBy}, vB = ${vB}, vS1 = ${vS1}, vS2 = ${vS2}`
+    aI = [[2, 3, 4], [5, 6, 8]]
+    print `aI.length = ${aI.length}, aI[1][2] = ${aI[1][2]}`
+    aI[1][2] = 0o337522
+    print `aI[1][2] = ${aI[1][2]}`
+}
+```
+
+的反编译效果：
+
+```java
+public static void modifyDemo() {
+    System.out.println("----- modifyDemo -----");
+    vI = 125;
+    vL >>>= 4;
+    vF *= (float)2;
+    vD %= (double)(-3);
+    System.out.println("vI = " + vI + ", vL = " + vL + ", vF = " + vF + ", vD = " + vD + "");
+    vBy = (byte)((int)((long)vBy | 16L));
+    vB = (boolean)0;
+    vS1 = "hello world!";
+    vS2 = vS2 + "!!";
+    System.out.println("vBy = " + vBy + ", vB = " + vB + ", vS1 = " + vS1 + ", vS2 = " + vS2 + "");
+    aI = new int[][]{{2, 3, 4}, {5, 6, 8}};
+    System.out.println("aI.length = " + aI.length + ", aI[1][2] = " + aI[1][2] + "");
+    aI[1][2] = 114514;
+    System.out.println("aI[1][2] = " + aI[1][2] + "");
 }
 ```
 
@@ -6287,6 +6689,14 @@ public Reference visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
 [`hant_examples/acm_and_leetcode/chess_fill.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/chess_fill.hant)
 
 1. 因为还不支持`!`运算符，所以用了这样的写法`in(xl, xr, x) == false`。
+
+### 双周赛114C：一次遍历的贪心
+
+显然最小值是数组的and。然后我们考虑到and是单减的，有这样一个贪心策略：前若干个区间给当前剩下了val，尝试到第一个小于等于val的位置，如果成功则当前区间有效；否则因为and单减，直接并入上一个区间即可。
+
+[`hant_examples\acm_and_leetcode\双周赛114C.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\双周赛114C.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.java.txt)
 
 ### lc640：解方程。字符串小模拟
 
