@@ -5514,9 +5514,47 @@ public static int gcd(int var0, int var1) {
 }
 ```
 
-## Part17-支持类方法和实例方法的调用
+## Part17-支持类方法和实例方法的调用以及属性引用
 
 [相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/1e84601eccd8172572614dbb2e0a5ae738642962...53e9df9d2e35d12d439c53b13dcb99cde2a81794)
+
+本节是在复刻Java调用类方法、实例方法和属性引用的特性。文法规则修改：
+
+```g4
+expression:
+	functionName '(' argumentList ')'							# FunctionCall
+	| owner = expression '.' functionName '(' argumentList ')'	# FunctionCall
+	| expression '.' Identifier									# ClazzFieldReference
+	// ...
+```
+
+接下来开始探究相关的字节码。
+
+`Integer.valueOf(233)`：
+
+```java
+methodVisitor.visitIntInsn(SIPUSH, 233);
+methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+```
+
+```java
+class W {
+    public static Z w0;
+
+    public String ww(String... ss) {
+        return ss.toString();
+    }
+}
+```
+
+中`ss.toString()`的字节码：
+
+```java
+methodVisitor.visitVarInsn(ALOAD, 1);
+methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;", false);
+```
+
+总结：实例方法调用的后几个参数和静态方法调用相同，两者只由`INVOKESTATIC`和`INVOKEVIRTUAL`区分。
 
 TODO
 
@@ -5525,6 +5563,14 @@ TODO
 [相关git commit](https://github.com/Hans774882968/hans-antlr-java/commit/53e9df9d2e35d12d439c53b13dcb99cde2a81794)
 
 TODO
+
+文法规则修改：
+
+```g4
+expression:
+	'new' qualifiedName '(' argumentList ')'					# ConstructorCall
+	// ...
+```
 
 ### 偶然发现了工厂方法的一个应用场景
 
@@ -6698,6 +6744,33 @@ public static void modifyDemo() {
 
 [反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\双周赛114C.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.java.txt)
 
+### atcoder abc184d：3维期望dp
+
+题意：给你`a, b, c`个3种糖果，每次从袋子抽出一个糖果，则放入2个同类型糖果进袋子（袋子里同类型糖果多了一个）。你会发现后面的抽取和前面抽到什么相关。问袋子里有某种糖果100个的期望步数是多少。保证`a~c`<=99且`a+b+c`>=1。
+
+期望dp，设`dp[i][j][k]`表示现在袋子里有3种糖果各`i~k`个，到达目标的期望步数。则答案是`dp[a][b][c]`。分析当前抽取`dp[i][j][k]`，则有：`dp[i][j][k] = 1 + (dp[i+1][j][k]*i + dp[i][j+1][k]*j + dp[i][j][k+1]*k) / (i+j+k);`，倒序枚举即可。
+
+[`hant_examples\acm_and_leetcode\abc184d.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/abc184d.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\abc184d.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/abc184d.java.txt)
+
+### cf148d：3维dp，全概率公式
+
+网上大多数题解都是2维dp，2维dp解法需要考虑公主和龙都取以后的情况，并分类讨论。我在此提出一个更易于理解的3维dp解法。定义`dp[i][j][who]`为当前还剩`i`只白鼠，`j`只黑鼠，轮到`who`取且`who`胜利的概率，`who = 0, 1`分别表示公主和龙。约定：
+
+```java
+var wp = 1.0 * i / (i + j) // 当前角色取出白鼠的概率
+var bp = 1.0 * j / (i + j) // 当前角色取出黑鼠的概率
+var wp0 = 1.0 * i / (i + j - 1) // 龙取出黑鼠后跳出白鼠的概率
+var bp0 = 1.0 * (j - 1) / (i + j - 1) // 龙取出白鼠后跳出白鼠的概率
+```
+
+`who = 0`比较简单，说下`who = 1`的状态转移方程：`wp + bp * (wp0 * (1 - dp[i - 1][j - 1][0]) + bp0 * (1 - dp[i][j - 2][0]))`。龙取出黑鼠后，分跳出白鼠和黑鼠两种情况讨论。
+
+[`hant_examples\acm_and_leetcode\cf148d.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf148d.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\cf148d.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf148d.java.txt)
+
 ### lc640：解方程。字符串小模拟
 
 思路：分两次扫描，第一次获取`x`的系数，第二次获取常数项。
@@ -6732,6 +6805,16 @@ public static void modifyDemo() {
 [`hant_examples/acm_and_leetcode/lc928.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.hant)
 
 [反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc928.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.java.txt)
+
+### cf1520f2：记忆化的线段树
+
+题意：交互题。给一个长为`n`的未知数组，有`T`个查询，每次查询要求第`k`个0。在每次查询中你可以询问若干次区间和，每次输出答案后这个点的0会修改成1。对询问总次数有限制。
+
+看到区间和 + 单点修改，可以想到线段树。因为区间和的信息需要从询问得到，所以是记忆化的线段树。注意Java需要IO优化才能过这题。[IO优化参考](https://codeforces.com/contest/1520/submission/185762281)
+
+[`hant_examples/acm_and_leetcode/cf1520f2.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf1520f2.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/cf1520f2.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf1520f2.java.txt)
 
 ### hdu4746：莫比乌斯反演+交换求和顺序+预处理
 

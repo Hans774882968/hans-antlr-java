@@ -1,0 +1,71 @@
+var n = 0
+var k = 0
+var N = 200005
+var nd = new int[N << 2]
+var input = new java.io.BufferedReader(new java.io.InputStreamReader(java.lang.System.in));
+var out = new java.io.PrintWriter(java.lang.System.out);
+
+int ask(int l, int r) {
+    print `? ${l} ${r}`
+    java.lang.System.out.flush()
+    return java.lang.Integer.parseInt(input.readLine())
+}
+
+void pushup(int x) {
+    if ~nd[x << 1] {
+        if ~nd[x << 1 | 1] {
+            nd[x] = nd[x << 1] + nd[x << 1 | 1];
+        }
+    }
+}
+
+mdy(int ql, int x, int l, int r) {
+    if (l == r) {
+        nd[x] = 1;
+        return
+    }
+    var mid = (l + r) >> 1;
+    if ql <= mid mdy(ql, x << 1, l, mid);
+    if ql > mid mdy(ql, x << 1 | 1, mid+1, r);
+    if (~nd[x]) nd[x] += 1; // 顺序不能颠倒
+    pushup(x);
+}
+
+int qry(int ql, int qr, int x, int l, int r) {
+    if ql <= l {
+        if r <= qr {
+            if nd[x] == -1 return nd[x] = ask(l, r);
+            return nd[x];
+        }
+    }
+    var mid = (l + r) >> 1;
+    var ans = 0;
+    if ql <= mid ans += qry(ql, qr, x << 1, l, mid);
+    if qr > mid ans += qry(ql, qr, x << 1 | 1, mid+1, r);
+    pushup(x)
+    return ans
+}
+
+main(string[] args) {
+    for i: 0 to nd.length - 1 nd[i] = -1
+    var st = new java.util.StringTokenizer(input.readLine())
+    n = java.lang.Integer.parseInt(st.nextToken())
+    var T = java.lang.Integer.parseInt(st.nextToken())
+    for cas: 1 to T {
+        k = java.lang.Integer.parseInt(input.readLine())
+        var l = 1
+        var r = n
+        for ; l < r; {
+            var mid = (l + r) >> 1
+            var zero = mid-l+1 - qry(l, mid, 1, 1, n);
+            if zero < k {
+                l = mid+1
+                k -= zero
+            }
+            else r = mid
+        }
+        print `! ${l}`
+        java.lang.System.out.flush()
+        mdy(l, 1, 1, n)
+    }
+}

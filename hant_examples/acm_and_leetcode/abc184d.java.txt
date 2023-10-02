@@ -1,0 +1,114 @@
+// decompile from abc184d.hant, AC https://atcoder.jp/contests/abc184/submissions/46157420
+import java.util.Scanner;
+
+public class Main {
+    public static int N = 101;
+    public static double[][][] dp;
+
+    static {
+        dp = new double[N][N][N];
+    }
+
+    public static void main(String[] var0) {
+        Scanner var1 = new Scanner(System.in);
+        int var2 = var1.nextInt();
+        int var3 = var1.nextInt();
+        int var4 = var1.nextInt();
+        int var5 = 0;
+
+        int var6;
+        while (true) {
+            if (0 - 100 < 0) {
+                if (var5 - 100 > 0) {
+                    break;
+                }
+            } else if (var5 - 100 < 0) {
+                break;
+            }
+
+            var6 = 0;
+
+            while (true) {
+                if (0 - 100 < 0) {
+                    if (var6 - 100 > 0) {
+                        break;
+                    }
+                } else if (var6 - 100 < 0) {
+                    break;
+                }
+
+                dp[100][var5][var6] = dp[var5][100][var6] = dp[var5][var6][100] = (double) 0;
+                if (0 - 100 < 0) {
+                    ++var6;
+                } else {
+                    --var6;
+                }
+            }
+
+            if (0 - 100 < 0) {
+                ++var5;
+            } else {
+                --var5;
+            }
+        }
+
+        var5 = 99;
+
+        while (true) {
+            if (99 - 0 < 0) {
+                if (var5 - 0 > 0) {
+                    break;
+                }
+            } else if (var5 - 0 < 0) {
+                break;
+            }
+
+            var6 = 99;
+
+            while (true) {
+                if (99 - 0 < 0) {
+                    if (var6 - 0 > 0) {
+                        break;
+                    }
+                } else if (var6 - 0 < 0) {
+                    break;
+                }
+
+                int var7 = 99;
+
+                while (true) {
+                    if (99 - 0 < 0) {
+                        if (var7 - 0 > 0) {
+                            break;
+                        }
+                    } else if (var7 - 0 < 0) {
+                        break;
+                    }
+
+                    dp[var5][var6][var7] = (double) 1
+                            + (dp[var5 + 1][var6][var7] * (double) var5 + dp[var5][var6 + 1][var7] * (double) var6
+                                    + dp[var5][var6][var7 + 1] * (double) var7) / (double) (var5 + var6 + var7);
+                    if (99 - 0 < 0) {
+                        ++var7;
+                    } else {
+                        --var7;
+                    }
+                }
+
+                if (99 - 0 < 0) {
+                    ++var6;
+                } else {
+                    --var6;
+                }
+            }
+
+            if (99 - 0 < 0) {
+                ++var5;
+            } else {
+                --var5;
+            }
+        }
+
+        System.out.println(dp[var2][var3][var4]);
+    }
+}

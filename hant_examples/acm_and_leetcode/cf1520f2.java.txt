@@ -1,0 +1,136 @@
+// decompile from cf1520f2.hant, but needs to add throws declaration manually
+// AC https://codeforces.com/contest/1520/submission/226265042
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.StringTokenizer;
+
+public class cf1520f2 {
+    public static int n = 0;
+    public static int k = 0;
+    public static int N = 200005;
+    public static int[] nd;
+    public static BufferedReader input;
+    public static PrintWriter out;
+
+    static {
+        nd = new int[N << 2];
+        input = new BufferedReader(new InputStreamReader(System.in));
+        out = new PrintWriter(System.out);
+    }
+
+    public static int ask(int var0, int var1) throws NumberFormatException, IOException {
+        System.out.println("? " + var0 + " " + var1 + "");
+        System.out.flush();
+        return Integer.parseInt(input.readLine());
+    }
+
+    public static void pushup(int var0) {
+        if (~nd[var0 << 1] != 0 && ~nd[var0 << 1 | 1] != 0) {
+            nd[var0] = nd[var0 << 1] + nd[var0 << 1 | 1];
+        }
+
+    }
+
+    public static void mdy(int var0, int var1, int var2, int var3) {
+        if (var2 - var3 != 0) {
+            int var4 = var2 + var3 >> 1;
+            if (var0 - var4 <= 0) {
+                mdy(var0, var1 << 1, var2, var4);
+            }
+
+            if (var0 - var4 > 0) {
+                mdy(var0, var1 << 1 | 1, var4 + 1, var3);
+            }
+
+            if (~nd[var1] != 0) {
+                int var10002 = nd[var1]++;
+            }
+
+            pushup(var1);
+        } else {
+            nd[var1] = 1;
+        }
+    }
+
+    public static int qry(int var0, int var1, int var2, int var3, int var4) throws NumberFormatException, IOException {
+        if (var0 - var3 <= 0 && var4 - var1 <= 0) {
+            return nd[var2] - -1 != 0 ? nd[var2] : (nd[var2] = ask(var3, var4));
+        } else {
+            int var5 = var3 + var4 >> 1;
+            int var6 = 0;
+            if (var0 - var5 <= 0) {
+                var6 += qry(var0, var1, var2 << 1, var3, var5);
+            }
+
+            if (var1 - var5 > 0) {
+                var6 += qry(var0, var1, var2 << 1 | 1, var5 + 1, var4);
+            }
+
+            pushup(var2);
+            return var6;
+        }
+    }
+
+    public static void main(String[] var0) throws NumberFormatException, IOException {
+        int var1 = 0;
+
+        while (true) {
+            if (0 - (nd.length - 1) < 0) {
+                if (var1 - (nd.length - 1) > 0) {
+                    break;
+                }
+            } else if (var1 - (nd.length - 1) < 0) {
+                break;
+            }
+
+            nd[var1] = -1;
+            if (0 - (nd.length - 1) < 0) {
+                ++var1;
+            } else {
+                --var1;
+            }
+        }
+
+        StringTokenizer var8 = new StringTokenizer(input.readLine());
+        n = Integer.parseInt(var8.nextToken());
+        int var2 = Integer.parseInt(var8.nextToken());
+        int var3 = 1;
+
+        while (true) {
+            if (1 - var2 < 0) {
+                if (var3 - var2 > 0) {
+                    break;
+                }
+            } else if (var3 - var2 < 0) {
+                break;
+            }
+
+            k = Integer.parseInt(input.readLine());
+            int var4 = 1;
+            int var5 = n;
+
+            while (var4 - var5 < 0) {
+                int var6 = var4 + var5 >> 1;
+                int var7 = var6 - var4 + 1 - qry(var4, var6, 1, 1, n);
+                if (var7 - k >= 0) {
+                    var5 = var6;
+                } else {
+                    var4 = var6 + 1;
+                    k -= var7;
+                }
+            }
+
+            System.out.println("! " + var4 + "");
+            System.out.flush();
+            mdy(var4, 1, 1, n);
+            if (1 - var2 < 0) {
+                ++var3;
+            } else {
+                --var3;
+            }
+        }
+
+    }
+}

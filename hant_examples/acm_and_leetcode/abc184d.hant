@@ -1,0 +1,22 @@
+var N = 101
+var dp = new double[N][N][N]
+
+main(string[] args) {
+    var sc = new java.util.Scanner(java.lang.System.in)
+    var a = sc.nextInt()
+    var b = sc.nextInt()
+    var c = sc.nextInt()
+    for i: 0 to 100 {
+        for j: 0 to 100 {
+            dp[100][i][j] = dp[i][100][j] = dp[i][j][100] = 0
+        }
+    }
+    for i: 99 to 0 {
+        for j: 99 to 0 {
+            for k: 99 to 0 {
+                dp[i][j][k] = 1 + (dp[i+1][j][k]*i + dp[i][j+1][k]*j + dp[i][j][k+1]*k) / (i+j+k);
+            }
+        }
+    }
+    print dp[a][b][c]
+}

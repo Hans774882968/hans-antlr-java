@@ -26,7 +26,10 @@ public class HantBlackBoxMostExamplesTest {
                 "hant_examples\\type\\incompatible.hant",
                 "hant_examples\\type\\shift_invalid_type.hant",
                 "hant_examples\\object\\stdin_double.hant",
-                "hant_examples\\acm_and_leetcode\\hdu4746.hant");
+                "hant_examples\\acm_and_leetcode\\hdu4746.hant",
+                "hant_examples\\acm_and_leetcode\\abc184d.hant",
+                "hant_examples\\acm_and_leetcode\\cf148d.hant",
+                "hant_examples\\acm_and_leetcode\\cf1520f2.hant");
 
         Path path = Paths.get("hant_examples");
         Files.walkFileTree(path, new FileVisitor<Path>() {
