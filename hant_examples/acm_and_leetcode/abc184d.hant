@@ -3,9 +3,7 @@ var dp = new double[N][N][N]
 
 main(string[] args) {
     var sc = new java.util.Scanner(java.lang.System.in)
-    var a = sc.nextInt()
-    var b = sc.nextInt()
-    var c = sc.nextInt()
+    var a = sc.nextInt(), b = sc.nextInt(), c = sc.nextInt()
     for i: 0 to 100 {
         for j: 0 to 100 {
             dp[100][i][j] = dp[i][100][j] = dp[i][j][100] = 0

@@ -1,11 +1,12 @@
-package com.example.hans_antlr4.domain.statement;
+package com.example.hans_antlr4.domain.statement.var;
+
+import java.util.List;
 
 import com.example.hans_antlr4.bytecode_gen.statement.StatementGenerator;
-import com.example.hans_antlr4.domain.expression.Expression;
 
 public class GlobalVariableDeclaration extends VariableDeclaration {
-    public GlobalVariableDeclaration(String name, Expression expression) {
-        super(name, expression);
+    public GlobalVariableDeclaration(List<VarDefUnit> varDefUnits) {
+        super(varDefUnits);
     }
 
     @Override

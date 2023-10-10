@@ -60,7 +60,8 @@ statement:
 	| breakStatement
 	| continueStatement
 	| expressionStatement;
-variable: VARIABLE Identifier EQUALS expression;
+variable: VARIABLE varDefUnit (',' varDefUnit)*;
+varDefUnit: Identifier EQUALS expression;
 returnStatement:
 	Return expression	# ReturnWithValue
 	| Return			# ReturnVoid;

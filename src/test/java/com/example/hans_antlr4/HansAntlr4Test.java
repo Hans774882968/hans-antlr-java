@@ -19,7 +19,7 @@ import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 

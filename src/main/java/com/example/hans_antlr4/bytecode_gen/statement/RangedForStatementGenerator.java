@@ -37,7 +37,7 @@ public class RangedForStatementGenerator implements Opcodes {
             return;
         }
         GlobalVariable globalVariable = newScope.getGlobalVariable(iteratorVarName);
-        String publicClassName = newScope.getMetaData().getClassName();
+        String publicClassName = newScope.getClassName();
         Type type = globalVariable.getType();
         String descriptor = type.getDescriptor();
         mv.visitFieldInsn(GETSTATIC, publicClassName, iteratorVarName, descriptor);

@@ -17,8 +17,7 @@ void dfs(int[][] a, int n, int stX, int stY, int x0, int y0) {
     var area4 = inP(stX + half, stX + n - 1, stY + half, stY + n - 1, x0, y0)
     cur += 1
     if area1 == false {
-        var nx0 = stX + half - 1
-        var ny0 = stY + half - 1
+        var nx0 = stX + half - 1, ny0 = stY + half - 1
         a[nx0][ny0] = cur
     }
     if area2 == false {
@@ -27,41 +26,35 @@ void dfs(int[][] a, int n, int stX, int stY, int x0, int y0) {
         a[nx0][ny0] = cur
     }
     if area3 == false {
-        var nx0 = stX + half - 1
-        var ny0 = stY + half
+        var nx0 = stX + half - 1, ny0 = stY + half
         a[nx0][ny0] = cur
     }
     if area4 == false {
-        var nx0 = stX + half
-        var ny0 = stY + half
+        var nx0 = stX + half, ny0 = stY + half
         a[nx0][ny0] = cur
     }
     if area1 {
         dfs(a, half, stX, stY, x0, y0)
     } else {
-        var nx0 = stX + half - 1
-        var ny0 = stY + half - 1
+        var nx0 = stX + half - 1, ny0 = stY + half - 1
         dfs(a, half, stX, stY, nx0, ny0)
     }
     if area2 {
         dfs(a, half, stX + half, stY, x0, y0)
     } else {
-        var nx0 = stX + half
-        var ny0 = stY + half - 1
+        var nx0 = stX + half, ny0 = stY + half - 1
         dfs(a, half, stX + half, stY, nx0, ny0)
     }
     if area3 {
         dfs(a, half, stX, stY + half, x0, y0)
     } else {
-        var nx0 = stX + half - 1
-        var ny0 = stY + half
+        var nx0 = stX + half - 1, ny0 = stY + half
         dfs(a, half, stX, stY + half, nx0, ny0)
     }
     if area4 {
         dfs(a, half, stX + half, stY + half, x0, y0)
     } else {
-        var nx0 = stX + half
-        var ny0 = stY + half
+        var nx0 = stX + half, ny0 = stY + half
         dfs(a, half, stX + half, stY + half, nx0, ny0)
     }
 }
@@ -73,8 +66,7 @@ void main(string[] args) {
         var tot = 1 << N
         var a = new int[tot][tot]
         var r = new java.util.Random()
-        var i0 = r.nextInt(tot)
-        var j0 = r.nextInt(tot)
+        var i0 = r.nextInt(tot), j0 = r.nextInt(tot)
         a[i0][j0] = 1
         print `${i0} ${j0} ${a[i0][j0]}`
         cur = 1

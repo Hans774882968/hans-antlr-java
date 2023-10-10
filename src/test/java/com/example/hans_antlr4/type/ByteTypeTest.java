@@ -8,7 +8,7 @@ import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.PrintStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
@@ -21,7 +21,7 @@ public class ByteTypeTest {
         Block body = (Block) forStatement.getBodyStatement();
         Assert.assertEquals(3, body.getStatements().size());
         VariableDeclaration firstStatement = (VariableDeclaration) body.getStatements().get(0);
-        Assert.assertEquals(BuiltInType.BYTE, firstStatement.getExpression().getType());
+        Assert.assertEquals(BuiltInType.BYTE, firstStatement.getVarDefUnits().get(0).getExpression().getType());
         PrintStatement secondStatement = (PrintStatement) body.getStatements().get(1);
         Assert.assertEquals(BuiltInType.BYTE, secondStatement.getExpression().getType());
     }
@@ -34,7 +34,7 @@ public class ByteTypeTest {
         Block bodyInt = (Block) forStatementInt.getBodyStatement();
         Assert.assertEquals(3, bodyInt.getStatements().size());
         VariableDeclaration firstStatementInt = (VariableDeclaration) bodyInt.getStatements().get(0);
-        Assert.assertEquals(BuiltInType.INT, firstStatementInt.getExpression().getType());
+        Assert.assertEquals(BuiltInType.INT, firstStatementInt.getVarDefUnits().get(0).getExpression().getType());
         PrintStatement secondStatementInt = (PrintStatement) bodyInt.getStatements().get(1);
         Assert.assertEquals(BuiltInType.INT, secondStatementInt.getExpression().getType());
 
@@ -44,7 +44,7 @@ public class ByteTypeTest {
         Block bodyLong = (Block) forStatementLong.getBodyStatement();
         Assert.assertEquals(3, bodyLong.getStatements().size());
         VariableDeclaration firstStatementLong = (VariableDeclaration) bodyLong.getStatements().get(0);
-        Assert.assertEquals(BuiltInType.LONG, firstStatementLong.getExpression().getType());
+        Assert.assertEquals(BuiltInType.LONG, firstStatementLong.getVarDefUnits().get(0).getExpression().getType());
         PrintStatement secondStatementLong = (PrintStatement) bodyLong.getStatements().get(1);
         Assert.assertEquals(BuiltInType.LONG, secondStatementLong.getExpression().getType());
     }

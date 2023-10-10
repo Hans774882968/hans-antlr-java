@@ -82,7 +82,7 @@ public class ExpressionGenerator implements Opcodes {
     public void generate(GlobalVarReference globalVarReference) {
         String varName = globalVarReference.getVarName();
         String descriptor = globalVarReference.getType().getDescriptor();
-        String publicClassName = scope.getMetaData().getClassName();
+        String publicClassName = scope.getClassName();
         mv.visitFieldInsn(GETSTATIC, publicClassName, varName, descriptor);
     }
 
@@ -96,7 +96,7 @@ public class ExpressionGenerator implements Opcodes {
                 mv.visitVarInsn(opcode, index);
             }
             if (variable instanceof GlobalVariable) {
-                String publicClassName = scope.getMetaData().getClassName();
+                String publicClassName = scope.getClassName();
                 GlobalVariable globalVariable = (GlobalVariable) variable;
                 String varName = globalVariable.getVarName();
                 String descriptor = globalVariable.getType().getDescriptor();

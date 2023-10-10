@@ -1,20 +1,15 @@
-var N = 1005
-var dp = new double[N][N][2]
+var N = 1005, dp = new double[N][N][2]
 
 main(string[] args) {
-    var sc = new java.util.Scanner(java.lang.System.in)
-    var w = sc.nextInt()
-    var b = sc.nextInt()
+    var sc = new java.util.Scanner(java.lang.System.in), w = sc.nextInt(), b = sc.nextInt()
     if w for i: 1 to w for who: 0 to 1 dp[i][0][who] = 1
     if b for j: 1 to b for who: 0 to 1 dp[0][j][who] = 0
     dp[0][0][0] = 0; dp[0][0][1] = 1;
     if w for i: 1 to w {
         if b for j: 1 to b {
             for who: 0 to 1 {
-                var wp = 1.0 * i / (i + j)
-                var bp = 1.0 * j / (i + j)
-                var wp0 = 1.0 * i / (i + j - 1)
-                var bp0 = 1.0 * (j - 1) / (i + j - 1)
+                var wp = 1.0 * i / (i + j), bp = 1.0 * j / (i + j)
+                var wp0 = 1.0 * i / (i + j - 1), bp0 = 1.0 * (j - 1) / (i + j - 1)
                 dp[i][j][who] = wp
                 if who == 0
                     dp[i][j][who] += bp * (1 - dp[i][j - 1][1])

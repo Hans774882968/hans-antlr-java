@@ -42,6 +42,112 @@
 
 **作者：[hans774882968](https://blog.csdn.net/hans774882968)以及[hans774882968](https://juejin.cn/user/1464964842528888)以及[hans774882968](https://www.52pojie.cn/home.php?mod=space&uid=1906177)**
 
+## 用`hant`写一些算法题吧！
+
+我为`hant`做了不少功能，如果不用它写几道算法题就太可惜了！
+
+### 力扣和其他OJ算法题的新过法
+
+首先写好代码，编译出`.class`文件，接着反编译出Java代码，稍作修改后提交到OJ。
+
+### 经典算法：八皇后
+
+[`hant_examples/acm_and_leetcode/eight_queen.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/eight_queen.hant)
+
+1. 因为还不支持“全局变量”（隐藏的`public class`的静态字段），所以需要使用`var ans = new int[1]`并传入`dfs`方法的方式来模拟全局变量。
+
+### 经典算法：棋盘覆盖问题
+
+[`hant_examples/acm_and_leetcode/chess_fill.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/chess_fill.hant)
+
+1. 因为还不支持`!`运算符，所以用了这样的写法`in(xl, xr, x) == false`。
+
+### 双周赛114C：一次遍历的贪心
+
+显然最小值是数组的and。然后我们考虑到and是单减的，有这样一个贪心策略：前若干个区间给当前剩下了val，尝试到第一个小于等于val的位置，如果成功则当前区间有效；否则因为and单减，直接并入上一个区间即可。
+
+[`hant_examples\acm_and_leetcode\双周赛114C.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\双周赛114C.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.java.txt)
+
+### atcoder abc184d：3维期望dp
+
+题意：给你`a, b, c`个3种糖果，每次从袋子抽出一个糖果，则放入2个同类型糖果进袋子（袋子里同类型糖果多了一个）。你会发现后面的抽取和前面抽到什么相关。问袋子里有某种糖果100个的期望步数是多少。保证`a~c`<=99且`a+b+c`>=1。
+
+期望dp，设`dp[i][j][k]`表示现在袋子里有3种糖果各`i~k`个，到达目标的期望步数。则答案是`dp[a][b][c]`。分析当前抽取`dp[i][j][k]`，则有：`dp[i][j][k] = 1 + (dp[i+1][j][k]*i + dp[i][j+1][k]*j + dp[i][j][k+1]*k) / (i+j+k);`，倒序枚举即可。
+
+[`hant_examples\acm_and_leetcode\abc184d.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/abc184d.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\abc184d.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/abc184d.java.txt)
+
+### cf148d：3维dp，全概率公式
+
+网上大多数题解都是2维dp，2维dp解法需要考虑公主和龙都取以后的情况，并分类讨论。我在此提出一个更易于理解的3维dp解法。定义`dp[i][j][who]`为当前还剩`i`只白鼠，`j`只黑鼠，轮到`who`取且`who`胜利的概率，`who = 0, 1`分别表示公主和龙。约定：
+
+```java
+var wp = 1.0 * i / (i + j) // 当前角色取出白鼠的概率
+var bp = 1.0 * j / (i + j) // 当前角色取出黑鼠的概率
+var wp0 = 1.0 * i / (i + j - 1) // 龙取出黑鼠后跳出白鼠的概率
+var bp0 = 1.0 * (j - 1) / (i + j - 1) // 龙取出白鼠后跳出白鼠的概率
+```
+
+`who = 0`比较简单，说下`who = 1`的状态转移方程：`wp + bp * (wp0 * (1 - dp[i - 1][j - 1][0]) + bp0 * (1 - dp[i][j - 2][0]))`。龙取出黑鼠后，分跳出白鼠和黑鼠两种情况讨论。
+
+[`hant_examples\acm_and_leetcode\cf148d.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf148d.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\cf148d.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf148d.java.txt)
+
+### lc640：解方程。字符串小模拟
+
+思路：分两次扫描，第一次获取`x`的系数，第二次获取常数项。
+
+[`hant_examples/acm_and_leetcode/lc640.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc640.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc640.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc640.java.txt)
+
+1. 因为还不支持`char`字面量，所以使用`bytes[i] != 120`这样的方法来和`'x'`比较。
+
+### lc924：并查集
+
+题意：给你一个无向图表示软件的病毒感染关系，再给你`initial`数组表示初始的被感染软件。和被感染软件处于同一连通块的软件都会被感染。现在允许去掉`initial`的一个元素，求最小被感染软件数。注意：被去掉的元素仍然能被同一连通块的软件感染。
+
+思路：对于给定`initial`，答案就是所涉及的连通块的点的个数之和。因此统计所涉及的连通块各有几个点在`initial`中，若一个连通块有2个及以上点在`initial`中，则去掉它们的贡献都是0。若只有一个，则去掉这个点的贡献就是该连通块的点的个数。
+
+注意题目中要求的“最小索引”指的是点的编号取最小。我理解成在`initial`中的下标最小，WA了好几发。
+
+[`hant_examples/acm_and_leetcode/lc924.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc924.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.java.txt)
+
+1. 在支持泛型后才能支持`Collections.min(Arrays.asList(a))`，目前只能用for循环来求数组最小值。
+2. 不支持`&&, ||, !`运算符还是挺痛的。
+
+### lc928：并查集，比lc924难
+
+题意：和lc924相同，只是删除`initial`的点后会把这个点和其他点的连边也删掉。
+
+思路：考虑`initial`以外的点构成的子图，每个`initial`中的点都和子图的某些连通块有连接。对于每个连通块，如果只有1个`initial`中的点和它有连接，那么删除这个点该连通块就能给这个点提供该连通块点的个数的贡献。所以遍历`initial`的每个点，算出所有连通块的总贡献，就得到每个点的收益，收益最大的点为所求。
+
+[`hant_examples/acm_and_leetcode/lc928.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc928.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.java.txt)
+
+### cf1520f2：记忆化的线段树
+
+题意：交互题。给一个长为`n`的未知数组，有`T`个查询，每次查询要求第`k`个0。在每次查询中你可以询问若干次区间和，每次输出答案后这个点的0会修改成1。对询问总次数有限制。
+
+看到区间和 + 单点修改，可以想到线段树。因为区间和的信息需要从询问得到，所以是记忆化的线段树。注意Java需要IO优化才能过这题。[IO优化参考](https://codeforces.com/contest/1520/submission/185762281)
+
+[`hant_examples/acm_and_leetcode/cf1520f2.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf1520f2.hant)
+
+[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/cf1520f2.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf1520f2.java.txt)
+
+### hdu4746：莫比乌斯反演+交换求和顺序+预处理
+
+[我21年写的题解](https://blog.csdn.net/hans774882968/article/details/117399861)
+
+[`hant_examples/acm_and_leetcode/hdu4746.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/hdu4746.hant)
+
 ## 致敬原作者：如何运行[原项目](https://github.com/JakubDziworski/Enkel-JVM-language)
 
 原项目的README已经足够清晰，我在此仅给出一些注意点。
@@ -5514,17 +5620,16 @@ public static int gcd(int var0, int var1) {
 }
 ```
 
-## Part17-支持类方法和实例方法的调用以及属性引用
+## Part17-支持类方法和实例方法的调用
 
 [相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/1e84601eccd8172572614dbb2e0a5ae738642962...53e9df9d2e35d12d439c53b13dcb99cde2a81794)
 
-本节是在复刻Java调用类方法、实例方法和属性引用的特性。文法规则修改：
+本节是在复刻Java调用类方法和实例方法的特性。文法规则修改：
 
 ```g4
 expression:
 	functionName '(' argumentList ')'							# FunctionCall
 	| owner = expression '.' functionName '(' argumentList ')'	# FunctionCall
-	| expression '.' Identifier									# ClazzFieldReference
 	// ...
 ```
 
@@ -5556,13 +5661,212 @@ methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()
 
 总结：实例方法调用的后几个参数和静态方法调用相同，两者只由`INVOKESTATIC`和`INVOKEVIRTUAL`区分。
 
-TODO
+再看看`System.out.printf("%d %d\n", 11, 22);`的字节码：
 
-## Part15-支持new关键字调用构造函数
+```java
+methodVisitor.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+methodVisitor.visitLdcInsn("%d %d\n");
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitIntInsn(BIPUSH, 11);
+methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+methodVisitor.visitInsn(AASTORE);
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitIntInsn(BIPUSH, 22);
+methodVisitor.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+methodVisitor.visitInsn(AASTORE);
+methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "printf", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;", false);
+methodVisitor.visitInsn(POP);
+```
+
+总结：
+
+1. 如果函数返回值没有被使用，需要额外生成`POP`指令。
+2. 匹配的`printf`方法签名是`public PrintStream printf(String var1, Object... var2)`，但传入的参数是原始类型，所以需要进行自动装箱。
+3. `ANEWARRAY`指令用于创建引用类型的数组，这个指令在后文《支持数组字面量》一节会再次接触。
+
+本次改动需要调整的数据结构主要有`domain/expression/call/FunctionCall.java`和`FunctionSignature`。原本`FunctionCall`的`owner`属性一定是`ClassType(name=publicClassName)`，现在需要扩展为任意表达式，所以需要调整为`Expression owner;`。`FunctionSignature`则需要新增`isStatic`来判定该方法是否为静态方法。
+
+### visitor部分
+
+同本项目的大多数需求点不同，本次改动的难点不在`bytecode_gen`部分，而在visitor部分。visitor的改动主要是判断`owner`是否在代码中显式指明，如果显式指明则需要获取`owner`类的函数签名。本次改动我们实现Java核心类库的方法调用即可，所以我们可以先使用**反射**拿到`java.lang.reflect.Method`类型的函数签名，再转为我们自己的`FunctionSignature`。获取`Method`类型的函数签名的原理是反射，但参考原作者项目可知，我们可以使用`MethodUtils.getMatchingAccessibleMethod`方法（`org.apache.commons.lang3.reflect.MethodUtils`）。
+
+visitor的核心改动：
+
+```java
+boolean ownerIsExplicit = ctx.owner != null;
+if (ownerIsExplicit) {
+    Expression owner = ctx.owner.accept(parent);
+    FunctionSignature signature = scope.getMethodCallSignature(
+            Optional.of(owner.getType()), funName, argTypes, sourceLine);
+    return new FunctionCall(owner, signature, arguments);
+}
+// 后面的省略
+```
+
+连带的`getMethodCallSignature`的改动：
+
+```java
+public FunctionSignature getMethodCallSignature(
+        Optional<Type> owner,
+        String methodName,
+        List<Type> argTypes,
+        int sourceLine) {
+    boolean isDifferentThanCurrentClass = owner.isPresent() && !owner.get().equals(getClassType());
+    if (isDifferentThanCurrentClass) {
+        return new ClassPathScope()
+                .getMethodSignature(owner.get(), methodName, argTypes)
+                .orElseThrow(() -> new MethodSignatureNotFoundException(this, methodName, sourceLine));
+    }
+    return getMethodCallSignature(methodName, argTypes, sourceLine);
+}
+```
+
+新增的`src\main\java\com\example\hans_antlr4\domain\scope\ClassPathScope.java`代码量较大，不贴出来了，只需要知道我们使用的方法是`MethodUtils.getMatchingAccessibleMethod`。使用这个方法时会遇到一个问题，就是它不能匹配`System.out.printf`的函数签名，导致`hant`不能调用该方法。`printf`有两个函数签名：
+
+```java
+public PrintStream printf(String var1, Object... var2) {
+    return this.format(var1, var2);
+}
+
+public PrintStream printf(Locale var1, String var2, Object... var3) {
+    return this.format(var1, var2, var3);
+}
+```
+
+为了解决这个问题，我不得不写出一段颇为丑陋的特判代码，感兴趣的同学可以自己翻阅。这段特判代码参考了`MethodUtils.getMatchingAccessibleMethod`的实现，在`Method[] methodOwnerClass.getMethods()`中筛选所需的`printf`方法，说到底原理还是反射。
+
+最后还需要将`java.lang.reflect.Method`类型的函数签名转为我们自己的`FunctionSignature`，这个工作由`src/main/java/com/example/hans_antlr4/utils/ReflectionObjectToSignatureMapper.java`完成。其中涉及`java.lang.Class`转我们自己的`Type`的工作，由`TypeResolver.getFromJavaLangClass(Class<?> clazz)`完成。
+
+### `bytecode_gen`部分
+
+`CallExpressionGenerator.java`的改动点：
+
+1. 根据函数签名判断是否是静态方法，生成对应指令。
+2. 如果函数返回值没有被使用，需要额外生成`POP`指令。
+3. 为了支持`printf`，需要额外支持可变参数。实现方法为`generateObjectArrayInsnForVarArg(List<Parameter> parameters, List<Expression> arguments)`，其中调用了`generateAutoBoxingInsn(Expression arg)`来生成自动装箱指令。
+
+### 效果
+
+[`hant_examples\object\lib_call.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/object/lib_call.hant)
+
+测试用例：
+
+1. `src/test/java/com/example/hans_antlr4/domain/ScopeTest.java`
+2. `src/test/java/com/example/hans_antlr4/func/DescriptorFactoryTest.java`
+
+TODO: 目前必须使用全限定名来访问Java核心类库，比如必须使用`java.lang.System.out.printf`而不能使用`System.out.printf`，后续再优化。
+
+## 支持访问属性
+
+[相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/1e84601eccd8172572614dbb2e0a5ae738642962...53e9df9d2e35d12d439c53b13dcb99cde2a81794)
+
+本节是在复刻Java访问属性的特性。文法规则修改：
+
+```g4
+expression:
+	expression '.' Identifier									# ClazzFieldReference
+	// ...
+```
+
+接下来探究相关的字节码。
+
+约定`W.w0.z0.y0.x0 = System.out;`，`w0, z0, y0 x0`都是静态属性，类型分别是`Z, Y, X, PrintStream`，则`W.w0.z0.y0.x0.println("xyz111");`的字节码：
+
+```java
+methodVisitor.visitFieldInsn(GETSTATIC, "W", "w0", "LZ;");
+methodVisitor.visitInsn(POP);
+methodVisitor.visitFieldInsn(GETSTATIC, "Z", "z0", "LY;");
+methodVisitor.visitInsn(POP);
+methodVisitor.visitFieldInsn(GETSTATIC, "Y", "y0", "LX;");
+methodVisitor.visitInsn(POP);
+methodVisitor.visitFieldInsn(GETSTATIC, "X", "x0", "Ljava/io/PrintStream;");
+methodVisitor.visitLdcInsn("xyz111");
+methodVisitor.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V", false);
+```
+
+约定`z1, y1, x1`都是实例属性，类型分别是`Y, X, int`，则`W.w0.z1.y1.x1`的字节码：
+
+```java
+methodVisitor.visitFieldInsn(GETSTATIC, "W", "w0", "LZ;");
+methodVisitor.visitFieldInsn(GETFIELD, "Z", "z1", "LY;");
+methodVisitor.visitFieldInsn(GETFIELD, "Y", "y1", "LX;");
+methodVisitor.visitFieldInsn(GETFIELD, "X", "x1", "I");
+```
+
+总结：要使用的是`visitFieldInsn(final int opcode, final String owner, final String name, final String descriptor)`方法。前3个参数显然，`descriptor`调用我们自己的`Type`的`Type.getDescriptor()`获取。
+
+本次改动需要新增数据结构`ClassFieldReference`：
+
+```java
+@Getter
+public class ClassFieldReference extends Expression {
+    private String qualifiedName;
+    private List<FieldReferenceRecord> fieldReferenceRecords;
+
+    public ClassFieldReference(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
+        super(getReturnTypeInInit(qualifiedName, fieldReferenceRecords), null, null);
+        this.qualifiedName = qualifiedName;
+        this.fieldReferenceRecords = fieldReferenceRecords;
+    }
+
+    private static Type getReturnTypeInInit(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
+        if (fieldReferenceRecords.isEmpty()) {
+            return new ClassType(qualifiedName);
+        }
+        return fieldReferenceRecords.get(fieldReferenceRecords.size() - 1).getFieldType();
+    }
+    // accept 等方法省略
+}
+
+@AllArgsConstructor
+@Getter
+public class FieldReferenceRecord {
+    private boolean isStatic;
+    private Type owner;
+    private String fieldName;
+    private Type fieldType;
+}
+```
+
+你肯定会好奇为什么设计了`List<FieldReferenceRecord>`来一次性记录了所有的属性访问。这是因为visitor部分的代码写法存在限制，导致目前我没有找到很好的方法去区分`x.y.z`应该识别为Java类的全限定名还是普通对象`x`的属性调用。这个设计会导致后续实现数组功能后不支持`a[i].length`等问题，影响易用性。TODO: 解决此问题。
+
+visitor部分的改动主要集中在`visitClazzFieldReference`方法，代码比较复杂就不贴出了，只说一下我设计的算法。
+
+1. 按`.`分割源代码字符串。`antlr`会帮你做好去除无关空字符等工作，所以我们不需要再调用`trim`。遍历前缀，找到最短的可以加载成功的全限定类名（用`Class.forName`）。
+2. 如果成功找到全限定类名：用`currentOwnerClass.getField(identifier)`去找到`Field field`，然后将`field.getType()`转为我们自己的`Type`。`field.getType()`转`Type`由`TypeResolver.getFromJavaLangClass`完成。后续`hant`支持自定义类的时候，这里肯定还要新增一个来源，即还需要从自定义类签名数组中寻找`Type`。这样就获得了`fieldReferenceRecords`。
+3. 如果未成功找到：将`identifiers[0]`作为可能的变量名，根据变量名从作用域中找到这个变量，进而获得其`Type`对应的`java.lang.Class currentOwnerClass;`，最后拿着`currentOwnerClass`走“2”描述的过程。目前只需要从局部变量数组中找到这个变量名，后续支持“全局变量”后需要升级为：先从局部变量数组中找，再从“全局变量”数组中找。
+
+visitor部分的代码极其复杂，但`bytecode_gen`部分非常常规，根据上文总结的字节码特征写出代码即可。
+
+```java
+public void generate(ClassFieldReference classFieldReference) {
+    classFieldReference.getFieldReferenceRecords().forEach(fieldReferenceRecord -> {
+        Type owner = fieldReferenceRecord.getOwner();
+        String ownerDescriptor = owner == null || owner.getName() == null
+                ? ""
+                : owner.getInternalName();
+        String name = fieldReferenceRecord.getFieldName();
+        String descriptor = fieldReferenceRecord.getFieldType().getDescriptor();
+        if (fieldReferenceRecord.isStatic()) {
+            mv.visitFieldInsn(GETSTATIC, ownerDescriptor, name, descriptor);
+        } else {
+            mv.visitFieldInsn(GETFIELD, ownerDescriptor, name, descriptor);
+        }
+    });
+}
+```
+
+效果：[`hant_examples\object\lib_call.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/object/lib_call.hant)
+
+## Part15-支持`new`关键字调用构造函数
 
 [相关git commit](https://github.com/Hans774882968/hans-antlr-java/commit/53e9df9d2e35d12d439c53b13dcb99cde2a81794)
 
-TODO
+相比于《Part17-支持类方法和实例方法的调用》，这一节的需求简单得多。如果有参考本项目实现自己编程语言的同学，建议调换顺序，先做`new`关键字的功能，再做方法调用的功能。
 
 文法规则修改：
 
@@ -5572,13 +5876,63 @@ expression:
 	// ...
 ```
 
-### 偶然发现了工厂方法的一个应用场景
+接下来探究相关的字节码。
 
-这时我们发现我们有一个诉求：所有使用`new ClassType()`的场景，在遇到`new ClassType("java.lang.String")`或`new ClassType("java.lang.Object")`时，需要返回对应的内建类型`BuiltInType.STRING, BuiltInType.OBJECT`。因此我们可以写一个工具方法：
+`var v = new String("acmer");`：
 
 ```java
-// src\main\java\com\example\hans_antlr4\domain\type\ClassType.java
+methodVisitor.visitTypeInsn(NEW, "java/lang/String");
+methodVisitor.visitInsn(DUP);
+methodVisitor.visitLdcInsn("acmer");
+methodVisitor.visitMethodInsn(INVOKESPECIAL, "java/lang/String", "<init>", "(Ljava/lang/String;)V", false);
+methodVisitor.visitVarInsn(ASTORE, 0);
+```
+
+`new String("ctfer");`：除了上述几条指令以外，还生成了一条`POP`指令：`methodVisitor.visitInsn(POP);`。
+
+1. `NEW`指令之后的`DUP`指令是必需的嘛？是的。因为`INVOKESPECIAL`会消耗一个对象指针，但初始化完成后需要在栈中保留一个对象指针。
+2. 总结一下指令流程：`NEW`，`DUP`，各参数入栈，`INVOKESPECIAL`，如果指针不会被使用，还需要生成`POP`指令。`visitMethodInsn`在之前的章节已经见过了，只不过在此方法名固定为`<init>`。
+
+数据结构改造：
+
+```java
+@Getter
+public class ConstructorCall extends Call {
+    private final List<Expression> arguments;
+    private final String identifier;
+    private final int sourceLine;
+
+    public ConstructorCall(String identifier, int sourceLine) {
+        this(identifier, Collections.emptyList(), sourceLine);
+    }
+
+    public ConstructorCall(String className, List<Expression> arguments, int sourceLine) {
+        super(ClassType.getTypeByQualifiedName(className), null, null);
+        this.arguments = arguments;
+        this.identifier = getIdentifierName();
+        this.sourceLine = sourceLine;
+    }
+
+    private String getIdentifierName() {
+        String tmpName = getType().getName();
+        if (tmpName.equals("string")) {
+            return "java.lang.String";
+        }
+        if (tmpName.equals("object")) {
+            return "java.lang.Object";
+        }
+        return tmpName;
+    }
+}
+```
+
+你也许会好奇`getIdentifierName`方法的作用。其目标是保证`hant`的内置类型`string`和`java.lang.String`类型对象的行为完全一致。`object`同理。同理，`ClassType.getTypeByQualifiedName`也是为了这个目标而增加：
+
+```java
 public static Type getTypeByQualifiedName(String qualifiedName) {
+    if (qualifiedName == null) {
+        return new ClassType("");
+    }
     if (qualifiedName.equals("java.lang.String")) {
         return BuiltInType.STRING;
     }
@@ -5588,6 +5942,40 @@ public static Type getTypeByQualifiedName(String qualifiedName) {
     return new ClassType(qualifiedName);
 }
 ```
+
+自此，本项目不建议直接使用`new ClassType`来获取`ClassType`对象，而应使用`getTypeByQualifiedName`来获取。可以说在此我偶然发现了**工厂方法**的一个应用场景。
+
+visitor部分改造：在`CallExpressionVisitor`新增`visitConstructorCall`方法即可，很常规，省略。
+
+`bytecode_gen`部分改造：和`public void generate(FunctionCall functionCall)`逻辑差不多，因此不再贴出完整代码。
+
+1. 模仿方法调用部分的实现，我们在`Scope`类写一个`getConstructorCallSignature`方法来获取构造函数的方法签名，其思想和逻辑与`Scope.getMethodCallSignature`类似，不再赘述。
+2. `NEW`指令的参数`ownerDescriptor`的源`ClassType`应该从`getTypeByQualifiedName`方法拿。
+3. 和`AssignmentExpression`的`notNecessaryToGenerateDupInstruction`类似，我们写一个`returnValueIsNotUsed`方法决定是否需要生成`POP`指令。
+
+```java
+public boolean returnValueIsNotUsed() {
+    if (!isRootExpression()) {
+        return false;
+    }
+    Statement statement = getBelongStatement();
+    return statement instanceof ExpressionStatement;
+}
+```
+
+### 效果：至此，`hant`已经图灵完备
+
+原作者项目`enkel`语言看上去功能很弱，但实际上它也是图灵完备的。这是因为`enkel`能够调用`java.util.List`。同理，`hant`在实现方法调用和构造函数调用后，也图灵完备了。但目前它离一门好用的编程语言还差得远！继续努力吧！
+
+相关`hant`测试代码：
+
+- [`hant_examples\object\read_file.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/object/read_file.hant)
+- [`hant_examples\object\stdin_double.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/object/stdin_double.hant)
+- [`hant_examples\object\big_int.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/object/big_int.hant)
+
+相关单测用例：
+
+- [`src\main\java\com\example\hans_antlr4\utils\ReflectionObjectToSignatureMapper.java`](https://github.com/Hans774882968/hans-antlr-java/blob/main/src/main/java/com/example/hans_antlr4/utils/ReflectionObjectToSignatureMapper.java)
 
 ## 支持数组定义和引用
 
@@ -6350,7 +6738,7 @@ public class GlobalVariableDeclarationGenerator implements Opcodes {
         expression.accept(expressionGenerator);
         String varName = globalVariableDeclaration.getName();
         Type type = expression.getType();
-        String publicClassName = scope.getMetaData().getClassName();
+        String publicClassName = scope.getClassName();
         mv.visitFieldInsn(PUTSTATIC, publicClassName, varName, type.getDescriptor());
     }
 }
@@ -6509,7 +6897,7 @@ if (!classFieldReference.isStartsWithClass()) {
         mv.visitVarInsn(opcode, index);
     }
     if (variable instanceof GlobalVariable) {
-        String publicClassName = scope.getMetaData().getClassName();
+        String publicClassName = scope.getClassName();
         GlobalVariable globalVariable = (GlobalVariable) variable;
         String varName = globalVariable.getVarName();
         String descriptor = globalVariable.getType().getDescriptor();
@@ -6524,7 +6912,7 @@ if (!classFieldReference.isStartsWithClass()) {
 public void generate(GlobalVarReference globalVarReference) {
     String varName = globalVarReference.getVarName();
     String descriptor = globalVarReference.getType().getDescriptor();
-    String publicClassName = scope.getMetaData().getClassName();
+    String publicClassName = scope.getClassName();
     mv.visitFieldInsn(GETSTATIC, publicClassName, varName, descriptor);
 }
 ```
@@ -6647,7 +7035,7 @@ public void generateLoadVariableInsn(
         mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
     }
     if (variable instanceof GlobalVariable) {
-        String publicClassName = parent.getScope().getMetaData().getClassName();
+        String publicClassName = parent.getScope().getClassName();
         String varName = variable.getVarName();
         String descriptor = variable.getType().getDescriptor();
         mv.visitFieldInsn(Opcodes.GETSTATIC, publicClassName, varName, descriptor);
@@ -6664,7 +7052,7 @@ public void generateModifyVariableInsn(
         mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
     }
     if (variable instanceof GlobalVariable) {
-        String publicClassName = parent.getScope().getMetaData().getClassName();
+        String publicClassName = parent.getScope().getClassName();
         String varName = variable.getVarName();
         String descriptor = variable.getType().getDescriptor();
         mv.visitFieldInsn(Opcodes.PUTSTATIC, publicClassName, varName, descriptor);
@@ -6716,111 +7104,45 @@ public static void modifyDemo() {
 }
 ```
 
-## 用`hant`写一些算法题吧！
+## 支持一条`var`语句定义多个变量
 
-我为`hant`做了不少功能，如果不用它写几道算法题就太可惜了！
+Java 10推出了`var`语句，提供了基础的类型推断能力。但`var`语句不支持一行定义多个变量，比如`var ii = 1, jj = 2;`会报错`'var' is not allowed in a compound declaration`。所幸这个特性在`hant`等编译到JVM的语言中是非常容易实现的。
 
-### 力扣和其他OJ算法题的新过法
+文法规则修改：
 
-首先写好代码，编译出`.class`文件，接着反编译出Java代码，稍作修改后提交到OJ。
-
-### 经典算法：八皇后
-
-[`hant_examples/acm_and_leetcode/eight_queen.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/eight_queen.hant)
-
-1. 因为还不支持“全局变量”（隐藏的`public class`的静态字段），所以需要使用`var ans = new int[1]`并传入`dfs`方法的方式来模拟全局变量。
-
-### 经典算法：棋盘覆盖问题
-
-[`hant_examples/acm_and_leetcode/chess_fill.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/chess_fill.hant)
-
-1. 因为还不支持`!`运算符，所以用了这样的写法`in(xl, xr, x) == false`。
-
-### 双周赛114C：一次遍历的贪心
-
-显然最小值是数组的and。然后我们考虑到and是单减的，有这样一个贪心策略：前若干个区间给当前剩下了val，尝试到第一个小于等于val的位置，如果成功则当前区间有效；否则因为and单减，直接并入上一个区间即可。
-
-[`hant_examples\acm_and_leetcode\双周赛114C.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.hant)
-
-[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\双周赛114C.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/%E5%8F%8C%E5%91%A8%E8%B5%9B114C.java.txt)
-
-### atcoder abc184d：3维期望dp
-
-题意：给你`a, b, c`个3种糖果，每次从袋子抽出一个糖果，则放入2个同类型糖果进袋子（袋子里同类型糖果多了一个）。你会发现后面的抽取和前面抽到什么相关。问袋子里有某种糖果100个的期望步数是多少。保证`a~c`<=99且`a+b+c`>=1。
-
-期望dp，设`dp[i][j][k]`表示现在袋子里有3种糖果各`i~k`个，到达目标的期望步数。则答案是`dp[a][b][c]`。分析当前抽取`dp[i][j][k]`，则有：`dp[i][j][k] = 1 + (dp[i+1][j][k]*i + dp[i][j+1][k]*j + dp[i][j][k+1]*k) / (i+j+k);`，倒序枚举即可。
-
-[`hant_examples\acm_and_leetcode\abc184d.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/abc184d.hant)
-
-[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\abc184d.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/abc184d.java.txt)
-
-### cf148d：3维dp，全概率公式
-
-网上大多数题解都是2维dp，2维dp解法需要考虑公主和龙都取以后的情况，并分类讨论。我在此提出一个更易于理解的3维dp解法。定义`dp[i][j][who]`为当前还剩`i`只白鼠，`j`只黑鼠，轮到`who`取且`who`胜利的概率，`who = 0, 1`分别表示公主和龙。约定：
-
-```java
-var wp = 1.0 * i / (i + j) // 当前角色取出白鼠的概率
-var bp = 1.0 * j / (i + j) // 当前角色取出黑鼠的概率
-var wp0 = 1.0 * i / (i + j - 1) // 龙取出黑鼠后跳出白鼠的概率
-var bp0 = 1.0 * (j - 1) / (i + j - 1) // 龙取出白鼠后跳出白鼠的概率
+```g4
+variable: VARIABLE varDefUnit (',' varDefUnit)*;
+varDefUnit: Identifier EQUALS expression;
 ```
 
-`who = 0`比较简单，说下`who = 1`的状态转移方程：`wp + bp * (wp0 * (1 - dp[i - 1][j - 1][0]) + bp0 * (1 - dp[i][j - 2][0]))`。龙取出黑鼠后，分跳出白鼠和黑鼠两种情况讨论。
+数据结构改造：因为`StatementVisitor`是这么声明的：`public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement>`，所以我们不应该把`visitVariable`的返回值类型改为`List<VariableDeclaration>`，而应该改造`VariableDeclaration`。
 
-[`hant_examples\acm_and_leetcode\cf148d.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf148d.hant)
+```java
+@AllArgsConstructor
+@Getter
+public class VariableDeclaration extends Statement {
+    private List<VarDefUnit> varDefUnits;
+    // 兼容之前用到 VariableDeclaration 的代码，减少改动量
+    public VariableDeclaration(String name, Expression expression) {
+        this.varDefUnits = Arrays.asList(new VarDefUnit(name, expression));
+    }
+    // equals hashCode 等省略
+}
 
-[反编译`.class`文件所得AC代码：`hant_examples\acm_and_leetcode\cf148d.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf148d.java.txt)
+@AllArgsConstructor
+@Getter
+public class VarDefUnit {
+    private String name;
+    private Expression expression;
+    // equals hashCode 等省略
+}
+```
 
-### lc640：解方程。字符串小模拟
+visitor和`bytecode_gen`部分的改动都很常规，在此省略。
 
-思路：分两次扫描，第一次获取`x`的系数，第二次获取常数项。
+效果：[`hant_examples/global_var/multi_var.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/global_var/multi_var.hant)。
 
-[`hant_examples/acm_and_leetcode/lc640.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc640.hant)
-
-[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc640.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc640.java.txt)
-
-1. 因为还不支持`char`字面量，所以使用`bytes[i] != 120`这样的方法来和`'x'`比较。
-
-### lc924：并查集
-
-题意：给你一个无向图表示软件的病毒感染关系，再给你`initial`数组表示初始的被感染软件。和被感染软件处于同一连通块的软件都会被感染。现在允许去掉`initial`的一个元素，求最小被感染软件数。注意：被去掉的元素仍然能被同一连通块的软件感染。
-
-思路：对于给定`initial`，答案就是所涉及的连通块的点的个数之和。因此统计所涉及的连通块各有几个点在`initial`中，若一个连通块有2个及以上点在`initial`中，则去掉它们的贡献都是0。若只有一个，则去掉这个点的贡献就是该连通块的点的个数。
-
-注意题目中要求的“最小索引”指的是点的编号取最小。我理解成在`initial`中的下标最小，WA了好几发。
-
-[`hant_examples/acm_and_leetcode/lc924.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.hant)
-
-[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc924.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc924.java.txt)
-
-1. 在支持泛型后才能支持`Collections.min(Arrays.asList(a))`，目前只能用for循环来求数组最小值。
-2. 不支持`&&, ||, !`运算符还是挺痛的。
-
-### lc928：并查集，比lc924难
-
-题意：和lc924相同，只是删除`initial`的点后会把这个点和其他点的连边也删掉。
-
-思路：考虑`initial`以外的点构成的子图，每个`initial`中的点都和子图的某些连通块有连接。对于每个连通块，如果只有1个`initial`中的点和它有连接，那么删除这个点该连通块就能给这个点提供该连通块点的个数的贡献。所以遍历`initial`的每个点，算出所有连通块的总贡献，就得到每个点的收益，收益最大的点为所求。
-
-[`hant_examples/acm_and_leetcode/lc928.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.hant)
-
-[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/lc928.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/lc928.java.txt)
-
-### cf1520f2：记忆化的线段树
-
-题意：交互题。给一个长为`n`的未知数组，有`T`个查询，每次查询要求第`k`个0。在每次查询中你可以询问若干次区间和，每次输出答案后这个点的0会修改成1。对询问总次数有限制。
-
-看到区间和 + 单点修改，可以想到线段树。因为区间和的信息需要从询问得到，所以是记忆化的线段树。注意Java需要IO优化才能过这题。[IO优化参考](https://codeforces.com/contest/1520/submission/185762281)
-
-[`hant_examples/acm_and_leetcode/cf1520f2.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf1520f2.hant)
-
-[反编译`.class`文件所得AC代码：`hant_examples/acm_and_leetcode/cf1520f2.java.txt`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/cf1520f2.java.txt)
-
-### hdu4746：莫比乌斯反演+交换求和顺序+预处理
-
-[我21年写的题解](https://blog.csdn.net/hans774882968/article/details/117399861)
-
-[`hant_examples/acm_and_leetcode/hdu4746.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/acm_and_leetcode/hdu4746.hant)
+值得注意的是，不需要提供额外支持，`hant`就已经具备引用同一语句前面定义的变量的能力，即`var a = foo, b = f(a)`是合法的，它和`var a = foo; var b = f(a)`等价。
 
 ## 参考资料
 

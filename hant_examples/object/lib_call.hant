@@ -119,6 +119,18 @@ void listDemo2d() {
     print a.get(0)
 }
 
+sourceCodeDemo {
+    print "----- sourceCodeDemo -----"
+    var a = [[1, 2]]
+    // 1 4 acmer
+    print a.
+        length
+    print "abcd"
+        .length()
+    print "an acmer".
+        substring(3)
+}
+
 void main(string[] args) {
     mathDemo()
     wrapClassDemo()
@@ -129,4 +141,5 @@ void main(string[] args) {
     randomDemo()
     listDemo(10)
     listDemo2d()
+    sourceCodeDemo()
 }

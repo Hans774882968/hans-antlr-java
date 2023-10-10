@@ -1,6 +1,7 @@
 package com.example.hans_antlr4.parsing.biz_visitor;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -22,7 +23,8 @@ import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VarDefUnit;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
@@ -46,17 +48,22 @@ public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement> {
 
     @Override
     public VariableDeclaration visitVariable(HansAntlrParser.VariableContext ctx) {
-        final TerminalNode varTerminalNode = ctx.Identifier();
-        final String varName = varTerminalNode.getText();
-        final ExpressionContext expressionContext = ctx.expression();
-        final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
-        Expression expression = expressionContext.accept(expressionVisitor);
+        List<VarDefUnit> varDefUnits = ctx.varDefUnit().stream().map(varDefUnitCtx -> {
+            final TerminalNode varTerminalNode = varDefUnitCtx.Identifier();
+            final String varName = varTerminalNode.getText();
+            final ExpressionContext expressionContext = varDefUnitCtx.expression();
+            final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
+            Expression expression = expressionContext.accept(expressionVisitor);
 
-        scope.addLocalVariable(new LocalVariable(varName, expression.getType()));
-        VariableDeclaration variableDeclaration = new VariableDeclaration(varName, expression);
+            scope.addLocalVariable(new LocalVariable(varName, expression.getType()));
+            VarDefUnit varDefUnit = new VarDefUnit(varName, expression);
 
-        logVariableDeclarationStatementFound(varTerminalNode, expression);
+            logVariableDeclarationStatementFound(varTerminalNode, expression);
 
+            return varDefUnit;
+        }).collect(Collectors.toList());
+
+        VariableDeclaration variableDeclaration = new VariableDeclaration(varDefUnits);
         return variableDeclaration;
     }
 

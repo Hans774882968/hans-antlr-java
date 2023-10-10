@@ -32,7 +32,7 @@ public class AssignmentUtil {
             mv.visitVarInsn(lhsType.getLoadVariableOpcode(), variableIndex);
         }
         if (variable instanceof GlobalVariable) {
-            String publicClassName = parent.getScope().getMetaData().getClassName();
+            String publicClassName = parent.getScope().getClassName();
             String varName = variable.getVarName();
             String descriptor = variable.getType().getDescriptor();
             mv.visitFieldInsn(Opcodes.GETSTATIC, publicClassName, varName, descriptor);
@@ -49,7 +49,7 @@ public class AssignmentUtil {
             mv.visitVarInsn(lhsType.getStoreVariableOpcode(), variableIndex);
         }
         if (variable instanceof GlobalVariable) {
-            String publicClassName = parent.getScope().getMetaData().getClassName();
+            String publicClassName = parent.getScope().getClassName();
             String varName = variable.getVarName();
             String descriptor = variable.getType().getDescriptor();
             mv.visitFieldInsn(Opcodes.PUTSTATIC, publicClassName, varName, descriptor);

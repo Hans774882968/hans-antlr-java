@@ -158,6 +158,15 @@ public interface HansAntlrParserVisitor<T> extends ParseTreeVisitor<T> {
 	T visitVariable(HansAntlrParser.VariableContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link HansAntlrParser#varDefUnit}.
+	 * 
+	 * @param ctx
+	 *            the parse tree
+	 * @return the visitor result
+	 */
+	T visitVarDefUnit(HansAntlrParser.VarDefUnitContext ctx);
+
+	/**
 	 * Visit a parse tree produced by the {@code ReturnWithValue}
 	 * labeled alternative in {@link HansAntlrParser#returnStatement}.
 	 * 

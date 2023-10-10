@@ -6,7 +6,7 @@ import org.objectweb.asm.Opcodes;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.scope.Scope;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.Type;
 
 import lombok.Getter;
@@ -24,12 +24,14 @@ public class VariableDeclarationStatementGenerator implements Opcodes {
     }
 
     public void generate(VariableDeclaration variableDeclaration) {
-        Expression expression = variableDeclaration.getExpression();
-        String varName = variableDeclaration.getName();
-        int index = scope.getLocalVariableIndex(varName);
+        variableDeclaration.getVarDefUnits().forEach(varDefUnit -> {
+            Expression expression = varDefUnit.getExpression();
+            String varName = varDefUnit.getName();
+            int index = scope.getLocalVariableIndex(varName);
 
-        Type type = expression.getType();
-        expression.accept(expressionGenerator);
-        mv.visitVarInsn(type.getStoreVariableOpcode(), index);
+            Type type = expression.getType();
+            expression.accept(expressionGenerator);
+            mv.visitVarInsn(type.getStoreVariableOpcode(), index);
+        });
     }
 }

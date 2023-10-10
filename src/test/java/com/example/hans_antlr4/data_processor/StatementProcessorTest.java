@@ -14,7 +14,7 @@ import com.example.hans_antlr4.domain.expression.unary.UnaryTilde;
 import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.Break;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 
 public class StatementProcessorTest {

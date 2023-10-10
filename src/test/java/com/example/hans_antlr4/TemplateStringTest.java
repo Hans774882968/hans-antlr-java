@@ -12,7 +12,7 @@ import com.example.hans_antlr4.domain.expression.TemplateString;
 import com.example.hans_antlr4.domain.expression.UnsignedShr;
 import com.example.hans_antlr4.domain.expression.Value;
 import com.example.hans_antlr4.domain.statement.Statement;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 
@@ -23,7 +23,7 @@ public class TemplateStringTest {
         TemplateString templateString = new TemplateString(
                 Arrays.asList(expected),
                 new ArrayList<>());
-        Assert.assertEquals(templateString, variableDeclaration.getExpression());
+        Assert.assertEquals(templateString, variableDeclaration.getVarDefUnits().get(0).getExpression());
     }
 
     @Test
@@ -36,7 +36,7 @@ public class TemplateStringTest {
                         new Value(BuiltInType.INT, "1"), new Multiplication(
                                 new Value(BuiltInType.INT, "2"),
                                 new Value(BuiltInType.INT, "3")))));
-        Assert.assertEquals(templateString, variableDeclaration.getExpression());
+        Assert.assertEquals(templateString, variableDeclaration.getVarDefUnits().get(0).getExpression());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class TemplateStringTest {
         TemplateString templateString = new TemplateString(
                 Arrays.asList("我是acmer"),
                 new ArrayList<>());
-        Assert.assertEquals(templateString, variableDeclaration.getExpression());
+        Assert.assertEquals(templateString, variableDeclaration.getVarDefUnits().get(0).getExpression());
     }
 
     @Test
@@ -58,7 +58,7 @@ public class TemplateStringTest {
                 Arrays.asList(new UnsignedShr(
                         new Value(BuiltInType.INT, "11"),
                         new Value(BuiltInType.INT, "3"))));
-        Assert.assertEquals(templateString, variableDeclaration.getExpression());
+        Assert.assertEquals(templateString, variableDeclaration.getVarDefUnits().get(0).getExpression());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class TemplateStringTest {
         TemplateString templateString = new TemplateString(
                 Arrays.asList(""),
                 new ArrayList<>());
-        Assert.assertEquals(templateString, variableDeclaration.getExpression());
+        Assert.assertEquals(templateString, variableDeclaration.getVarDefUnits().get(0).getExpression());
     }
 
     @Test
@@ -78,7 +78,7 @@ public class TemplateStringTest {
         TemplateString templateString = new TemplateString(
                 Arrays.asList("${abc}"),
                 new ArrayList<>());
-        Assert.assertEquals(templateString, variableDeclaration.getExpression());
+        Assert.assertEquals(templateString, variableDeclaration.getVarDefUnits().get(0).getExpression());
     }
 
     @Test

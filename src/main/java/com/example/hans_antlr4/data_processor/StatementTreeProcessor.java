@@ -13,7 +13,7 @@ import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 
 /*
  * 1. setParent
@@ -114,8 +114,10 @@ public class StatementTreeProcessor {
             return;
         }
         variableDeclaration.setParent(parent);
-        variableDeclaration.getExpression().processSubExpressionTree(
-                expressionTreeProcessor, null, variableDeclaration);
+        variableDeclaration.getVarDefUnits().forEach(varDefUnit -> {
+            varDefUnit.getExpression().processSubExpressionTree(
+                    expressionTreeProcessor, null, variableDeclaration);
+        });
     }
 
     public void processStatementTree(Break breakStatement, Statement parent, Loop nearestLoopStatement) {

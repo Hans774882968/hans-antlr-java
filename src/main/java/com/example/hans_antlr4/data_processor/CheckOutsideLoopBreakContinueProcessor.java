@@ -10,7 +10,7 @@ import com.example.hans_antlr4.domain.statement.RangedForStatement;
 import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.StandardForStatement;
 import com.example.hans_antlr4.domain.statement.StatementAfterIf;
-import com.example.hans_antlr4.domain.statement.VariableDeclaration;
+import com.example.hans_antlr4.domain.statement.var.VariableDeclaration;
 import com.example.hans_antlr4.exception.BreakStatementOutsideLoopException;
 import com.example.hans_antlr4.exception.ContinueStatementOutsideLoopException;
 
