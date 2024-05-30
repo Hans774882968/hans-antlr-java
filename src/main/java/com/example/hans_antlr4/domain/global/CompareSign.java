@@ -41,4 +41,68 @@ public enum CompareSign implements Opcodes {
             return CompareSign.LESS;
         throw new RuntimeException("Sign has no opposite compare sign");
     }
+
+    public boolean evaluateValue(String left, String right) {
+        if (this == CompareSign.EQUAL) {
+            return left == right;
+        }
+        if (this == CompareSign.NOT_EQUAL) {
+            return left != right;
+        }
+        throw new RuntimeException("No such sign" + this + "for type String and String");
+    }
+
+    public boolean evaluateValue(boolean left, boolean right) {
+        if (this == CompareSign.EQUAL) {
+            return left == right;
+        }
+        if (this == CompareSign.NOT_EQUAL) {
+            return left != right;
+        }
+        throw new RuntimeException("No such sign" + this + "for type boolean and boolean");
+    }
+
+    public boolean evaluateValue(double left, double right) {
+        if (this == CompareSign.EQUAL) {
+            return left == right;
+        }
+        if (this == CompareSign.NOT_EQUAL) {
+            return left != right;
+        }
+        if (this == CompareSign.LESS) {
+            return left < right;
+        }
+        if (this == CompareSign.GREATER) {
+            return left > right;
+        }
+        if (this == CompareSign.LESS_OR_EQUAL) {
+            return left <= right;
+        }
+        if (this == CompareSign.GREATER_OR_EQUAL) {
+            return left >= right;
+        }
+        throw new RuntimeException("No such sign");
+    }
+
+    public boolean evaluateValue(long left, long right) {
+        if (this == CompareSign.EQUAL) {
+            return left == right;
+        }
+        if (this == CompareSign.NOT_EQUAL) {
+            return left != right;
+        }
+        if (this == CompareSign.LESS) {
+            return left < right;
+        }
+        if (this == CompareSign.GREATER) {
+            return left > right;
+        }
+        if (this == CompareSign.LESS_OR_EQUAL) {
+            return left <= right;
+        }
+        if (this == CompareSign.GREATER_OR_EQUAL) {
+            return left >= right;
+        }
+        throw new RuntimeException("No such sign");
+    }
 }

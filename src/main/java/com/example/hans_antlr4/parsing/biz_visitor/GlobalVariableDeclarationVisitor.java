@@ -29,7 +29,8 @@ public class GlobalVariableDeclarationVisitor extends HansAntlrParserBaseVisitor
             final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
             Expression expression = expressionContext.accept(expressionVisitor);
 
-            scope.addGlobalVariable(new GlobalVariable(varName, expression.getType()));
+            scope.addGlobalVariable(new GlobalVariable(
+                    varName, expression.getType(), expression.getValueInferResult()));
 
             return new VarDefUnit(varName, expression);
         }).collect(Collectors.toList());

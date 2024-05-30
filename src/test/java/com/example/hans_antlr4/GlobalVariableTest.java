@@ -6,28 +6,12 @@ import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.inOrder;
 
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.InOrder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.utils.Const;
-
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
-class BootstrapMethodArgMatcher implements ArgumentMatcher<Object> {
-    private int stringElementCount;
-
-    @Override
-    public boolean matches(Object right) {
-        if (!(right instanceof String)) {
-            return false;
-        }
-        return right.toString().equals("\u0001".repeat(stringElementCount));
-    }
-}
 
 public class GlobalVariableTest implements Opcodes {
     @Test
@@ -74,7 +58,7 @@ public class GlobalVariableTest implements Opcodes {
                 eq("makeConcatWithConstants"),
                 eq("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
                 isA(Handle.class),
-                argThat(new BootstrapMethodArgMatcher(3)));
+                argThat(new MakeConcatWithConstArgMatcher(3)));
         inOrder0.verify(fnMv).visitVarInsn(eq(ASTORE), eq(1));
 
         MethodVisitor clinitMv = mvs[1];

@@ -20,13 +20,13 @@ import com.example.hans_antlr4.domain.type.BuiltInType;
 public class StatementProcessorTest {
     @Test
     public void statementCase1() {
-        Value value1 = new Value(BuiltInType.INT, "1");
+        Value value1 = Value.valueWithoutSourceLine(BuiltInType.INT, "1");
         VariableDeclaration variableDeclaration = new VariableDeclaration("x", value1);
-        VarReference addL = new VarReference("y", BuiltInType.INT);
-        VarReference addR = new VarReference("z", BuiltInType.INT);
-        Addition startExpr = new Addition(addL, addR);
-        Value value2 = new Value(BuiltInType.INT, "2");
-        UnaryTilde endExpr = new UnaryTilde(value2);
+        VarReference addL = VarReference.varReferenceWithoutSourceLine("y", BuiltInType.INT);
+        VarReference addR = VarReference.varReferenceWithoutSourceLine("z", BuiltInType.INT);
+        Addition startExpr = Addition.additionWithoutSourceLine(addL, addR);
+        Value value2 = Value.valueWithoutSourceLine(BuiltInType.INT, "2");
+        UnaryTilde endExpr = UnaryTilde.unaryTildeWithoutSourceLine(value2);
         final int ANY_SOURCE_LINE = 0;
         Break breakStatement = new Break(ANY_SOURCE_LINE);
         RangedForStatement rangedForStatement = new RangedForStatement(

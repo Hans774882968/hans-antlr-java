@@ -17,10 +17,10 @@ public class GlobalVariableDeclarationGenerator implements Opcodes {
     private Scope scope;
     private ExpressionGenerator expressionGenerator;
 
-    public GlobalVariableDeclarationGenerator(MethodVisitor mv, Scope scope) {
+    public GlobalVariableDeclarationGenerator(MethodVisitor mv, Scope scope, boolean constantFolding) {
         this.mv = mv;
         this.scope = scope;
-        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+        this.expressionGenerator = new ExpressionGenerator(mv, scope, constantFolding);
     }
 
     public void generate(GlobalVariableDeclaration globalVariableDeclaration) {

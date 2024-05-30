@@ -16,11 +16,12 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class StandardForStatementGenerator implements Opcodes {
     private MethodVisitor mv;
+    private boolean constantFolding;
 
     public void generate(StandardForStatement standardForStatement) {
         final Scope newScope = standardForStatement.getScope();
-        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, newScope);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope);
+        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, newScope, constantFolding);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope, constantFolding);
         Optional<Expression> nullableShouldEndLoopExpression = standardForStatement.getShouldEndLoopExpression();
 
         // 1. 生成 forInit

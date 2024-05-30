@@ -10,12 +10,15 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import com.example.hans_antlr4.bytecode_gen.CompilationUnit;
 import com.example.hans_antlr4.data_processor.ProcessorEntry;
 import com.example.hans_antlr4.parsing.biz_visitor.CompilationUnitVisitor;
+import com.example.hans_antlr4.program_arguments.CompilerArguments;
 import com.example.hans_antlr4.utils.Const;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ParseEntry {
+    public static CompilerArguments compilerArguments;
+
     public static CompilationUnit parseFromFilePath(
             String fileAbsolutePath, String publicClassName) throws IOException {
         CharStream charStream = CharStreams.fromFileName(fileAbsolutePath);
@@ -32,7 +35,7 @@ public class ParseEntry {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HansAntlrParser parser = new HansAntlrParser(tokens);
 
-        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor(publicClassName);
+        CompilationUnitVisitor compilationUnitVisitor = new CompilationUnitVisitor(publicClassName, compilerArguments);
         HansAntlrErrorListener errorListener = new HansAntlrErrorListener();
         parser.addErrorListener(errorListener);
 

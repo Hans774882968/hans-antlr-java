@@ -13,6 +13,8 @@ import java.util.List;
 import org.junit.Test;
 
 import com.example.hans_antlr4.TestUtils;
+import com.example.hans_antlr4.exception.BlackBoxTestException;
+import com.example.hans_antlr4.exception.ExceptionUtil;
 
 public class HantBlackBoxMostExamplesTest {
     @Test
@@ -44,7 +46,12 @@ public class HantBlackBoxMostExamplesTest {
                 if (!strFilePath.endsWith(".hant") || excludedFiles.stream().anyMatch(f -> strFilePath.contains(f))) {
                     return FileVisitResult.CONTINUE;
                 }
-                TestUtils.runBlackBox(strFilePath);
+                try {
+                    TestUtils.runBlackBox(strFilePath);
+                } catch (Exception e) {
+                    throw new BlackBoxTestException(
+                            ExceptionUtil.getWrappedExceptionMessage(strFilePath, e), e);
+                }
                 return FileVisitResult.CONTINUE;
             }
 

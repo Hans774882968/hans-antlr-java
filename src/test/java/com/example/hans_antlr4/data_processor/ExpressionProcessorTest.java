@@ -18,14 +18,14 @@ import com.example.hans_antlr4.domain.type.BuiltInType;
 public class ExpressionProcessorTest {
     @Test
     public void expressionCase1() {
-        VarReference powL = new VarReference("x", BuiltInType.INT);
-        Value powR = new Value(BuiltInType.INT, "2");
-        Pow pow = new Pow(powL, powR);
-        VarReference subtractionL = new VarReference("x", BuiltInType.INT);
-        Value subtractionR = new Value(BuiltInType.INT, "2");
-        Subtraction subtraction = new Subtraction(subtractionL, subtractionR);
-        UnaryTilde unaryTilde = new UnaryTilde(subtraction);
-        Addition addition = new Addition(pow, unaryTilde);
+        VarReference powL = VarReference.varReferenceWithoutSourceLine("x", BuiltInType.INT);
+        Value powR = Value.valueWithoutSourceLine(BuiltInType.INT, "2");
+        Pow pow = Pow.powWithoutSourceLine(powL, powR);
+        VarReference subtractionL = VarReference.varReferenceWithoutSourceLine("x", BuiltInType.INT);
+        Value subtractionR = Value.valueWithoutSourceLine(BuiltInType.INT, "2");
+        Subtraction subtraction = Subtraction.subtractionWithoutSourceLine(subtractionL, subtractionR);
+        UnaryTilde unaryTilde = UnaryTilde.unaryTildeWithoutSourceLine(subtraction);
+        Addition addition = Addition.additionWithoutSourceLine(pow, unaryTilde);
         PrintStatement mockStatement = new PrintStatement(addition);
         addition.processSubExpressionTree(new ExpressionTreeProcessor(), null, mockStatement);
 
@@ -50,16 +50,16 @@ public class ExpressionProcessorTest {
 
     @Test
     public void expressionCase2() {
-        VarReference powL = new VarReference("x", BuiltInType.INT);
-        Value powR = new Value(BuiltInType.INT, "2");
-        Pow pow = new Pow(powL, powR);
-        VarReference subtractionL = new VarReference("x", BuiltInType.INT);
-        Value subtractionR = new Value(BuiltInType.INT, "2");
-        Subtraction subtraction = new Subtraction(subtractionL, subtractionR);
+        VarReference powL = VarReference.varReferenceWithoutSourceLine("x", BuiltInType.INT);
+        Value powR = Value.valueWithoutSourceLine(BuiltInType.INT, "2");
+        Pow pow = Pow.powWithoutSourceLine(powL, powR);
+        VarReference subtractionL = VarReference.varReferenceWithoutSourceLine("x", BuiltInType.INT);
+        Value subtractionR = Value.valueWithoutSourceLine(BuiltInType.INT, "2");
+        Subtraction subtraction = Subtraction.subtractionWithoutSourceLine(subtractionL, subtractionR);
         AssignmentExpression assignmentAdd = new AssignmentExpression(
                 new LocalVariable("x", BuiltInType.INT), AssignmentSign.ADD, subtraction, 0);
-        UnaryTilde unaryTilde = new UnaryTilde(assignmentAdd);
-        Addition addition = new Addition(pow, unaryTilde);
+        UnaryTilde unaryTilde = UnaryTilde.unaryTildeWithoutSourceLine(assignmentAdd);
+        Addition addition = Addition.additionWithoutSourceLine(pow, unaryTilde);
         PrintStatement mockStatement = new PrintStatement(addition);
         addition.processSubExpressionTree(new ExpressionTreeProcessor(), null, mockStatement);
 

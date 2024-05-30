@@ -27,12 +27,8 @@ void assignToVar() {
     var a2 = new double[4][5][6][7]
     var tmpA2 = a2[3][1]
     print tmpA2[4][2]
-    /* TODO: 最好把字符串相加的实现方式换成和 += 一样的 makeConcatWithConstants
-    Caused by: java.lang.NoSuchMethodError: 'java.lang.StringBuilder java.lang.StringBuilder.append(double[][])'
-    double[] 也有这个问题。
-    print tmpA2 + " " + tmpA2[4]
-    */
-    print tmpA2.toString() + " " + tmpA2[4].toString() // [[D@4a3631f8 [D@6b58b9e9
+    print `tmpA2 + " " + tmpA2[4] = ${tmpA2 + " " + tmpA2[4]}` // [[D@2c88b9fc [D@388ba540
+    print tmpA2.toString() + " " + tmpA2[4].toString() // [[D@2c88b9fc [D@388ba540
     var tmpS = ""
     tmpS += tmpA2
     tmpS += " "

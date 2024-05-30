@@ -1,0 +1,110 @@
+addition {
+    print "----- addition -----"
+    var v1 = 0x3f + 37
+    print v1 // 100
+    var v2 = 127y + 127y
+    print `v2 = ${v2}` // 254
+    var v3 = 127y + 128
+    print `v3 = ${v3}` // 255
+    var v4 = "acmer" + 700 + 1y
+    print v4 // acmer7001
+}
+
+subtract() {
+    print "----- subtract -----"
+    var v1 = -33y - 127y
+    print `v1 = ${v1}` // -160
+    var v2 = 33y - 1333
+    print `v2 = ${v2}` // -1300
+}
+
+void pow {
+    print "----- pow -----"
+    var v1 = 2y ** 17y
+    print `v1 = ${v1}` // 131072
+    var v2 = 2y ** 17
+    print `v2 = ${v2}` // 131072
+    var v3 = 2y ** 32, v4 = 2 ** 32
+    print `v3 = ${v3} v4 = ${v4}` // 2147483647 2147483647
+}
+
+mulDivMod {
+    print "----- mulDivMod -----"
+    var v1 = (288 / 33y) % (77L * 13L - 996)
+    print `v1 = ${v1}` // 3
+    var v2 = 33y * 33y, v3 = 33y * 3333333333L, v4 = 3.2 / 2y, v5 = 3.2 % 2y
+    print `v2 = ${v2} v3 = ${v3} v4 = ${v4} v5 = ${v5}` // 1089 109999999989 1.6 1.2
+}
+
+void shift {
+    print "----- shift -----"
+    var tmpB = 13y
+    var v1 = (tmpB << (6 + 2)) + 7y
+    print `v1 = ${v1}` // 3335
+    var v2 = (13y << (6 + 2)) + 7y
+    print `v2 = ${v2}` // 3335
+    var v3 = -127y >>> 1, v4 = 127y >> 1
+    print `v3 = ${v3} v4 = ${v4}` // 2147483584 63
+}
+
+void andXorOr() {
+    print "----- andXorOr -----"
+    var v1 = 0b101011 & 0o11L, v2 = 0b101101y ^ 0b010010;
+    var v3 = 0b101101L | 0b010010y, v4 = 0b101101y ^ 0b010010y
+    print `${v1} ${v2} ${v3} ${v4}` // 9 63 63 63
+}
+
+unary() {
+    print "----- unary -----"
+    var v1 = -(64y << 1)
+    var v2 = +(64y << 1)
+    var v3 = ~((64y << 1) + 1y)
+    print `v1 = ${v1} v2 = ${v2} v3 = ${v3}` // -128 128 -130
+    var tmpB = 64y
+    print `${-(tmpB << 1)} ${+(tmpB << 1)} ${~((tmpB << 1) + 1y)}` // -128 128 -130
+    var v4 = -(64y << 1y), v5 = +(64y << 1y), v6 = ~((64y << 1y) + 1y)
+    print `v4 = ${v4} v5 = ${v5} v6 = ${v6}` // -128 128 -130
+    var v7 = -127y, v8 = +127y, v9 = ~127y
+    print `v7 = ${v7} v8 = ${v8} v9 = ${v9}` // -127 127 -128
+    var v10 = (13y << (6 + 2)) + 20y
+    print `v10 = ${v10}` // 3348
+}
+
+conditionalExpression {
+    print "----- conditionalExpression -----"
+    var v1 = 64y == 63 + 1
+    print `v1 = ${v1}` // true
+    var v2 = "acmer".equals("acm" + `e${"r"}`)
+    print `v2 = ${v2}` // true
+    var v3 = 0x40y == 32L * 2
+    print `v3 = ${v3}` // true
+    var v4 = 0o14y == 12f, v5 = 0xcy == 12d
+    print `v4 = ${v4} v5 = ${v5}` // true true
+    var v6 = 0o14y + 2y == 16 - 2
+    print `v6 = ${v6}` // true
+    var v7 = 2y ** 31 == 2 ** 31
+    print `${2y ** 31} v7 = ${v7}` // 2147483647 true
+}
+
+var g1 = 33y + 99y
+var g2 = 10y - 1145141919820L
+var g3 = `hello ${13y - 213L}`, g4 = 13y >>> 1
+var g5 = ((31y << 1 | 1) * (31y >> 1)) ** 2y, g6 = (8y | 16L) & (16y ^ 1y)
+
+void globalVar() {
+    print "----- globalVar -----"
+    print `g1 = ${g1} g2 = ${g2} g3 = \`"${g3}"\`` // 132 -1145141919810 "hello -200"
+    print `g4 = ${g4} g5 = ${g5} g6 = ${g6}` // 6 893025 16
+}
+
+main(string[] args) {
+    addition()
+    subtract()
+    pow()
+    mulDivMod()
+    shift()
+    andXorOr()
+    unary()
+    conditionalExpression()
+    globalVar()
+}

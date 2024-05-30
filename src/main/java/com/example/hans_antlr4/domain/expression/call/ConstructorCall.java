@@ -6,6 +6,7 @@ import java.util.List;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.ClassType;
 
@@ -24,10 +25,11 @@ public class ConstructorCall extends Call {
     }
 
     public ConstructorCall(String className, List<Expression> arguments, int sourceLine) {
-        super(ClassType.getTypeByQualifiedName(className), null, null);
+        super(ClassType.getTypeByQualifiedName(className), null, null, sourceLine);
         this.arguments = arguments;
         this.identifier = getIdentifierName();
         this.sourceLine = sourceLine;
+        calculateValueInferResult();
     }
 
     private String getIdentifierName() {
@@ -52,6 +54,11 @@ public class ConstructorCall extends Call {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferResult.nonConst);
     }
 
     @Override

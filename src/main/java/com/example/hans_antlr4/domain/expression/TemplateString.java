@@ -7,7 +7,9 @@ import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
+import com.example.hans_antlr4.domain.value_infer.ValueInferUtils;
 import com.example.hans_antlr4.exception.IllegalTemplateStringException;
+import com.example.hans_antlr4.utils.Const;
 
 import lombok.Getter;
 
@@ -16,22 +18,18 @@ public class TemplateString extends Expression {
     private List<String> strs;
     private List<Expression> expressions;
 
-    public TemplateString(List<String> strs, List<Expression> expressions) {
-        super(BuiltInType.STRING, null, null);
-        this.strs = strs;
-        this.expressions = expressions;
-        if (strs.size() != expressions.size() + 1) {
-            throw new IllegalTemplateStringException(strs, expressions);
-        }
-    }
-
     public TemplateString(List<String> strs, List<Expression> expressions, int sourceLine) {
-        super(BuiltInType.STRING, null, null);
+        super(BuiltInType.STRING, null, null, sourceLine, null);
         this.strs = strs;
         this.expressions = expressions;
         if (strs.size() != expressions.size() + 1) {
             throw new IllegalTemplateStringException(strs, expressions, sourceLine);
         }
+        calculateValueInferResult();
+    }
+
+    public static TemplateString templateStringWithoutSourceLine(List<String> strs, List<Expression> expressions) {
+        return new TemplateString(strs, expressions, Const.MOCK_SOURCE_LINE);
     }
 
     @Override
@@ -45,6 +43,11 @@ public class TemplateString extends Expression {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferUtils.calcValueInferResultForTemplateString(this));
     }
 
     @Override

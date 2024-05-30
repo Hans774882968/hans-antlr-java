@@ -36,8 +36,8 @@ public class App {
         os.write(byteCode);
     }
 
-    private void runClass(byte[] byteCode) {
-        CodeRunner.run(byteCode);
+    private void runClass(byte[] byteCode, String fileAbsolutePath, String[] args) {
+        CodeRunner.run(byteCode, fileAbsolutePath, args);
     }
 
     public static void main(String[] args) {
@@ -61,6 +61,7 @@ public class App {
             return;
         }
         app.setLogLevel();
+        ParseEntry.compilerArguments = app.compilerArguments;
 
         String inputFilePath = app.compilerArguments.getFilePath();
         File hantFile = new File(inputFilePath);
@@ -71,7 +72,7 @@ public class App {
         CompilationUnit compilationUnit = null;
         try {
             compilationUnit = ParseEntry.parseFromFilePath(fileAbsolutePath, publicClassName);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return;
         }
@@ -80,11 +81,11 @@ public class App {
 
         try {
             if (app.compilerArguments.isRunMode()) {
-                app.runClass(byteCode);
+                app.runClass(byteCode, fileAbsolutePath, args);
             } else {
                 app.saveBytecodeToClassFile(fileAbsolutePath, byteCode);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

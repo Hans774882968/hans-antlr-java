@@ -115,7 +115,7 @@ void listDemo2d() {
     print "----- listDemo2d -----"
     var a = new java.util.ArrayList()
     a.add(new java.util.ArrayList())
-    // a.get(0).add(java.lang.Integer.valueOf(123)) // TODO: 目前无法实现二维数组
+    // a.get(0).add(java.lang.Integer.valueOf(123)) // TODO: 目前无法仅通过 ArrayList 实现二维数组
     print a.get(0)
 }
 

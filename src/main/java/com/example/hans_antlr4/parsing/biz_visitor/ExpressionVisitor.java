@@ -56,8 +56,8 @@ import com.example.hans_antlr4.domain.type.Type;
 import com.example.hans_antlr4.domain.type.TypeChecker;
 import com.example.hans_antlr4.exception.ArithmeticExprLhsAndRhsTypeIncompatibleException;
 import com.example.hans_antlr4.exception.ConditionalExprLhsAndRhsTypeIncompatibleException;
-import com.example.hans_antlr4.exception.IllegalShiftTypeException;
 import com.example.hans_antlr4.exception.assignment.IllegalAssignmentLhsType;
+import com.example.hans_antlr4.exception.type.IllegalShiftTypeException;
 import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 import com.example.hans_antlr4.parsing.HansAntlrParser.ExpressionContext;
@@ -95,7 +95,8 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         List<Expression> dimensions = ctx.expression().stream().map(exp -> {
             return exp.accept(this);
         }).collect(Collectors.toList());
-        return new ArrayDeclaration(elementType, dimensions);
+        int sourceLine = ctx.getStart().getLine();
+        return new ArrayDeclaration(elementType, dimensions, sourceLine);
     }
 
     @Override
@@ -106,7 +107,8 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
             Expression dimension = ctx.expression(i).accept(this);
             dimensions.add(dimension);
         }
-        return new ArrayAccess(array, dimensions);
+        int sourceLine = ctx.getStart().getLine();
+        return new ArrayAccess(array, dimensions, sourceLine);
     }
 
     private int getFindFieldStartIndex(String[] identifiers, String classFieldString) {
@@ -208,28 +210,30 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
             }
         }
 
+        int sourceLine = ctx.getStart().getLine();
         if (findFieldStartIndex == -1) {
             String possibleVarName = identifiers[0];
             if (scope.localVariableExists(possibleVarName)) {
                 LocalVariable localVariable = scope.getLocalVariable(possibleVarName);
-                return new ClassFieldReference(localVariable, fieldReferenceRecords);
+                return new ClassFieldReference(localVariable, fieldReferenceRecords, sourceLine);
             }
             GlobalVariable globalVariable = scope.getGlobalVariable(possibleVarName);
-            return new ClassFieldReference(globalVariable, fieldReferenceRecords);
+            return new ClassFieldReference(globalVariable, fieldReferenceRecords, sourceLine);
         }
         String classQualifiedName = getClassQualifiedName(identifiers, findFieldStartIndex);
-        return new ClassFieldReference(classQualifiedName, fieldReferenceRecords);
+        return new ClassFieldReference(classQualifiedName, fieldReferenceRecords, sourceLine);
     }
 
     @Override
     public Reference visitVarReference(HansAntlrParser.VarReferenceContext ctx) {
+        int sourceLine = ctx.getStart().getLine();
         String varName = ctx.getText();
         if (scope.localVariableExists(varName)) {
             LocalVariable localVariable = scope.getLocalVariable(varName);
-            return new VarReference(varName, localVariable.getType());
+            return new VarReference(varName, localVariable.getType(), sourceLine);
         }
         GlobalVariable globalVariable = scope.getGlobalVariable(varName);
-        return new GlobalVarReference(varName, globalVariable.getType());
+        return new GlobalVarReference(varName, globalVariable.getType(), sourceLine);
     }
 
     @Override
@@ -238,7 +242,8 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         Type type = TypeResolver.getFromValue(value);
         // 约定：getValueFromString 调用时已经没有 typeSuffix
         String pureNumber = HantNumber.getStringWithoutTypeSuffix(value);
-        return new Value(type, pureNumber);
+        int sourceLine = ctx.getStart().getLine();
+        return new Value(type, pureNumber, sourceLine);
     }
 
     @Override
@@ -261,13 +266,14 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
     public Unary visitUNARY(HansAntlrParser.UNARYContext ctx) {
         Expression expression = ctx.expression().accept(this);
         String op = ctx.UNARY.getText();
+        int sourceLine = ctx.getStart().getLine();
         if (op.equals("+")) {
-            return new UnaryPositive(expression);
+            return new UnaryPositive(expression, sourceLine);
         }
         if (op.equals("-")) {
-            return new UnaryNegative(expression);
+            return new UnaryNegative(expression, sourceLine);
         }
-        return new UnaryTilde(expression);
+        return new UnaryTilde(expression, sourceLine);
     }
 
     @Override
@@ -276,9 +282,9 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         ExpressionContext rightExpressionContext = ctx.expression(1);
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
-        Pow res = new Pow(leftExpression, rightExpression);
+        int sourceLine = ctx.getStart().getLine();
+        Pow res = new Pow(leftExpression, rightExpression, sourceLine);
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;
@@ -292,13 +298,13 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         Expression rightExpression = rightExpressionContext.accept(this);
         String op = ctx.ADDITIVE.getText();
         Additive res = null;
+        int sourceLine = ctx.getStart().getLine();
         if (op.equals(ArithmeticSign.ADD.getSign())) {
-            res = new Addition(leftExpression, rightExpression);
+            res = new Addition(leftExpression, rightExpression, sourceLine);
         } else {
-            res = new Subtraction(leftExpression, rightExpression);
+            res = new Subtraction(leftExpression, rightExpression, sourceLine);
         }
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;
@@ -312,15 +318,15 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         Expression rightExpression = rightExpressionContext.accept(this);
         String op = ctx.MULTIPLICATIVE().getText();
         Multiplicative res = null;
+        int sourceLine = ctx.getStart().getLine();
         if (op.equals(ArithmeticSign.MUL.getSign())) {
-            res = new Multiplication(leftExpression, rightExpression);
+            res = new Multiplication(leftExpression, rightExpression, sourceLine);
         } else if (op.equals(ArithmeticSign.DIV.getSign())) {
-            res = new Division(leftExpression, rightExpression);
+            res = new Division(leftExpression, rightExpression, sourceLine);
         } else {
-            res = new Mod(leftExpression, rightExpression);
+            res = new Mod(leftExpression, rightExpression, sourceLine);
         }
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;
@@ -340,15 +346,15 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
             throw new IllegalShiftTypeException(leftType, rightType, sourceLine);
         }
         Shift res = null;
+        int sourceLine = ctx.getStart().getLine();
         if (op.equals(ArithmeticSign.SHL.getSign())) {
-            res = new Shl(leftExpression, rightExpression);
+            res = new Shl(leftExpression, rightExpression, sourceLine);
         } else if (op.equals(ArithmeticSign.SHR.getSign())) {
-            res = new Shr(leftExpression, rightExpression);
+            res = new Shr(leftExpression, rightExpression, sourceLine);
         } else {
-            res = new UnsignedShr(leftExpression, rightExpression);
+            res = new UnsignedShr(leftExpression, rightExpression, sourceLine);
         }
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;
@@ -358,20 +364,20 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
             ExpressionContext leftExpressionContext,
             ExpressionContext rightExpressionContext,
             TerminalNode terminalNode) {
+        int sourceLine = leftExpressionContext.getStart().getLine();
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext != null
                 ? rightExpressionContext.accept(this)
-                : new Value(BuiltInType.INT, "0");
+                : new Value(BuiltInType.INT, "0", sourceLine);
         CompareSign cmpSign = terminalNode != null
                 ? CompareSign.fromString(terminalNode.getText())
                 : CompareSign.NOT_EQUAL;
         Type lhsType = leftExpression.getType();
         Type rhsType = rightExpression.getType();
         if (!TypeChecker.conditionalLhsTypeAndRhsAreCompatible(lhsType, rhsType)) {
-            int sourceLine = leftExpressionContext.getStart().getLine();
             throw new ConditionalExprLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sourceLine);
         }
-        return new ConditionalExpression(leftExpression, rightExpression, cmpSign);
+        return new ConditionalExpression(leftExpression, rightExpression, cmpSign, sourceLine);
     }
 
     @Override
@@ -394,9 +400,9 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         ExpressionContext rightExpressionContext = ctx.expression(1);
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
-        And res = new And(leftExpression, rightExpression);
+        int sourceLine = ctx.getStart().getLine();
+        And res = new And(leftExpression, rightExpression, sourceLine);
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;
@@ -408,9 +414,9 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         ExpressionContext rightExpressionContext = ctx.expression(1);
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
-        Xor res = new Xor(leftExpression, rightExpression);
+        int sourceLine = ctx.getStart().getLine();
+        Xor res = new Xor(leftExpression, rightExpression, sourceLine);
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;
@@ -422,9 +428,9 @@ public class ExpressionVisitor extends HansAntlrParserBaseVisitor<Expression> {
         ExpressionContext rightExpressionContext = ctx.expression(1);
         Expression leftExpression = leftExpressionContext.accept(this);
         Expression rightExpression = rightExpressionContext.accept(this);
-        Or res = new Or(leftExpression, rightExpression);
+        int sourceLine = ctx.getStart().getLine();
+        Or res = new Or(leftExpression, rightExpression, sourceLine);
         if (!TypeChecker.arithmeticLhsTypeAndRhsAreCompatible(res)) {
-            int sourceLine = ctx.getStart().getLine();
             throw new ArithmeticExprLhsAndRhsTypeIncompatibleException(res, sourceLine);
         }
         return res;

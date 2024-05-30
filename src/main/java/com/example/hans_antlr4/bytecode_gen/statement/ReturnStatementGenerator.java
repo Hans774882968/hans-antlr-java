@@ -12,9 +12,9 @@ public class ReturnStatementGenerator {
     private MethodVisitor mv;
     private ExpressionGenerator expressionGenerator;
 
-    public ReturnStatementGenerator(MethodVisitor mv, Scope scope) {
+    public ReturnStatementGenerator(MethodVisitor mv, Scope scope, boolean constantFolding) {
         this.mv = mv;
-        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+        this.expressionGenerator = new ExpressionGenerator(mv, scope, constantFolding);
     }
 
     public void generate(ReturnStatement returnStatement) {

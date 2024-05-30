@@ -2,6 +2,7 @@ package com.example.hans_antlr4.domain.expression;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.scope.FieldReferenceRecord;
 import com.example.hans_antlr4.domain.scope.Variable;
 import com.example.hans_antlr4.domain.statement.Statement;
@@ -19,17 +20,19 @@ public class ClassFieldReference extends Expression {
     private Variable startVar; // 仅 startsWithClass = false 时有
     private List<FieldReferenceRecord> fieldReferenceRecords;
 
-    public ClassFieldReference(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
-        super(getReturnTypeInInit(qualifiedName, fieldReferenceRecords), null, null);
+    public ClassFieldReference(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords, int sourceLine) {
+        super(getReturnTypeInInit(qualifiedName, fieldReferenceRecords), null, null, sourceLine, null);
         this.startsWithClass = true;
         this.fieldReferenceRecords = fieldReferenceRecords;
+        calculateValueInferResult();
     }
 
-    public ClassFieldReference(Variable startVar, List<FieldReferenceRecord> fieldReferenceRecords) {
-        super(getReturnTypeInInitOrReportError(fieldReferenceRecords), null, null);
+    public ClassFieldReference(Variable startVar, List<FieldReferenceRecord> fieldReferenceRecords, int sourceLine) {
+        super(getReturnTypeInInitOrReportError(fieldReferenceRecords), null, null, sourceLine, null);
         this.startsWithClass = false;
         this.startVar = startVar;
         this.fieldReferenceRecords = fieldReferenceRecords;
+        calculateValueInferResult();
     }
 
     private static Type getReturnTypeInInit(String qualifiedName, List<FieldReferenceRecord> fieldReferenceRecords) {
@@ -57,6 +60,11 @@ public class ClassFieldReference extends Expression {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferResult.nonConst);
     }
 
     @Override

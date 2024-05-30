@@ -1,8 +1,12 @@
 package com.example.hans_antlr4.domain.type;
 
+import java.util.List;
+
 import com.example.hans_antlr4.domain.expression.ArithmeticExpression;
+import com.example.hans_antlr4.domain.expression.Expression;
 import com.example.hans_antlr4.domain.global.ArithmeticSign;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.exception.type.IllegalArrayIndexTypeException;
 
 public class TypeChecker {
     public static boolean isDecimalTypes(Type type) {
@@ -10,7 +14,10 @@ public class TypeChecker {
     }
 
     public static boolean isIntegerTypes(Type type) {
-        return type == BuiltInType.BYTE || type == BuiltInType.INT || type == BuiltInType.LONG;
+        return type == BuiltInType.BYTE
+                || type == BuiltInType.SHORT
+                || type == BuiltInType.INT
+                || type == BuiltInType.LONG;
     }
 
     public static boolean isNumericTypes(Type type) {
@@ -74,5 +81,13 @@ public class TypeChecker {
 
     public static boolean isLegalShiftType(Type leftType, Type rightType) {
         return isIntegerTypes(leftType) && isIntegerTypes(rightType);
+    }
+
+    public static void arrayDimensionTypeCheck(List<Expression> dimensions, int sourceLine) {
+        for (Expression dimension : dimensions) {
+            if (!isIntegerTypes(dimension.getType())) {
+                throw new IllegalArrayIndexTypeException(dimension, sourceLine);
+            }
+        }
     }
 }

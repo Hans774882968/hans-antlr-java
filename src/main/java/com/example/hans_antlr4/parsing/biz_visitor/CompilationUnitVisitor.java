@@ -13,6 +13,7 @@ import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.parsing.HansAntlrParserBaseVisitor;
+import com.example.hans_antlr4.program_arguments.CompilerArguments;
 import com.example.hans_antlr4.parsing.HansAntlrParser.CompilationUnitContext;
 import com.example.hans_antlr4.parsing.HansAntlrParser;
 
@@ -25,6 +26,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class CompilationUnitVisitor extends HansAntlrParserBaseVisitor<CompilationUnit> {
     private String publicClassName;
+    private CompilerArguments compilerArguments;
 
     private Function getClinitFunction(CompilationUnitContext ctx, Scope scope) {
         List<Statement> globalVariables = ctx.globalVariable().stream()
@@ -56,6 +58,6 @@ public class CompilationUnitVisitor extends HansAntlrParserBaseVisitor<Compilati
                         .map(method -> method.accept(new FunctionVisitor(scope)))
                         .collect(Collectors.toList()));
 
-        return new CompilationUnit(methods);
+        return new CompilationUnit(methods, compilerArguments);
     }
 }

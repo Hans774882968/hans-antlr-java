@@ -9,8 +9,9 @@ import lombok.Getter;
 public abstract class Reference extends Expression {
     private String varName;
 
-    public Reference(String varName, Type type) {
-        super(type, null, null);
+    public Reference(String varName, Type type, int sourceLine) {
+        super(type, null, null, sourceLine, null);
         this.varName = varName;
+        calculateValueInferResult();
     }
 }

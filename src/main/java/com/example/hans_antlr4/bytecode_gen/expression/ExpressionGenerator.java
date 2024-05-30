@@ -58,8 +58,9 @@ public class ExpressionGenerator implements Opcodes {
     private ShiftExpressionGenerator shiftExpressionGenerator;
     private CallExpressionGenerator callExpressionGenerator;
     private ArrayGenerator arrayGenerator;
+    private boolean constantFolding;
 
-    public ExpressionGenerator(MethodVisitor mv, Scope scope) {
+    public ExpressionGenerator(MethodVisitor mv, Scope scope, boolean constantFolding) {
         this.mv = mv;
         this.scope = scope;
         this.conditionalExpressionGenerator = new ConditionalExpressionGenerator(this, mv);
@@ -68,6 +69,7 @@ public class ExpressionGenerator implements Opcodes {
         this.shiftExpressionGenerator = new ShiftExpressionGenerator(this, mv);
         this.callExpressionGenerator = new CallExpressionGenerator(this, mv);
         this.arrayGenerator = new ArrayGenerator(this, mv);
+        this.constantFolding = constantFolding;
     }
 
     // 给 Expression 添加 accept 抽象方法来调用 ExpressionGenerator 下的某个 generate 方法，于是 public void generate(Expression expression, Scope scope) 可以删除
@@ -142,6 +144,10 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(TemplateString templateString) {
+        if (constantFolding && templateString.getValueInferResult().isConst()) {
+            generate(templateString.getValueInferResult().getValue());
+            return;
+        }
         stringAppendGenerator.generate(templateString);
     }
 
@@ -154,21 +160,35 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(UnaryPositive expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         expression.getExpression().accept(this);
     }
 
     public void generate(UnaryNegative expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         expression.getExpression().accept(this);
         mv.visitInsn(expression.getType().getUnaryNegativeOpcode());
     }
 
     public void generate(UnaryTilde expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         expression.getExpression().accept(this);
         Type type = expression.getType();
         if (type == BuiltInType.INT) {
             mv.visitInsn(ICONST_M1);
         } else if (type == BuiltInType.LONG) {
             mv.visitLdcInsn(-1L);
+        } else if (type == BuiltInType.BYTE) {
+            mv.visitInsn(ICONST_M1);
         } else {
             throw new UnsupportedTypeForTildeExpressionException(type);
         }
@@ -176,6 +196,10 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(Addition expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         if (expression.getType() == BuiltInType.STRING) {
             stringAppendGenerator.generate(expression);
             return;
@@ -185,21 +209,37 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(Subtraction expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getSubtractOpcode());
     }
 
     public void generate(Multiplication expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getMultiplyOpcode());
     }
 
     public void generate(Division expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getDivideOpcode());
     }
 
     public void generate(Pow expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         Expression leftExpression = expression.getLeftExpression();
         Expression rightExpression = expression.getRightExpression();
         leftExpression.accept(this);
@@ -215,41 +255,73 @@ public class ExpressionGenerator implements Opcodes {
     }
 
     public void generate(Mod expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getModOpcode());
     }
 
     public void generate(Shl expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateShiftComponents(expression);
         mv.visitInsn(expression.getType().getShlOpcode());
     }
 
     public void generate(Shr expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateShiftComponents(expression);
         mv.visitInsn(expression.getType().getShrOpcode());
     }
 
     public void generate(UnsignedShr expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateShiftComponents(expression);
         mv.visitInsn(expression.getType().getUnsignedShrOpcode());
     }
 
     public void generate(And expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getAndOpcode());
     }
 
     public void generate(Xor expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getXorOpcode());
     }
 
     public void generate(Or expression) {
+        if (constantFolding && expression.getValueInferResult().isConst()) {
+            generate(expression.getValueInferResult().getValue());
+            return;
+        }
         evaluateArithmeticComponents(expression);
         mv.visitInsn(expression.getType().getOrOpcode());
     }
 
     public void generate(ConditionalExpression conditionalExpression) {
+        if (constantFolding && conditionalExpression.getValueInferResult().isConst()) {
+            generate(conditionalExpression.getValueInferResult().getValue());
+            return;
+        }
         conditionalExpressionGenerator.generate(conditionalExpression);
     }
 

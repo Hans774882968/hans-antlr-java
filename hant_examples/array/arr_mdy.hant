@@ -115,7 +115,7 @@ void byte1d() {
 void byte2d() {
     print "----- byte2d -----"
     var a = new byte[2][2]
-    a[0][1] += a[0][0] = 0x7fy - 20y
+    a[0][1] += a[0][0] = 107y
     a[1][0] = a[0][1] **= 2
     java.lang.System.out.printf("%d, %d\n", a[0][1], a[1][0]) // -71 -71
 }

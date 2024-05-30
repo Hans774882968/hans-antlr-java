@@ -8,6 +8,7 @@ import org.objectweb.asm.Opcodes;
 
 import com.example.hans_antlr4.domain.global.Function;
 import com.example.hans_antlr4.domain.scope.GlobalVariable;
+import com.example.hans_antlr4.program_arguments.CompilerArguments;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +17,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class CompilationUnit implements Opcodes {
     private List<Function> functions;
+    private CompilerArguments compilerArguments;
 
     public ClassWriter createClassWriter(String publicClassName) {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
@@ -45,7 +47,7 @@ public class CompilationUnit implements Opcodes {
 
         generateGlobalVariableBytecode(cw);
 
-        functions.forEach(function -> new MethodGenerator(cw).generate(function));
+        functions.forEach(function -> new MethodGenerator(cw, compilerArguments).generate(function));
 
         cw.visitEnd();
         return cw.toByteArray();

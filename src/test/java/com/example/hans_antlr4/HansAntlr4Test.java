@@ -29,12 +29,12 @@ public class HansAntlr4Test {
         Statement statement = TestUtils.getFirstStatementFromCode("var 変数名2です /* 这是一个注释 */ = \"// 这不是注释\"");
 
         VariableDeclaration variableDeclaration = new VariableDeclaration("変数名2です",
-                new Value(BuiltInType.STRING, "\"// 这不是注释\""));
+                Value.valueWithoutSourceLine(BuiltInType.STRING, "\"// 这不是注释\""));
         Assert.assertEquals(variableDeclaration, statement);
 
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, false);
         statement.accept(statementGenerator);
         verify(mv, times(1)).visitVarInsn(eq(Opcodes.ASTORE), eq(0));
     }
@@ -43,13 +43,16 @@ public class HansAntlr4Test {
     public void expressionBuildTreeTest() throws MainMethodNotFoundInPublicClass {
         Statement firstStatement = TestUtils.getFirstStatementFromCode(
                 "var x = 2 ** 3 * 3 ** 2 + 2 ** 3\r\n" + "print x\r\n");
-        Expression expression = new Addition(
-                new Multiplication(
-                        new Pow(new Value(BuiltInType.INT, "2"),
-                                new Value(BuiltInType.INT, "3")),
-                        new Pow(new Value(BuiltInType.INT, "3"),
-                                new Value(BuiltInType.INT, "2"))),
-                new Pow(new Value(BuiltInType.INT, "2"), new Value(BuiltInType.INT, "3")));
+        Expression expression = Addition.additionWithoutSourceLine(
+                Multiplication.multiplicationWithoutSourceLine(
+                        Pow.powWithoutSourceLine(
+                                Value.valueWithoutSourceLine(BuiltInType.INT, "2"),
+                                Value.valueWithoutSourceLine(BuiltInType.INT, "3")),
+                        Pow.powWithoutSourceLine(
+                                Value.valueWithoutSourceLine(BuiltInType.INT, "3"),
+                                Value.valueWithoutSourceLine(BuiltInType.INT, "2"))),
+                Pow.powWithoutSourceLine(Value.valueWithoutSourceLine(BuiltInType.INT, "2"),
+                        Value.valueWithoutSourceLine(BuiltInType.INT, "3")));
         VariableDeclaration variableDeclaration = new VariableDeclaration("x", expression);
         Assert.assertEquals(variableDeclaration, firstStatement);
     }
@@ -57,9 +60,10 @@ public class HansAntlr4Test {
     @Test
     public void powerExpressionBuildTreeTest1() throws MainMethodNotFoundInPublicClass {
         // 验证乘方运算符的左结合
-        Expression expression = new Pow(
-                new Pow(new Value(BuiltInType.INT, "2"), new Value(BuiltInType.INT, "2")),
-                new Value(BuiltInType.INT, "3"));
+        Expression expression = Pow.powWithoutSourceLine(
+                Pow.powWithoutSourceLine(Value.valueWithoutSourceLine(BuiltInType.INT, "2"),
+                        Value.valueWithoutSourceLine(BuiltInType.INT, "2")),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "3"));
         VariableDeclaration variableDeclaration = new VariableDeclaration("x11", expression);
 
         Statement firstStatement = TestUtils.getFirstStatementFromCode("var x11 = 2 ** 2 ** 3");
@@ -69,9 +73,11 @@ public class HansAntlr4Test {
     @Test
     public void powerExpressionBuildTreeTest2() throws MainMethodNotFoundInPublicClass {
         // powerExpressionBuildTreeTest1 的对照组
-        Expression expression = new Pow(
-                new Value(BuiltInType.INT, "2"),
-                new Pow(new Value(BuiltInType.INT, "2"), new Value(BuiltInType.INT, "3")));
+        Expression expression = Pow.powWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.INT, "2"),
+                Pow.powWithoutSourceLine(
+                        Value.valueWithoutSourceLine(BuiltInType.INT, "2"),
+                        Value.valueWithoutSourceLine(BuiltInType.INT, "3")));
         VariableDeclaration variableDeclaration = new VariableDeclaration("x12", expression);
 
         Statement firstStatement = TestUtils.getFirstStatementFromCode("var x12 = 2 ** (2 ** 3)");
@@ -82,8 +88,9 @@ public class HansAntlr4Test {
     public void variableDeclarationStatementGeneratorTest1() {
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
-        statementGenerator.generate(new VariableDeclaration("v0", new Value(BuiltInType.INT, "114514")));
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, false);
+        statementGenerator.generate(
+                new VariableDeclaration("v0", Value.valueWithoutSourceLine(BuiltInType.INT, "114514")));
         verify(mv, times(1)).visitVarInsn(eq(Opcodes.ISTORE), anyInt());
         verify(mv, times(0)).visitVarInsn(eq(Opcodes.ASTORE), anyInt());
         verify(mv, times(1)).visitLdcInsn(eq(114514));
@@ -94,8 +101,9 @@ public class HansAntlr4Test {
     public void variableDeclarationStatementGeneratorTest2() {
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
-        statementGenerator.generate(new VariableDeclaration("v0", new Value(BuiltInType.STRING, "\"114514\"")));
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, false);
+        statementGenerator.generate(new VariableDeclaration("v0",
+                Value.valueWithoutSourceLine(BuiltInType.STRING, "\"114514\"")));
         verify(mv, times(0)).visitVarInsn(eq(Opcodes.ISTORE), anyInt());
         verify(mv, times(1)).visitVarInsn(eq(Opcodes.ASTORE), anyInt());
         verify(mv, times(0)).visitIntInsn(eq(Opcodes.SIPUSH), anyInt());
@@ -106,8 +114,10 @@ public class HansAntlr4Test {
     public void printStatementGeneratorTest() {
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
-        statementGenerator.generate(new PrintStatement(new Value(BuiltInType.INT, "114514")));
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, false);
+        statementGenerator.generate(
+                new PrintStatement(
+                        Value.valueWithoutSourceLine(BuiltInType.INT, "114514")));
         verify(mv, times(1))
                 .visitFieldInsn(anyInt(), anyString(), anyString(), anyString());
         verify(mv, times(1)).visitMethodInsn(

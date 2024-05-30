@@ -14,10 +14,10 @@ public class ExpressionStatementGenerator {
     private Scope scope;
     private ExpressionGenerator expressionGenerator;
 
-    public ExpressionStatementGenerator(MethodVisitor mv, Scope scope) {
+    public ExpressionStatementGenerator(MethodVisitor mv, Scope scope, boolean constantFolding) {
         this.mv = mv;
         this.scope = scope;
-        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+        this.expressionGenerator = new ExpressionGenerator(mv, scope, constantFolding);
     }
 
     public void generate(ExpressionStatement expressionStatement) {

@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.exception.array.GetArrayDimensionReducedTypeFailedException;
 import com.example.hans_antlr4.utils.Const;
 
 @Getter
@@ -28,9 +29,9 @@ public class ArrayType implements Type {
         this.descriptor = "[".repeat(dimension) + elementDescriptor;
     }
 
-    public static Type getDimensionReducedType(ArrayType array, int dimension) {
+    public static Type getDimensionReducedType(ArrayType array, int dimension, int sourceLine) {
         if (dimension > array.getDimension()) {
-            throw new RuntimeException("dimension " + dimension + " exceed the dimension of array " + array.getName());
+            throw new GetArrayDimensionReducedTypeFailedException(array, dimension, sourceLine);
         }
         if (dimension == array.getDimension()) {
             return array.elementType;

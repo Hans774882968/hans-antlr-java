@@ -20,6 +20,7 @@ import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
 import com.example.hans_antlr4.parsing.ParseEntry;
+import com.example.hans_antlr4.program_arguments.CompilerArguments;
 import com.example.hans_antlr4.utils.Const;
 
 public class TestUtils {
@@ -63,10 +64,21 @@ public class TestUtils {
         }).collect(Collectors.toList());
     }
 
-    private static Function getFunctionClinit(List<Function> functions) {
+    private static Function findFunctionClinit(List<Function> functions) {
         return functions.stream().filter(f -> {
             return f.getFunctionSignature().getName().equals("<clinit>");
         }).findFirst().get();
+    }
+
+    private static CompilerArguments getMockCompilerArguments() {
+        CompilerArguments compilerArguments = new CompilerArguments();
+        return compilerArguments;
+    }
+
+    private static CompilerArguments getMockCompilerArguments(boolean constantFolding) {
+        CompilerArguments compilerArguments = new CompilerArguments();
+        compilerArguments.setConstantFolding(constantFolding);
+        return compilerArguments;
     }
 
     public static Statement getFirstStatementFromCode(String code) throws MainMethodNotFoundInPublicClass {
@@ -96,9 +108,13 @@ public class TestUtils {
     }
 
     public static MethodVisitor mockGenerateBytecode(List<Statement> statements) {
+        return mockGenerateBytecode(statements, false);
+    }
+
+    public static MethodVisitor mockGenerateBytecode(List<Statement> statements, boolean constantFolding) {
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, constantFolding);
         for (Statement statement : statements) {
             statement.accept(statementGenerator);
         }
@@ -106,8 +122,13 @@ public class TestUtils {
     }
 
     public static MethodVisitor mockGenerateBytecode(List<Statement> statements, Scope scope) {
+        return mockGenerateBytecode(statements, scope, false);
+    }
+
+    public static MethodVisitor mockGenerateBytecode(
+            List<Statement> statements, Scope scope, boolean constantFolding) {
         MethodVisitor mv = mock(MethodVisitor.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, constantFolding);
         for (Statement statement : statements) {
             statement.accept(statementGenerator);
         }
@@ -126,7 +147,7 @@ public class TestUtils {
         List<Function> functionsWithoutClinit = getFunctionsWithoutClinit(compilationUnit.getFunctions());
         ClassWriter cw = mock(ClassWriter.class);
         MethodVisitor mv = mock(MethodVisitor.class);
-        new MethodGenerator(cw).generate(functionsWithoutClinit.get(0), mv);
+        new MethodGenerator(cw, getMockCompilerArguments()).generate(functionsWithoutClinit.get(0), mv);
         return mv;
     }
 
@@ -139,7 +160,7 @@ public class TestUtils {
             Function fn = functionsWithoutClinit.get(i);
             MethodVisitor mv = mock(MethodVisitor.class);
             mvs[i] = mv;
-            new MethodGenerator(cw).generate(fn, mv);
+            new MethodGenerator(cw, getMockCompilerArguments()).generate(fn, mv);
         }
         return mvs;
     }
@@ -153,12 +174,24 @@ public class TestUtils {
         compilationUnit.generateGlobalVariableBytecode(cw);
 
         mvs[0] = mock(MethodVisitor.class);
-        new MethodGenerator(cw).generate(functionsWithoutClinit.get(0), mvs[0]);
+        new MethodGenerator(cw, getMockCompilerArguments()).generate(functionsWithoutClinit.get(0), mvs[0]);
 
-        Function clinit = getFunctionClinit(compilationUnit.getFunctions());
+        Function clinit = findFunctionClinit(compilationUnit.getFunctions());
         mvs[1] = mock(MethodVisitor.class);
-        new MethodGenerator(cw).generate(clinit, mvs[1]);
+        new MethodGenerator(cw, getMockCompilerArguments()).generate(clinit, mvs[1]);
 
         return mvs;
+    }
+
+    public static MethodVisitor mockGenerateGlobalVar(String code, boolean constantFolding) {
+        CompilationUnit compilationUnit = ParseEntry.parseFromCode(code);
+        Function clinit = findFunctionClinit(compilationUnit.getFunctions());
+        ClassWriter cw = compilationUnit.createClassWriter(Const.mockPublicClass);
+
+        compilationUnit.generateGlobalVariableBytecode(cw);
+
+        MethodVisitor mv = mock(MethodVisitor.class);
+        new MethodGenerator(cw, getMockCompilerArguments(constantFolding)).generate(clinit, mv);
+        return mv;
     }
 }

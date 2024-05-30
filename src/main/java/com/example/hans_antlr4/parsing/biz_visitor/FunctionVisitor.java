@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.example.hans_antlr4.domain.expression.Parameter;
 import com.example.hans_antlr4.domain.global.Function;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.scope.FunctionSignature;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
 import com.example.hans_antlr4.domain.scope.Scope;
@@ -53,7 +54,8 @@ public class FunctionVisitor extends HansAntlrParserBaseVisitor<Function> {
                         .map(paramCtx -> new Parameter(
                                 TypeResolver.getFromTypeContext(paramCtx.type()),
                                 paramCtx.Identifier().getText()))
-                        .peek(param -> scope.addLocalVariable(new LocalVariable(param.getName(), param.getType())))
+                        .peek(param -> scope.addLocalVariable(new LocalVariable(
+                                param.getName(), param.getType(), ValueInferResult.nonConst)))
                         .collect(Collectors.toList());
         return parameters;
     }

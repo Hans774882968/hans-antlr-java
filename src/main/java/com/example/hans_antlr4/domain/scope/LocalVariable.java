@@ -2,6 +2,7 @@ package com.example.hans_antlr4.domain.scope;
 
 import java.util.Objects;
 
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.type.Type;
 
 import lombok.Data;
@@ -10,7 +11,11 @@ import lombok.Data;
 @Data
 public class LocalVariable extends Variable {
     public LocalVariable(String varName, Type type) {
-        super(varName, type);
+        super(varName, type, ValueInferResult.nonConst);
+    }
+
+    public LocalVariable(String varName, Type type, ValueInferResult valueInferResult) {
+        super(varName, type, valueInferResult);
     }
 
     @Override

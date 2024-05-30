@@ -3,6 +3,7 @@ package com.example.hans_antlr4.domain.expression;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.AssignmentSign;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.scope.AssignmentLhs;
 import com.example.hans_antlr4.domain.scope.Variable;
 import com.example.hans_antlr4.domain.statement.ExpressionStatement;
@@ -19,7 +20,6 @@ public class AssignmentExpression extends Expression {
     private AssignmentLhs lhs;
     private AssignmentSign sign;
     private Expression expression;
-    private int sourceLine;
 
     // AssignmentExpression 的类型为 LHS 类型，计算时左右侧入栈顶并转为 max 类型，计算完毕后把 max 类型转为 LHS 类型再赋值
     public AssignmentExpression(
@@ -27,12 +27,12 @@ public class AssignmentExpression extends Expression {
             AssignmentSign sign,
             Expression expression,
             int sourceLine) {
-        super(variable.getType(), null, null);
+        super(variable.getType(), null, null, sourceLine, null);
         this.lhs = new AssignmentLhs(variable);
         this.sign = sign;
         this.expression = expression;
-        this.sourceLine = sourceLine;
         typeCheck();
+        calculateValueInferResult();
     }
 
     public AssignmentExpression(
@@ -40,12 +40,12 @@ public class AssignmentExpression extends Expression {
             AssignmentSign sign,
             Expression expression,
             int sourceLine) {
-        super(classFieldReference.getType(), null, null);
+        super(classFieldReference.getType(), null, null, sourceLine, null);
         this.lhs = new AssignmentLhs(classFieldReference);
         this.sign = sign;
         this.expression = expression;
-        this.sourceLine = sourceLine;
         typeCheck();
+        calculateValueInferResult();
     }
 
     public AssignmentExpression(
@@ -53,19 +53,19 @@ public class AssignmentExpression extends Expression {
             AssignmentSign sign,
             Expression expression,
             int sourceLine) {
-        super(arrayAccess.getType(), null, null);
+        super(arrayAccess.getType(), null, null, sourceLine, null);
         this.lhs = new AssignmentLhs(arrayAccess);
         this.sign = sign;
         this.expression = expression;
-        this.sourceLine = sourceLine;
         typeCheck();
+        calculateValueInferResult();
     }
 
     public void typeCheck() {
         Type lhsType = getLhsType();
         Type rhsType = getRhsType();
         if (!TypeChecker.assignmentLhsTypeAndRhsAreCompatible(sign, lhsType, rhsType)) {
-            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sign, sourceLine);
+            throw new AssignmentLhsAndRhsTypeIncompatibleException(lhsType, rhsType, sign, getSourceLine());
         }
     }
 
@@ -127,6 +127,11 @@ public class AssignmentExpression extends Expression {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferResult.nonConst);
     }
 
     @Override

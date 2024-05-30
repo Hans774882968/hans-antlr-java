@@ -17,6 +17,7 @@ import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.RangedForStatement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.utils.Const;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,7 @@ import lombok.Getter;
 @Getter
 public class RangedForStatementGenerator implements Opcodes {
     private MethodVisitor mv;
+    private boolean constantFolding;
 
     private void generateIIncInsn(
             RangedForStatement rangedForStatement,
@@ -56,8 +58,8 @@ public class RangedForStatementGenerator implements Opcodes {
         final Expression startExpression = rangedForStatement.getStartExpression();
         final Expression endExpression = rangedForStatement.getEndExpression();
         final Type endExprType = rangedForStatement.getEndExpressionType();
-        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, newScope);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope);
+        ExpressionGenerator expressionGenerator = new ExpressionGenerator(mv, newScope, constantFolding);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, newScope, constantFolding);
 
         // 1. 生成变量定义语句
         rangedForStatement.getIteratorVariableStatement().accept(statementGenerator);
@@ -74,7 +76,7 @@ public class RangedForStatementGenerator implements Opcodes {
         // 4. 生成加1或减1的操作
         mv.visitLabel(rangedForStatement.getOperationLabel());
         ConditionalExpression startLessThenEndExpression = new ConditionalExpression(
-                startExpression, endExpression, CompareSign.LESS);
+                startExpression, endExpression, CompareSign.LESS, Const.MOCK_SOURCE_LINE);
         startLessThenEndExpression.accept(expressionGenerator);
         Label decOneLabel = new Label();
         mv.visitJumpInsn(IFEQ, decOneLabel);
@@ -93,10 +95,10 @@ public class RangedForStatementGenerator implements Opcodes {
         mv.visitJumpInsn(IFEQ, iteratorLessThanEndLabel);
         {
             Reference reference = newScope.localVariableExists(iteratorVarName)
-                    ? new VarReference(iteratorVarName, endExprType)
-                    : new GlobalVarReference(iteratorVarName, endExprType);
+                    ? VarReference.varReferenceWithoutSourceLine(iteratorVarName, endExprType)
+                    : GlobalVarReference.globalVarReferenceWithoutSourceLine(iteratorVarName, endExprType);
             ConditionalExpression iteratorGreaterThanEndCondition = new ConditionalExpression(
-                    reference, endExpression, CompareSign.GREATER);
+                    reference, endExpression, CompareSign.GREATER, Const.MOCK_SOURCE_LINE);
             iteratorGreaterThanEndCondition.accept(expressionGenerator);
         }
         // 满足 var 大于 end 就退出，否则跳 body
@@ -107,10 +109,10 @@ public class RangedForStatementGenerator implements Opcodes {
         mv.visitLabel(iteratorLessThanEndLabel);
         {
             Reference reference = newScope.localVariableExists(iteratorVarName)
-                    ? new VarReference(iteratorVarName, endExprType)
-                    : new GlobalVarReference(iteratorVarName, endExprType);
+                    ? VarReference.varReferenceWithoutSourceLine(iteratorVarName, endExprType)
+                    : GlobalVarReference.globalVarReferenceWithoutSourceLine(iteratorVarName, endExprType);
             ConditionalExpression iteratorLessThanEndCondition = new ConditionalExpression(
-                    reference, endExpression, CompareSign.LESS);
+                    reference, endExpression, CompareSign.LESS, Const.MOCK_SOURCE_LINE);
             iteratorLessThanEndCondition.accept(expressionGenerator);
         }
         mv.visitJumpInsn(IFNE, rangedForStatement.getEndLoopLabel());

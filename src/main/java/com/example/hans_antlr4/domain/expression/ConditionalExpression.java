@@ -6,6 +6,7 @@ import com.example.hans_antlr4.domain.global.CompareSign;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.domain.value_infer.ValueInferUtils;
 import com.example.hans_antlr4.exception.MixedComparisonNotAllowedException;
 
 import lombok.Getter;
@@ -18,8 +19,12 @@ public class ConditionalExpression extends Expression {
     private final Expression rightExpression;
     private final boolean isPrimitiveComparison;
 
-    public ConditionalExpression(Expression leftExpression, Expression rightExpression, CompareSign compareSign) {
-        super(BuiltInType.BOOLEAN, null, null);
+    public ConditionalExpression(
+            Expression leftExpression,
+            Expression rightExpression,
+            CompareSign compareSign,
+            int sourceLine) {
+        super(BuiltInType.BOOLEAN, null, null, sourceLine, null);
         this.compareSign = compareSign;
         this.leftExpression = leftExpression;
         this.rightExpression = rightExpression;
@@ -29,8 +34,10 @@ public class ConditionalExpression extends Expression {
         boolean isObjectsComparison = !leftExpressionIsPrimitive && !rightExpressionIsPrimitive;
         boolean isMixedComparison = !isPrimitiveComparison && !isObjectsComparison;
         if (isMixedComparison) {
-            throw new MixedComparisonNotAllowedException(leftExpression.getType(), rightExpression.getType());
+            throw new MixedComparisonNotAllowedException(leftExpression.getType(),
+                    rightExpression.getType());
         }
+        calculateValueInferResult();
     }
 
     public Type getMaxPriorityNumericType() {
@@ -53,6 +60,11 @@ public class ConditionalExpression extends Expression {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferUtils.calcValueInferResultForConditionalExpression(this));
     }
 
     @Override

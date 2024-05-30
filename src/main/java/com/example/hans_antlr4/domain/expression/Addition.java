@@ -6,10 +6,16 @@ import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.global.ArithmeticSign;
 import com.example.hans_antlr4.domain.statement.Statement;
+import com.example.hans_antlr4.domain.value_infer.ValueInferUtils;
+import com.example.hans_antlr4.utils.Const;
 
 public class Addition extends Additive {
-    public Addition(Expression leftExpression, Expression rightExpression) {
-        super(leftExpression, rightExpression, ArithmeticSign.ADD);
+    public Addition(Expression leftExpression, Expression rightExpression, int sourceLine) {
+        super(leftExpression, rightExpression, ArithmeticSign.ADD, sourceLine);
+    }
+
+    public static Addition additionWithoutSourceLine(Expression leftExpression, Expression rightExpression) {
+        return new Addition(leftExpression, rightExpression, Const.MOCK_SOURCE_LINE);
     }
 
     @Override
@@ -23,6 +29,11 @@ public class Addition extends Additive {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferUtils.calcValueInferResultForAddition(this));
     }
 
     @Override

@@ -4,16 +4,17 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 
 import java.util.List;
 
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
 import org.mockito.InOrder;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.example.hans_antlr4.MakeConcatWithConstArgMatcher;
 import com.example.hans_antlr4.TestUtils;
 import com.example.hans_antlr4.domain.global.MetaData;
 import com.example.hans_antlr4.domain.scope.LocalVariable;
@@ -21,16 +22,6 @@ import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.BuiltInType;
 import com.example.hans_antlr4.exception.func.MainMethodNotFoundInPublicClass;
-
-class BootstrapMethodArgMatcher implements ArgumentMatcher<Object> {
-    @Override
-    public boolean matches(Object right) {
-        if (!(right instanceof String)) {
-            return false;
-        }
-        return right.toString().equals("\u0001\u0001");
-    }
-}
 
 public class AssignmentWithTypesTest implements Opcodes {
     @Test
@@ -124,24 +115,13 @@ public class AssignmentWithTypesTest implements Opcodes {
         MethodVisitor mv = TestUtils.mockGenerateBytecode(statements, scope);
         InOrder inOrder = inOrder(mv);
 
-        inOrder.verify(mv).visitVarInsn(eq(ALOAD), eq(0));
-
-        inOrder.verify(mv).visitTypeInsn(eq(NEW), eq("java/lang/StringBuilder"));
-        inOrder.verify(mv).visitInsn(eq(DUP));
-        inOrder.verify(mv).visitMethodInsn(
-                eq(INVOKESPECIAL),
-                eq("java/lang/StringBuilder"),
-                eq("<init>"),
-                eq("()V"),
-                eq(false));
-        inOrder.verify(mv).visitVarInsn(eq(ALOAD), eq(0));
-        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
-                eq("(Ljava/lang/String;)Ljava/lang/StringBuilder;"), eq(false));
+        inOrder.verify(mv, times(2)).visitVarInsn(eq(ALOAD), eq(0));
         inOrder.verify(mv).visitVarInsn(eq(DLOAD), eq(1));
-        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("append"),
-                eq("(D)Ljava/lang/StringBuilder;"), eq(false));
-        inOrder.verify(mv).visitMethodInsn(eq(INVOKEVIRTUAL), eq("java/lang/StringBuilder"), eq("toString"),
-                eq("()Ljava/lang/String;"), eq(false));
+        inOrder.verify(mv).visitInvokeDynamicInsn(
+                eq("makeConcatWithConstants"),
+                eq("(Ljava/lang/String;D)Ljava/lang/String;"),
+                isA(Handle.class),
+                argThat(new MakeConcatWithConstArgMatcher(2)));
 
         inOrder.verify(mv).visitInsn(eq(DUP));
         inOrder.verify(mv).visitVarInsn(eq(ASTORE), eq(0));
@@ -155,7 +135,7 @@ public class AssignmentWithTypesTest implements Opcodes {
                 eq("makeConcatWithConstants"),
                 eq("(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;"),
                 isA(Handle.class),
-                argThat(new BootstrapMethodArgMatcher()));
+                argThat(new MakeConcatWithConstArgMatcher(2)));
         inOrder.verify(mv).visitVarInsn(eq(ASTORE), eq(0));
     }
 }

@@ -37,7 +37,7 @@ public class HantLoopTest implements Opcodes {
         RangedForStatement rangedForStatement = (RangedForStatement) statement;
         Statement iteratorVariableStatement = rangedForStatement.getIteratorVariableStatement();
         VariableDeclaration variableDeclaration = new VariableDeclaration(
-                "i", new Value(BuiltInType.INT, "114512"));
+                "i", Value.valueWithoutSourceLine(BuiltInType.INT, "114512"));
         Assert.assertEquals(variableDeclaration, iteratorVariableStatement);
     }
 
@@ -54,7 +54,7 @@ public class HantLoopTest implements Opcodes {
                     new AssignmentExpression(
                             new LocalVariable("i", BuiltInType.INT),
                             AssignmentSign.ASSIGN,
-                            new Value(BuiltInType.INT, "114512"),
+                            Value.valueWithoutSourceLine(BuiltInType.INT, "114512"),
                             0));
             Assert.assertEquals(expressionStatement, iteratorVariableStatement);
         });

@@ -13,14 +13,15 @@ import com.example.hans_antlr4.domain.scope.Scope;
 import com.example.hans_antlr4.domain.statement.Block;
 import com.example.hans_antlr4.domain.statement.ReturnStatement;
 import com.example.hans_antlr4.domain.statement.Statement;
+import com.example.hans_antlr4.program_arguments.CompilerArguments;
 import com.example.hans_antlr4.utils.DescriptorFactory;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public class MethodGenerator implements Opcodes {
     private ClassWriter classWriter;
-
-    public MethodGenerator(ClassWriter classWriter) {
-        this.classWriter = classWriter;
-    }
+    private CompilerArguments compilerArguments;
 
     // 重载是为了方便单测传入 mock MethodVisitor
     public void generate(Function function) {
@@ -35,7 +36,8 @@ public class MethodGenerator implements Opcodes {
         mv.visitCode();
         Block body = function.getBody();
         Scope scope = body.getScope();
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        boolean constantFolding = compilerArguments.isConstantFolding();
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, constantFolding);
         body.accept(statementGenerator);
         appendReturnIfLastStatementIsNotReturn(function, statementGenerator);
         mv.visitMaxs(-1, -1);
@@ -52,7 +54,8 @@ public class MethodGenerator implements Opcodes {
             isLastStatementReturn = lastStatement instanceof ReturnStatement;
         }
         if (!isLastStatementReturn) {
-            EmptyExpression emptyExpression = new EmptyExpression(function.getFunctionSignature().getReturnType());
+            EmptyExpression emptyExpression = EmptyExpression.emptyExpressionWithoutSourceLine(
+                    function.getFunctionSignature().getReturnType());
             ReturnStatement returnStatement = new ReturnStatement(emptyExpression);
             returnStatement.accept(statementGenerator);
         }

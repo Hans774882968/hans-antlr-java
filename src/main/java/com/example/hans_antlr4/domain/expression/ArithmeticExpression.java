@@ -15,33 +15,48 @@ public abstract class ArithmeticExpression extends Expression {
     public ArithmeticExpression(
             Expression leftExpression,
             Expression rightExpression,
-            ArithmeticSign sign) {
-        super(getCommonType(leftExpression, rightExpression), null, null);
+            ArithmeticSign sign,
+            int sourceLine) {
+        super(getCommonType(leftExpression, rightExpression, sign), null, null, sourceLine, null);
         this.leftExpression = leftExpression;
         this.rightExpression = rightExpression;
         this.sign = sign;
+        calculateValueInferResult();
     }
 
-    public ArithmeticExpression(
-            Type type,
+    private static Type getCommonType(
             Expression leftExpression,
             Expression rightExpression,
             ArithmeticSign sign) {
-        super(type, null, null);
-        this.leftExpression = leftExpression;
-        this.rightExpression = rightExpression;
-        this.sign = sign;
-    }
-
-    private static Type getCommonType(Expression leftExpression, Expression rightExpression) {
         Type leftType = leftExpression.getType();
         Type rightType = rightExpression.getType();
+        if (sign.isShiftSign()) {
+            return getShiftCommonType(leftType);
+        }
         if (leftType == BuiltInType.STRING || rightType == BuiltInType.STRING) {
             return BuiltInType.STRING;
+        }
+        if (leftType == BuiltInType.BYTE && rightType == BuiltInType.BYTE) {
+            return BuiltInType.INT;
         }
         if (leftType.getPriority().compareTo(rightType.getPriority()) >= 0) {
             return leftType;
         }
         return rightType;
+    }
+
+    private static Type getShiftCommonType(Type leftType) {
+        if (leftType == BuiltInType.BYTE) {
+            return BuiltInType.INT;
+        }
+        return leftType;
+    }
+
+    public Type getLeftType() {
+        return leftExpression.getType();
+    }
+
+    public Type getRightType() {
+        return rightExpression.getType();
     }
 }

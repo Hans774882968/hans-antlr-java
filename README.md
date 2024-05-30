@@ -5840,6 +5840,16 @@ visitor部分的改动主要集中在`visitClazzFieldReference`方法，代码�
 2. 如果成功找到全限定类名：用`currentOwnerClass.getField(identifier)`去找到`Field field`，然后将`field.getType()`转为我们自己的`Type`。`field.getType()`转`Type`由`TypeResolver.getFromJavaLangClass`完成。后续`hant`支持自定义类的时候，这里肯定还要新增一个来源，即还需要从自定义类签名数组中寻找`Type`。这样就获得了`fieldReferenceRecords`。
 3. 如果未成功找到：将`identifiers[0]`作为可能的变量名，根据变量名从作用域中找到这个变量，进而获得其`Type`对应的`java.lang.Class currentOwnerClass;`，最后拿着`currentOwnerClass`走“2”描述的过程。目前只需要从局部变量数组中找到这个变量名，后续支持“全局变量”后需要升级为：先从局部变量数组中找，再从“全局变量”数组中找。
 
+有一个字段需要特殊处理，它就是数组的`length`属性。我们可以直接写出它的`FieldReferenceRecord`：
+
+```java
+if (currentOwnerType instanceof ArrayType && identifier.equals("length")) {
+    fieldReferenceRecords.add(new FieldReferenceRecord(
+            false, currentOwnerType, identifier, BuiltInType.INT));
+    continue;
+}
+```
+
 visitor部分的代码极其复杂，但`bytecode_gen`部分非常常规，根据上文总结的字节码特征写出代码即可。
 
 ```java
@@ -5981,13 +5991,230 @@ public boolean returnValueIsNotUsed() {
 
 [相关git commit](https://github.com/Hans774882968/hans-antlr-java/compare/53e9df9d2e35d12d439c53b13dcb99cde2a81794...0fe20ff4a50a2caba37ac3c1e9bfa3f57a570e89)
 
-TODO
+我们希望像Java一样支持数组的定义和引用。比如`var a = new int[2][3]`定义一个二维数组，初始值为全0。
+
+文法规则修改：
+
+```g4
+primitiveTypeName:
+	'boolean'
+	| 'string'
+	| 'char'
+	| 'byte'
+	| 'short'
+	| 'int'
+	| 'long'
+	| 'float'
+	| 'double'
+	| 'void';
+expression:
+	// ...
+	'new' (primitiveTypeName | qualifiedName) (
+		'[' expression ']'
+	)+												# ArrayDeclaration
+	| array = expression ('[' expression ']')+		# ArrayAccess
+	// ...
+    | <assoc = right> leftHandSide = expression AssignmentOperator = (
+		'='
+		| '**='
+		| '*='
+		| '/='
+		| '%='
+		| '+='
+		| '-='
+		| '<<='
+		| '>>='
+		| '>>>='
+		| '&='
+		| '^='
+		| '|='
+	) rightHandSide = expression # ASSIGNMENT;
+```
+
+原本赋值的文法是`<assoc = right> variableReference AssignmentOperator = ('=' /* other omitted... */) expression # ASSIGNMENT`。为了支持数组赋值，不得不将LHS调整为`expression`。
+
+接下来探究一下相关的字节码。
+
+```java
+String[] cc1 = new String[11];
+long[] cc2 = new long[11];
+int[][][][] cc = new int[2][3][4][v];
+String[][] aS23 = new String[2][3];
+```
+
+的字节码分别为：
+
+```java
+methodVisitor.visitIntInsn(BIPUSH, 11);
+methodVisitor.visitTypeInsn(ANEWARRAY, "java/lang/String");
+methodVisitor.visitVarInsn(ASTORE, 6);
+
+methodVisitor.visitIntInsn(BIPUSH, 11);
+methodVisitor.visitIntInsn(NEWARRAY, T_LONG);
+methodVisitor.visitVarInsn(ASTORE, 8);
+
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitInsn(ICONST_3);
+methodVisitor.visitInsn(ICONST_4);
+methodVisitor.visitVarInsn(ILOAD, 5);
+methodVisitor.visitMultiANewArrayInsn("[[[[I", 4);
+methodVisitor.visitVarInsn(ASTORE, 10);
+
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitInsn(ICONST_3);
+methodVisitor.visitMultiANewArrayInsn("[[Ljava/lang/String;", 2);
+methodVisitor.visitVarInsn(ASTORE, 3);
+```
+
+可见一维数组的情况比较复杂，多维数组的情况比较简单。在此为了方便，不考虑性能问题，一律使用`visitMultiANewArrayInsn`来创建数组。亲测`visitMultiANewArrayInsn`支持1维数组。
+
+约定`visitVarInsn(ALOAD, 10)`获取的是`int[][][][] cc = new int[2][3][4][v];`，则`cc[0][1][2][3]`的字节码：
+
+```java
+methodVisitor.visitVarInsn(ALOAD, 10);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitInsn(AALOAD);
+methodVisitor.visitInsn(ICONST_1);
+methodVisitor.visitInsn(AALOAD);
+methodVisitor.visitInsn(ICONST_2);
+methodVisitor.visitInsn(AALOAD);
+methodVisitor.visitInsn(ICONST_3);
+methodVisitor.visitInsn(IALOAD);
+```
+
+约定`visitVarInsn(ALOAD, 9)`获取的是`String[][] cc3 = new String[11][2];`，则`cc3[10][0]`的字节码：
+
+```java
+methodVisitor.visitVarInsn(ALOAD, 9);
+methodVisitor.visitIntInsn(BIPUSH, 10);
+methodVisitor.visitInsn(AALOAD);
+methodVisitor.visitInsn(ICONST_0);
+methodVisitor.visitInsn(AALOAD);
+```
+
+综上，如果获取的元素的类型为数组或其他引用类型比如`String`，就使用`AALOAD`；否则使用相关的原始类型`ALOAD`指令如`IALOAD`。
+
+数据结构改造：
+
+`ArrayDeclaration`：
+
+```java
+@Getter
+public class ArrayDeclaration extends Expression {
+    private Type elementType;
+    private List<Expression> dimensions;
+
+    public ArrayDeclaration(Type elementType, List<Expression> dimensions, int sourceLine) {
+        super(null, null, null, sourceLine, null);
+        arrayDimensionTypeCheck(dimensions);
+        setType(new ArrayType(elementType, dimensions.size()));
+        this.elementType = elementType;
+        this.dimensions = dimensions;
+    }
+
+    public void arrayDimensionTypeCheck(List<Expression> dimensions) {
+        TypeChecker.arrayDimensionTypeCheck(dimensions, getSourceLine());
+    }
+    // ...
+}
+```
+
+`ArrayAccess`：
+
+```java
+@Getter
+public class ArrayAccess extends Expression {
+    private Expression array;
+    private List<Expression> dimensions;
+
+    public ArrayAccess(Expression array, List<Expression> dimensions, int sourceLine) {
+        super(null, null, null, sourceLine, null);
+        arrayAccessTypeCheck(array, dimensions);
+        ArrayType arrayType = (ArrayType) array.getType();
+        this.array = array;
+        this.dimensions = dimensions;
+        setType(ArrayType.getDimensionReducedType(arrayType, dimensions.size(), sourceLine));
+    }
+
+    public void arrayAccessTypeCheck(Expression array, List<Expression> dimensions) {
+        if (!(array.getType() instanceof ArrayType)) {
+            throw new ArrayAccessGotNonArrayTypeException(array.getType(), getSourceLine());
+        }
+        TypeChecker.arrayDimensionTypeCheck(dimensions, getSourceLine());
+    }
+    // ...
+}
+```
+
+1. 我们需要推断`ArrayAccess`后的数据类型：
+
+```java
+public static Type getDimensionReducedType(ArrayType array, int dimension, int sourceLine) {
+    if (dimension > array.getDimension()) {
+        throw new GetArrayDimensionReducedTypeFailedException(array, dimension, sourceLine);
+    }
+    if (dimension == array.getDimension()) {
+        return array.elementType;
+    }
+    return new ArrayType(array.elementType, array.getDimension() - dimension);
+}
+```
+
+2. 我们封装了一个共用的`arrayDimensionTypeCheck`方法：
+
+```java
+public static void arrayDimensionTypeCheck(List<Expression> dimensions, int sourceLine) {
+    for (Expression dimension : dimensions) {
+        if (!isIntegerTypes(dimension.getType())) {
+            throw new IllegalArrayIndexTypeException(dimension, sourceLine);
+        }
+    }
+}
+```
+
+接下来我们需要新增数组类型。
+
+```java
+@Getter
+public class ArrayType implements Type {
+    private Type elementType;
+    private int dimension;
+    private String descriptor;
+    public static ArrayType OBJECT_ARR = new ArrayType(BuiltInType.OBJECT, 1);
+
+    public ArrayType(Type elementType, int dimension) {
+        this.elementType = elementType;
+        this.dimension = dimension;
+        if (elementType instanceof ArrayType || dimension <= 0) {
+            throw new RuntimeException("Invalid array type");
+        }
+        setDescriptor(dimension, elementType.getDescriptor());
+    }
+
+    private void setDescriptor(int dimension, String elementDescriptor) {
+        this.descriptor = "[".repeat(dimension) + elementDescriptor;
+    }
+    // ...
+}
+```
+
+visitor部分改造：为节省篇幅，就不贴代码了。
+
+1. visitArrayDeclaration：首先用`BuiltInType.getBuiltInType`找原始类型，如果失败，就看token是否被识别为`ctx.qualifiedName()`，若成功则为`ClassType`，否则报类型查找异常。
+2. visitArrayAccess很常规。
+3. 在《支持访问属性》一节已经提到，`visitClazzFieldReference`方法需要特殊处理一个字段，它就是数组的`length`属性。
+
+`bytecode_gen`部分的改造颇具挑战性。
 
 ### 效果：我们来写一段统计文件夹代码量的脚本吧！
+
+为什么写统计代码量的demo？因为`java.io.File.listFiles()`的返回值类型为`java.io.File[]`。
 
 [传送门：`hant_examples/array/code_stat.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/array/code_stat.hant)
 
 ![hant目前可以实现代码量统计](./README_assets/4-hant目前可以实现代码量统计.jpg)
+
+[其他测试代码：`hant_examples\array\arr_ref.hant`](https://github.com/Hans774882968/hans-antlr-java/blob/main/hant_examples/array/arr_ref.hant)
 
 ## 支持数组赋值
 

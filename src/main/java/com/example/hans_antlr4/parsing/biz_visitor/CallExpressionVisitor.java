@@ -40,12 +40,12 @@ public class CallExpressionVisitor extends HansAntlrParserBaseVisitor<Call> {
             Expression owner = ctx.owner.accept(parent);
             FunctionSignature signature = scope.getMethodCallSignature(
                     Optional.of(owner.getType()), funName, argTypes, sourceLine);
-            return new FunctionCall(owner, signature, arguments);
+            return new FunctionCall(owner, signature, arguments, sourceLine);
         }
 
         FunctionSignature signature = scope.getMethodCallSignature(funName, argTypes, sourceLine);
-        Expression owner = new EmptyExpression(ClassType.getTypeByQualifiedName(scope.getClassName()));
-        return new FunctionCall(owner, signature, arguments);
+        Expression owner = new EmptyExpression(ClassType.getTypeByQualifiedName(scope.getClassName()), sourceLine);
+        return new FunctionCall(owner, signature, arguments, sourceLine);
     }
 
     @Override

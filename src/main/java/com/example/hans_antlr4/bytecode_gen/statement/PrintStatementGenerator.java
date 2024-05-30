@@ -19,10 +19,10 @@ public class PrintStatementGenerator implements Opcodes {
     private Scope scope;
     private ExpressionGenerator expressionGenerator;
 
-    public PrintStatementGenerator(MethodVisitor mv, Scope scope) {
+    public PrintStatementGenerator(MethodVisitor mv, Scope scope, boolean constantFolding) {
         this.mv = mv;
         this.scope = scope;
-        this.expressionGenerator = new ExpressionGenerator(mv, scope);
+        this.expressionGenerator = new ExpressionGenerator(mv, scope, constantFolding);
     }
 
     private String getPrintMethodDescriptor(Type type) {

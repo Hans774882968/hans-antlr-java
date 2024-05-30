@@ -5,12 +5,19 @@ import java.util.Objects;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.Type;
+import com.example.hans_antlr4.utils.Const;
 
 public class GlobalVarReference extends Reference {
-    public GlobalVarReference(String varName, Type type) {
-        super(varName, type);
+    public GlobalVarReference(String varName, Type type, int sourceLine) {
+        super(varName, type, sourceLine);
+        calculateValueInferResult();
+    }
+
+    public static GlobalVarReference globalVarReferenceWithoutSourceLine(String varName, Type type) {
+        return new GlobalVarReference(varName, type, Const.MOCK_SOURCE_LINE);
     }
 
     @Override
@@ -24,6 +31,11 @@ public class GlobalVarReference extends Reference {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferResult.nonConst);
     }
 
     @Override

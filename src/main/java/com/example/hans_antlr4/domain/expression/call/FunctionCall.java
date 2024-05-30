@@ -6,6 +6,7 @@ import java.util.Objects;
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
 import com.example.hans_antlr4.domain.expression.Expression;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.scope.FunctionSignature;
 import com.example.hans_antlr4.domain.statement.Statement;
 
@@ -17,11 +18,16 @@ public class FunctionCall extends Call {
     private final FunctionSignature signature;
     private final List<Expression> arguments;
 
-    public FunctionCall(Expression owner, FunctionSignature signature, List<Expression> arguments) {
-        super(signature.getReturnType(), null, null);
+    public FunctionCall(
+            Expression owner,
+            FunctionSignature signature,
+            List<Expression> arguments,
+            int sourceLine) {
+        super(signature.getReturnType(), null, null, sourceLine);
         this.owner = owner;
         this.signature = signature;
         this.arguments = arguments;
+        calculateValueInferResult();
     }
 
     @Override
@@ -35,6 +41,11 @@ public class FunctionCall extends Call {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferResult.nonConst);
     }
 
     @Override

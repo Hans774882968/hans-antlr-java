@@ -20,7 +20,7 @@ public class HantIntRangeTest {
 
         MethodVisitor mv = mock(MethodVisitor.class);
         Scope scope = mock(Scope.class);
-        StatementGenerator statementGenerator = new StatementGenerator(mv, scope);
+        StatementGenerator statementGenerator = new StatementGenerator(mv, scope, false);
 
         statement.accept(statementGenerator);
         verify(mv, times(bipushTimes)).visitIntInsn(Opcodes.BIPUSH, intValue);

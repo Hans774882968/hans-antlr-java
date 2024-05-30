@@ -55,7 +55,7 @@ public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement> {
             final ExpressionVisitor expressionVisitor = new ExpressionVisitor(scope);
             Expression expression = expressionContext.accept(expressionVisitor);
 
-            scope.addLocalVariable(new LocalVariable(varName, expression.getType()));
+            scope.addLocalVariable(new LocalVariable(varName, expression.getType(), expression.getValueInferResult()));
             VarDefUnit varDefUnit = new VarDefUnit(varName, expression);
 
             logVariableDeclarationStatementFound(varTerminalNode, expression);
@@ -143,7 +143,8 @@ public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement> {
             iteratorVariableStatement = new ExpressionStatement(
                     new AssignmentExpression(iteratorVar, AssignmentSign.ASSIGN, startExpr, sourceLine));
         } else {
-            newScope.addLocalVariable(new LocalVariable(iteratorVarName, startExpr.getType()));
+            newScope.addLocalVariable(new LocalVariable(
+                    iteratorVarName, startExpr.getType(), startExpr.getValueInferResult()));
             iteratorVariableStatement = new VariableDeclaration(iteratorVarName, startExpr);
         }
 
@@ -194,7 +195,8 @@ public class StatementVisitor extends HansAntlrParserBaseVisitor<Statement> {
 
     @Override
     public ReturnStatement visitReturnVoid(HansAntlrParser.ReturnVoidContext ctx) {
-        return new ReturnStatement(new EmptyExpression(BuiltInType.VOID));
+        int sourceLine = ctx.getStart().getLine();
+        return new ReturnStatement(new EmptyExpression(BuiltInType.VOID, sourceLine));
     }
 
     @Override

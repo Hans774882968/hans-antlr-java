@@ -44,23 +44,23 @@ public class StringAppendGenerator implements Opcodes {
     }
 
     public void generate(Addition addition) {
-        mv.visitTypeInsn(NEW, "java/lang/StringBuilder");
-        mv.visitInsn(DUP);
-        mv.visitMethodInsn(INVOKESPECIAL, "java/lang/StringBuilder", "<init>", "()V", false);
-
         Expression leftExpression = addition.getLeftExpression();
         leftExpression.accept(parent);
         String leftExprDescriptor = leftExpression.getType().getDescriptor();
-        String descriptor = "(" + leftExprDescriptor + ")Ljava/lang/StringBuilder;";
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", descriptor, false);
-
         Expression rightExpression = addition.getRightExpression();
         rightExpression.accept(parent);
         String rightExprDescriptor = rightExpression.getType().getDescriptor();
-        descriptor = "(" + rightExprDescriptor + ")Ljava/lang/StringBuilder;";
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "append", descriptor, false);
+        String descriptor = "(" + leftExprDescriptor + rightExprDescriptor + ")Ljava/lang/String;";
 
-        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StringBuilder", "toString", "()Ljava/lang/String;", false);
+        Handle handle = new Handle(
+                H_INVOKESTATIC,
+                org.objectweb.asm.Type.getInternalName(java.lang.invoke.StringConcatFactory.class),
+                "makeConcatWithConstants",
+                MethodType.methodType(
+                        CallSite.class, MethodHandles.Lookup.class, String.class, MethodType.class,
+                        String.class, Object[].class).toMethodDescriptorString(),
+                false);
+        mv.visitInvokeDynamicInsn("makeConcatWithConstants", descriptor, handle, new Object[] { "\u0001\u0001" });
     }
 
     public void generate(TemplateString templateString) {

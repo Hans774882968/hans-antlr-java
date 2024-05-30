@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.example.hans_antlr4.bytecode_gen.expression.ExpressionGenerator;
 import com.example.hans_antlr4.data_processor.ExpressionTreeProcessor;
+import com.example.hans_antlr4.domain.global.ValueInferResult;
 import com.example.hans_antlr4.domain.statement.Statement;
 import com.example.hans_antlr4.domain.type.ArrayType;
 import com.example.hans_antlr4.domain.type.Type;
@@ -19,8 +20,9 @@ public class ArrayLiteral extends Expression {
     private List<Expression> items;
 
     public ArrayLiteral(List<Expression> items, int sourceLine) {
-        super(getInferredArrayType(items, sourceLine), null, null);
+        super(getInferredArrayType(items, sourceLine), null, null, sourceLine, null);
         this.items = items;
+        calculateValueInferResult();
     }
 
     private static ArrayType getInferredArrayType(List<Expression> items, int sourceLine) {
@@ -50,6 +52,11 @@ public class ArrayLiteral extends Expression {
             Expression parent,
             Statement belongStatement) {
         processor.processExpressionTree(this, parent, belongStatement);
+    }
+
+    @Override
+    public void calculateValueInferResult() {
+        this.setValueInferResult(ValueInferResult.nonConst);
     }
 
     @Override

@@ -25,6 +25,7 @@ string getLineCountMethod1(java.io.File file) {
     var fs = file.listFiles()
     var javaNum = 0
     var hantNum = 0
+    var testJavaNum = 0
     for (var i = 0; i < fs.length; i += 1) {
         var f = fs[i]
         if (f.isDirectory()) {
@@ -32,9 +33,13 @@ string getLineCountMethod1(java.io.File file) {
             var arr = nextRes.split(",")
             javaNum += java.lang.Integer.parseInt(arr[0])
             hantNum += java.lang.Integer.parseInt(arr[1])
+            testJavaNum += java.lang.Integer.parseInt(arr[2])
         }
         if (f.isFile()) {
             var fName = f.getPath()
+            if fName.startsWith(".\\.git") {
+                continue
+            }
             var inp = new java.io.FileInputStream(fName)
             var bytes = inp.readAllBytes()
             var data = new java.lang.String(bytes)
@@ -43,9 +48,10 @@ string getLineCountMethod1(java.io.File file) {
             var lineCount = lines.length
             if (fName.endsWith(".java")) javaNum += lineCount
             if (fName.endsWith(".hant")) hantNum += lineCount
+            if fName.startsWith(".\\src\\test") testJavaNum += lineCount
         }
     }
-    return javaNum + "," + hantNum
+    return `${javaNum},${hantNum},${testJavaNum},${javaNum - testJavaNum}`
 }
 
 string getLineCountMethod2(java.io.File file) {
@@ -78,13 +84,20 @@ string getLineCountMethod2(java.io.File file) {
     return javaNum + "," + hantNum
 }
 
-void main(string[] args) {
+_main {
     var path = "."
 	var file = new java.io.File(path)
     var ans1 = getFileCount(file)
-    print ans1 // 2941,158,36
+    print `${ans1} (total Java hant)` // 3832,192,55
     var ans2 = getLineCountMethod1(file)
-    print ans2 // 15269,2014
+    print `${ans2} (Java代码量 hant代码量 Java单测代码量 Java非单测代码量 accurate)` // 20147,3449,3207,16940
     var ans3 = getLineCountMethod2(file)
-    print ans3 // 15419,2050 数据有差别，因为会有些大于1字节的字符的某个字节的值恰好是10
+    print ans3 // 20330,3504 数据有差别，因为会有些大于1字节的字符的某个字节的值恰好是10
+}
+
+void main(string[] args) {
+    var start = java.lang.System.currentTimeMillis();
+    _main()
+    var end = java.lang.System.currentTimeMillis()
+    print `time cost: ${end - start} ms`
 }

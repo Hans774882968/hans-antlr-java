@@ -19,35 +19,59 @@ import com.example.hans_antlr4.domain.type.BuiltInType;
 public class TypeInferTest {
     @Test
     public void nonBitwiseExpression() {
-        Expression division = new Division(new Value(BuiltInType.LONG, "30"), new Value(BuiltInType.FLOAT, "3.2"));
+        Expression division = Division.divisionWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.FLOAT, "3.2"));
         Assert.assertEquals(BuiltInType.FLOAT, division.getType());
-        Expression mod = new Mod(new Value(BuiltInType.LONG, "30"), new Value(BuiltInType.INT, "7"));
+        Expression mod = Mod.modWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "7"));
         Assert.assertEquals(BuiltInType.LONG, mod.getType());
 
-        Expression pw1 = new Pow(new Value(BuiltInType.INT, "30"), new Value(BuiltInType.LONG, "7"));
+        Expression pw1 = Pow.powWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "7"));
         Assert.assertEquals(BuiltInType.LONG, pw1.getType());
-        Expression pw2 = new Pow(new Value(BuiltInType.FLOAT, "30"), new Value(BuiltInType.INT, "7"));
+        Expression pw2 = Pow.powWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.FLOAT, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "7"));
         Assert.assertEquals(BuiltInType.FLOAT, pw2.getType());
     }
 
     @Test
     public void bitwiseExpression() {
-        Expression shl1 = new Shl(new Value(BuiltInType.INT, "30"), new Value(BuiltInType.INT, "30"));
+        Expression shl1 = Shl.shlWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"));
         Assert.assertEquals(BuiltInType.INT, shl1.getType());
-        Expression shl2 = new Shl(new Value(BuiltInType.INT, "30"), new Value(BuiltInType.LONG, "30"));
+        Expression shl2 = Shl.shlWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"));
         Assert.assertEquals(BuiltInType.INT, shl2.getType());
-        Expression shr = new Shr(new Value(BuiltInType.LONG, "30"), new Value(BuiltInType.INT, "30"));
+        Expression shr = Shr.shrWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"));
         Assert.assertEquals(BuiltInType.LONG, shr.getType());
-        Expression uShr = new UnsignedShr(new Value(BuiltInType.LONG, "30"), new Value(BuiltInType.LONG, "30"));
+        Expression uShr = UnsignedShr.unsignedShrWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"));
         Assert.assertEquals(BuiltInType.LONG, uShr.getType());
 
-        Expression xor1 = new Xor(new Value(BuiltInType.INT, "30"), new Value(BuiltInType.INT, "30"));
+        Expression xor1 = Xor.xorWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"));
         Assert.assertEquals(BuiltInType.INT, xor1.getType());
-        Expression andExpr = new And(new Value(BuiltInType.INT, "30"), new Value(BuiltInType.LONG, "30"));
+        Expression andExpr = And.andWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"));
         Assert.assertEquals(BuiltInType.LONG, andExpr.getType());
-        Expression xor2 = new Xor(new Value(BuiltInType.LONG, "30"), new Value(BuiltInType.INT, "30"));
+        Expression xor2 = Xor.xorWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.INT, "30"));
         Assert.assertEquals(BuiltInType.LONG, xor2.getType());
-        Expression orExpr = new Or(new Value(BuiltInType.LONG, "30"), new Value(BuiltInType.LONG, "30"));
+        Expression orExpr = Or.orWithoutSourceLine(
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"),
+                Value.valueWithoutSourceLine(BuiltInType.LONG, "30"));
         Assert.assertEquals(BuiltInType.LONG, orExpr.getType());
     }
 }
